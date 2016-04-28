@@ -1,9 +1,25 @@
 'use strict'
 
-var express = require('express');
-var app=express();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
+let express = require('express');
+let app=express();
+
+let fs = require('fs')
+
+let httpServer = null
+let io = null
+
+const useHttps = true
+if(useHttps) {
+  const privateKey  = fs.readFileSync(__dirname + '/key.pem', 'utf8')
+  const certificate = fs.readFileSync(__dirname + '/key-cert.pem', 'utf8')
+  httpServer = require('https').Server({key: privateKey, cert: certificate}, app)
+}
+else {
+  httpServer = require('http').Server(app)
+}
+
+io = require('socket.io')(httpServer)
+
 var socketioJwt = require('socketio-jwt');
 var dotenv = require('dotenv');
 
@@ -26,9 +42,11 @@ var env = {
 }
 
 function autho(socket) {
-    console.log('\n\nautho for socket:' + socket)
+    console.log('\n\nautho for new socket')
+
     var options = {
-      secret: Buffer(JSON.stringify(process.env.AUTH0_CLIENT_SECRET), 'base64'),
+      // secret: Buffer(JSON.stringify(process.env.CLIENT_SECRET), 'base64'),
+      secret: Buffer(JSON.stringify("gzsecret"), 'base64'),
       timeout: 15000 // 15 seconds to send the authentication message
     }
 
@@ -41,7 +59,6 @@ function autho(socket) {
         Namespace.events.push('authenticated');
       }
     }
-
     if(options.required){
       var auth_timeout = setTimeout(function () {
         socket.disconnect('unauthorized');
@@ -49,6 +66,7 @@ function autho(socket) {
     }
 
     socket.on('authenticate', function (data) {
+      console.log('authenticate... token[' + data.token + ']')
       if(options.required){
         clearTimeout(auth_timeout);
       }
@@ -65,7 +83,6 @@ function autho(socket) {
             return; // stop logic, socket will be close on next tick
           }
       };
-
       if(typeof data.token !== "string") {
         return onError({message: 'invalid token datatype'}, 'invalid_token');
       }
@@ -89,6 +106,7 @@ function autho(socket) {
             namespace.emit('authenticated', socket);
           }
         };
+
         console.log('BYPASS!!')
         return onSuccess()
 
@@ -108,7 +126,7 @@ function autho(socket) {
         if (err || !secret) {
           return onError(err, 'invalid_secret');
         }
-        console.log('onSecretReady... verify. data.token ' + data.token)
+        console.log('secret: ' + secret)
         jwt.verify(data.token, secret, options, onJwtVerificationReady);
 
       };
@@ -121,21 +139,21 @@ function autho(socket) {
   }
 
 io
-	.on('connection', autho )
-	.on('authenticated', function(socket){
-		console.log('connected & authenticated: ' + JSON.stringify(socket.decoded_token));
-    let gzlauncher = {proc:null, output:'', state: 'ready'}
-		socket.on('gz-launcher', function(msg){
+  .on('connection', autho )
+  .on('authenticated', function(socket){
+    console.log('connected & authenticated: ' + JSON.stringify(socket.decoded_token));
+    let gzlauncher = {proc:null, output:'', state: 'ready', cmdline:''}
+    socket.on('gz-launcher', function(msg) {
       console.log('received: ' + JSON.stringify(msg))
       if (msg.cmd === 'run'){
-
-        const items = msg.args.split(' ')
+        const items = msg.cmdline.split(' ')
         const proc = items[0]
         const args = items.slice(1)
         console.log('spwaning: ' + proc + ' ' + args)
 
         gzlauncher.proc = spawn(proc, args, {stdio:'pipe'})
         gzlauncher.state = 'running'
+        gzlauncher.cmdline = msg.cmdline
 
         var onNewData = function (buf) {
           const txt = buf.toString()
@@ -157,40 +175,36 @@ io
         })
         gzlauncher.proc.stderr.on('data', (data)=> {
           io.emit('gz-launcher', onNewData(data))
-/*
-          var txt = data.toString()
-          txt = txt.split('\n').join('<br>')
-          console.log(txt)
-          gzlauncher.output += ansi2html.toHtml(txt)
-          io.emit('gz-launcher', {output: gzlauncher.output,
-            state:gzlauncher.state,
-            pid:gzlauncher.proc.pid })
-*/
         })
         gzlauncher.proc.on('close', (code)=>{
+	        console.log('gzlauncher.proc.on close')
           gzlauncher.state = 'closed'
+          // tell client
           io.emit('gz-launcher', {output: gzlauncher.output,
             state:gzlauncher.state,
             pid:gzlauncher.proc.pid })
+          gzlauncher = null
         })
-			  io.emit('gz-launcher', msg);
+        // io.emit('gz-launcher', msg);
       }
       if (msg.cmd === 'kill'){
         console.log('kill message received')
         gzlauncher.proc.kill()
-        gzlauncher = null
       }
 		});
 	});
 
-app.use(express.static(__dirname + '../public'));
+// app.use(express.static(__dirname + '../public'));
 
 
 app.get('/', function (req, res) {
-  res.sendFile(__dirname + '/../public/index.html')
+  // res.sendFile(__dirname + '/../public/index.html')
+  let s = `
+    <h1>Gazebo controller is running</h1>
+`
+  res.end(s)
 })
 
-console.log('args: ')
 let port = 4000
 if (process.argv.length > 2) {
   // console.log(process.argv[0])
@@ -199,7 +213,9 @@ if (process.argv.length > 2) {
   port = Number(process.argv[2])
 }
 
-http.listen(port, function(){
+httpServer.listen(port, function(){
+
+  console.log('ssl: ' + useHttps)
 	console.log('listening on *:' + port);
 });
 
