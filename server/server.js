@@ -1,12 +1,15 @@
 'use strict'
 
-let express = require('express');
-let app=express();
+let express = require('express')
+let app=express()
 
 let fs = require('fs')
 
 let httpServer = null
 let io = null
+
+const cors = require('cors')
+
 
 const useHttps = true
 if(useHttps) {
@@ -19,6 +22,8 @@ else {
 }
 
 io = require('socket.io')(httpServer)
+
+app.use(cors())
 
 var socketioJwt = require('socketio-jwt');
 var dotenv = require('dotenv');
@@ -204,6 +209,17 @@ app.get('/', function (req, res) {
 `
   res.end(s)
 })
+
+app.get('/grant', function (req, res) {
+  // res.sendFile(__dirname + '/../public/index.html')
+  let s = `
+    {
+      granted: false
+    }
+`
+  res.end(s)
+})
+
 
 let port = 4000
 if (process.argv.length > 2) {
