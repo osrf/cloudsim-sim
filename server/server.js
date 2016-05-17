@@ -9,6 +9,7 @@ let httpServer = null
 let io = null
 
 const cors = require('cors')
+const morgan = require('morgan')
 
 
 const useHttps = true
@@ -24,6 +25,9 @@ else {
 io = require('socket.io')(httpServer)
 
 app.use(cors())
+
+// prints all requests to the terminal
+app.use(morgan('combined'))
 
 var socketioJwt = require('socketio-jwt');
 var dotenv = require('dotenv')
@@ -218,7 +222,8 @@ app.get('/grant', function (req, res) {
       granted: false
     }
 `
-  res.end(s)
+  console.log('grant: ' + s)
+  res.jsonp(s)
 })
 
 app.post('/revoke', function(req, res) {
@@ -227,7 +232,8 @@ app.post('/revoke', function(req, res) {
       revoked: false
     }
 `
-  res.end(s)
+  console.log('revoke ' + s)
+  res.jsonp(s)
 })
 
 httpServer.listen(port, function(){
