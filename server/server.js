@@ -2,15 +2,15 @@
 
 let express = require('express')
 let app=express()
-
 let fs = require('fs')
 
 let httpServer = null
 let io = null
 
+const bodyParser = require("body-parser")
 const cors = require('cors')
 const morgan = require('morgan')
-
+const util = require('util')
 
 const useHttps = true
 if(useHttps) {
@@ -25,6 +25,7 @@ else {
 io = require('socket.io')(httpServer)
 
 app.use(cors())
+app.use(bodyParser.json())
 
 // prints all requests to the terminal
 app.use(morgan('combined'))
@@ -45,6 +46,11 @@ const jsgrant = require('jsgrant')
 console.log('SERVER.JS')
 dotenv.load()
 const port = process.env.PORT || 4000
+
+// the values are set in the local .env file
+jsgrant.init(process.env.AUTHENTICATION_SERVER_IP,
+             process.env.AUTHENTICATION_PUB_KEY,
+             process.env.ADMIN_USER)
 
 var env = {
   AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
@@ -215,26 +221,8 @@ app.get('/', function (req, res) {
   res.end(s)
 })
 
-app.get('/grant', function (req, res) {
-  // res.sendFile(__dirname + '/../public/index.html')
-  let s = `
-    {
-      granted: false
-    }
-`
-  console.log('grant: ' + s)
-  res.jsonp(s)
-})
-
-app.post('/revoke', function(req, res) {
-  let s = `
-    {
-      revoked: false
-    }
-`
-  console.log('revoke ' + s)
-  res.jsonp(s)
-})
+app.get('/grant', jsgrant.grant)
+app.get('/revoke', jsgrant.revoke)
 
 httpServer.listen(port, function(){
 
