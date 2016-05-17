@@ -36,9 +36,11 @@ const spawn = require('child_process').spawn
 const ansi_to_html = require('ansi-to-html')
 const ansi2html = new ansi_to_html()
 
+const jsgrant = require('jsgrant')
+
 console.log('SERVER.JS')
 dotenv.load()
-
+const port = process.env.PORT || 4000
 
 var env = {
   AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
@@ -226,15 +228,7 @@ app.post('/revoke', function(req, res) {
     }
 `
   res.end(s)
-}
-
-let port = 4000
-if (process.argv.length > 2) {
-  // console.log(process.argv[0])
-  // console.log(process.argv[1])
-  // console.log(process.argv[2])
-  port = Number(process.argv[2])
-}
+})
 
 httpServer.listen(port, function(){
 
