@@ -5,6 +5,10 @@
     "gulp": "^3.8.5",
     "gulp-nodemon": "^2.0.6"
   },
+  "repository": {
+    "type": "mercurial",
+    "url": "https://bitbucket.org/osrf/cloudsim-sim"
+  },
   "scripts": {
     "test": "gulp test:local",
     "start": "gulp serve"

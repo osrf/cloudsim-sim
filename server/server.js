@@ -26,7 +26,7 @@ io = require('socket.io')(httpServer)
 app.use(cors())
 
 var socketioJwt = require('socketio-jwt');
-var dotenv = require('dotenv');
+var dotenv = require('dotenv')
 
 var xtend = require('xtend');
 var jwt = require('jsonwebtoken');
@@ -37,9 +37,8 @@ const ansi_to_html = require('ansi-to-html')
 const ansi2html = new ansi_to_html()
 
 console.log('SERVER.JS')
+dotenv.load()
 
-
-dotenv.load();
 
 var env = {
   AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
@@ -220,6 +219,14 @@ app.get('/grant', function (req, res) {
   res.end(s)
 })
 
+app.post('/revoke', function(req, res) {
+  let s = `
+    {
+      revoked: false
+    }
+`
+  res.end(s)
+}
 
 let port = 4000
 if (process.argv.length > 2) {
