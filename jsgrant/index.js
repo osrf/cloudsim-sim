@@ -6,7 +6,6 @@ let resources = {gzserver : [] }
 let pubkey = ''
 let authServerIp = ''
 
-
 // ip: the authentication ip to verify that users exist
 // key: the public authentication server key, to verify tokens
 // user: the 'admin' original user
@@ -40,19 +39,19 @@ function grantPermission(me, user, resource, readOnly, cb) {
 
     // I'm not authorized to give this permission
     if (!authorized) {
-      cb(null, false, '"' + me + '" has insufficient priviledges to authorize "'
-                     + user + '" access to "' + resource + '"')
+      cb(null, false, '"' + me + '" has insufficient priviledges to manage "'
+                     + user + '" access for "' + resource + '"')
       return
     }
 
-    const usersForResource = resources[resource]
-    if (!usersForResource)
+    const resourceUsers = resources[resource]
+    if (!resourceUsers)
     {
       cb(null, false, 'Resource "' + resource + '" does not exist')
       return
     }
 
-    let current = usersForResource.find ((userInfo) => {
+    let current = resourceUsers.find ((userInfo) => {
       return userInfo.username == user
     })
     // If user already has some authorization
@@ -104,7 +103,7 @@ function grantPermission(me, user, resource, readOnly, cb) {
 
       var readOnlyTxt = readOnly? "read only" : "write"
 
-      cb(null, true, '"' + user + '" now has "' + readOnlyTxt + '" access to "' + resource +'"')
+      cb(null, true, '"' + user + '" now has "' + readOnlyTxt + '" access for "' + resource +'"')
       return
     }
 
@@ -114,21 +113,77 @@ function grantPermission(me, user, resource, readOnly, cb) {
 
 function revokePermission (me, user, resource, readOnly, cb) {
 
-  isAuthorized(me, resource, readOnly, (err, authorized) => {
-    if(err) {
-      cb('insuffisent priviledge')
+  console.log('TODO: WRITE TO DB: revoke', me, ' => ', user, resource, readOnly)
+
+  // Am I authorized to revoke this permission
+  isAuthorized(me, resource, readOnly, (err, authorized) =>  {
+
+    // Error getting my authorization
+    if (err) {
+      cb(err)
       return
     }
 
-    const index = resources[resource].findIndex( (userInfo) => {
+    // I'm not authorized to give this permission
+    if (!authorized) {
+      cb(null, false, '"' + me + '" has insufficient priviledges to manage "'
+                     + user + '" access for "' + resource + '"')
+      return
+    }
+
+    const resourceUsers = resources[resource]
+    if (!resourceUsers)
+    {
+      cb(null, false, 'Resource "' + resource + '" does not exist')
+      return
+    }
+
+    let current = resourceUsers.find ((userInfo) => {
       return userInfo.username == user
     })
-    if (index > -1) {
-      resources[resource].splice(index, 1)
+    // If user has no authorization
+    if (!current)
+    {
+      cb(null, true, '"' + user + '" has no authorization for "' + resource + '" so nothing changed.')
+      return
     }
-    // success, even if the permission wasn't there
-    // tbd write to db
-    cb(null)
+    else
+    {
+      // Is read only, revoking read only
+      if ((readOnly == true) && (current.readOnly == true))
+      {
+        resourceUsers.splice(resourceUsers.indexOf(current), 1)
+        cb(null, true, '"' + user + '" is no longer authorized for "read only" for "'
+           + resource + '"')
+        return
+      }
+      // Is write, revoking write
+      if ((readOnly == false) && (current.readOnly == false))
+      {
+        resourceUsers.splice(resourceUsers.indexOf(current), 1)
+        cb(null, true, '"' + user + '" is no longer authorized for "write" for "'
+           + resource + '"')
+        return
+      }
+      // Is write and we want to revoke read-only - not allowed
+      if ((readOnly == true) && (current.readOnly == false))
+      {
+        cb(null, false, '"' + user + '" has "write" access for "'
+           + resource + '", so "read only" can\'t be revoked.')
+        return
+      }
+      // Is read-only and want to revoke write - remove it all
+      if ((readOnly == false) && (current.readOnly == true))
+      {
+        resourceUsers.splice(resourceUsers.indexOf(current), 1)
+        cb(null, true, '"' + user + '" had "read only" access for "'
+           + resource + '" and now has nothing')
+        return
+      }
+
+      cb("Bad bad widget, something went wrong")
+      return;
+    }
 
   })
 
@@ -186,9 +241,7 @@ function getResourceUsers (resource, cb) {
 
 // route for grant
 function grant(req, res) {
-  console.log('           RESOURCES '+  util.inspect(resources))
-  console.log('body '+  util.inspect(req.body))
-  console.log('query ' + util.inspect(req.query))
+  console.log('Grant, query: ' + util.inspect(req.query))
   const token = req.query.granterToken
   const granter = token
   const grantee  = req.query.grantee
@@ -196,8 +249,6 @@ function grant(req, res) {
   const readOnly = JSON.parse(req.query.readOnly)
 
   grantPermission(granter, grantee, resource, readOnly, (err, success, msg)=>{
-    console.log("CB grant permission cb" , err, success, msg)
-
      if (err) {
         res.jsonp({success: false, msg: err})
         return
@@ -209,9 +260,21 @@ function grant(req, res) {
 
 // route for revoke
 function revoke(req, res) {
-  let s = `{revoked: false}`
-  console.log('revoke ' + s)
-  res.jsonp(s)
+  console.log('Revoke, query: ' + util.inspect(req.query))
+  const token = req.query.granterToken
+  const granter = token
+  const grantee  = req.query.grantee
+  const resource = req.query.resource
+  const readOnly = JSON.parse(req.query.readOnly)
+
+  revokePermission(granter, grantee, resource, readOnly, (err, success, msg)=>{
+     if (err) {
+        res.jsonp({success: false, msg: err})
+        return
+     }
+     res.jsonp({success: success, msg: msg})
+     return
+  })
 }
 
 
