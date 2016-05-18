@@ -27,45 +27,86 @@ function loadPermissions(cb) {
 
 
 function grantPermission(me, user, resource, readOnly, cb) {
-  console.log('grant permission', me, ' => ', user, resource, readOnly)
+  console.log('TODO: WRITE TO DB: grant', me, ' => ', user, resource, readOnly)
+
+  // Am I authorized to grant this permission
   isAuthorized(me, resource, readOnly, (err, authorized) =>  {
+
+    // Error getting my authorization
     if (err) {
-      console.log('error ' + err)
       cb(err)
       return
     }
 
+    // I'm not authorized to give this permission
     if (!authorized) {
-      console.log ( '"' + me + '" has insufficient priviledges to authorize "'
+      cb(null, false, '"' + me + '" has insufficient priviledges to authorize "'
                      + user + '" access to "' + resource + '"')
-      cb('insuffisent priviledge')
       return
     }
 
-    // check if already authorized
-    isAuthorized(user, resource, readOnly, (err, authorized)=> {
+    const usersForResource = resources[resource]
+    if (!usersForResource)
+    {
+      cb(null, false, 'Resource "' + resource + '" does not exist')
+      return
+    }
 
-      if (err) {
-        console.log('error: ' + err)
-        cb(err)
-        return
-      }
-      if (authorized) {// already authorized.
-        console.log('"' + user + '" is already authorized for "'
-           + resource + '", readOnly: ' + readOnly)
-        cb(null)
-        return
-      }
-      let x = { user : user,
-            readOnly : readOnly,
-            resource : resource,
-            authority : me
-           }
-      resources[resource].push(x)
-      console.log('todo DB: ' + x)
-      cb(null)
-
+    let current = usersForResource.find ((userInfo) => {
+      return userInfo.username == user
     })
+    // If user already has some authorization
+    if (current)
+    {
+      // Is already read only
+      if ((readOnly == true) && (current.readOnly == true))
+      {
+        cb(null, true, '"' + user + '" is already authorized for "read only" for "'
+           + resource + '"')
+        return
+      }
+      // Is already write
+      if ((readOnly == false) && (current.readOnly == false))
+      {
+        cb(null, true, '"' + user + '" is already authorized for "write" for "'
+           + resource + '"')
+        return
+      }
+      // Is write and we want to downgrade
+      if ((readOnly == true) && (current.readOnly == false))
+      {
+        current.readOnly = true
+        cb(null, true, '"' + user + '" access for "'
+           + resource + '" has been downgraded to "read only"')
+        return
+      }
+      // Is read only and we want to upgrade
+      if ((readOnly == false) && (current.readOnly == true))
+      {
+        current.readOnly = false
+        cb(null, true, '"' + user + '" access for "'
+           + resource + '" has been upgraded to "write"')
+        return
+      }
+
+      cb("Something went wrong")
+      return;
+    }
+    else
+    {
+      // Grant brand new permission
+      let x = { username : user,
+                readOnly : readOnly,
+                resource : resource,
+                authority : me
+              }
+      resources[resource].push(x)
+
+      var readOnlyTxt = readOnly? "read only" : "write"
+
+      cb(null, true, '"' + user + '" now has "' + readOnlyTxt + '" access to "' + resource +'"')
+      return
+    }
 
   })
 
@@ -93,25 +134,30 @@ function revokePermission (me, user, resource, readOnly, cb) {
 
 }
 
+// Check if a user already has a given permission for a resource
 function isAuthorized(user, resource, readOnly, cb) {
-  getAllowedUsers(resource, readOnly, function (err, users) {
+  getResourceUsers(resource, function (err, users) {
 
+    // Error getting users for this resource
     if (err) {
       cb(err)
       return
     }
-    // is
-    const info = users.find ( (userInfo) => {
+
+    // Get user's current permission for this resource
+    const current = users.find ((userInfo) => {
         return userInfo.username == user
     })
-    // user not in the list
-    if (!info) {
-      console.log('User not on the list : ', user, resource, readOnly)
+
+    // User not authorized for this resource yet
+    if (!current) {
+      console.log('User not authorized yet: ', user, resource, readOnly)
       cb(null, false)
       return
     }
 
-    if(info.readonly && (readOnly == false) ) {
+    // Currently read only, so not write authorized
+    if(current.readonly && readOnly == false) {
       // not authorized
       console.log('read only not authorized: ', user, resource, readOnly)
       cb(null, false)
@@ -123,12 +169,18 @@ function isAuthorized(user, resource, readOnly, cb) {
   })
 }
 
-function getAllowedUsers (resource, readOnly, cb) {
-  console.log('getAllowedUsers ' + resource)
+// Returns all users for the given resource
+// resource: resource to check
+// cb: callback with params:
+// - error
+// - list of users
+function getResourceUsers (resource, cb) {
   let users = resources[resource]
-  // resource does not exists, therefore, no users
+
+  // resource does not exist, therefore, no users
   if (!users)
     users = []
+
   cb(null, users)
 }
 
@@ -141,29 +193,23 @@ function grant(req, res) {
   const granter = token
   const grantee  = req.query.grantee
   const resource = req.query.resource
-  const readOnly = req.query.readOnly
-  grantPermission(granter, grantee, resource, readOnly, (err, authorized)=>{
+  const readOnly = JSON.parse(req.query.readOnly)
+
+  grantPermission(granter, grantee, resource, readOnly, (err, success, msg)=>{
+    console.log("CB grant permission cb" , err, success, msg)
 
      if (err) {
-        res.jsonp({granted: false, error: err})
+        res.jsonp({success: false, msg: err})
         return
      }
-     res.jsonp({granted: authorized})
+     res.jsonp({success: success, msg: msg})
+     return
   })
-
-  // res.sendFile(__dirname + '/../public/index.html')
-  let s = {granted: false}
-  console.log('grant: ' + s)
-  res.jsonp(s)
 }
 
 // route for revoke
 function revoke(req, res) {
-  let s = `
-    {
-      revoked: false
-    }
-`
+  let s = `{revoked: false}`
   console.log('revoke ' + s)
   res.jsonp(s)
 }
@@ -174,11 +220,4 @@ function revoke(req, res) {
 exports.init = init
 exports.grant = grant
 exports.revoke = revoke
-
-/*
-exports.grantPermission = grantPermission
-exports.revokePermission = revokePermission
-exports.isAuthorized = isAuthorized
-exports.getAllowedUsers = getAllowedUsers
-*/
 
