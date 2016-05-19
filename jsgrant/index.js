@@ -249,7 +249,7 @@ function grant(req, res) {
   const resource = req.query.resource
   const readOnly = JSON.parse(req.query.readOnly)
 
-  console.log('  token: ' + token
+  console.log('  token: ' + token)
   jstoken.verifyToken (token, (decoded) => {
     console.log('  decoded token: ' + JSON.stringify(decoded))
     const granter = decoded.username
@@ -317,3 +317,4 @@ exports.revoke = revoke
 exports.signToken = jstoken.signToken
 exports.verifyToken = jstoken.verifyToken
 exports.test = jstoken.test
+
