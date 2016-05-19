@@ -1,6 +1,7 @@
 'use strict'
 
 const util = require("util")
+const jstoken = require("./token")
 
 let resources = {gzserver : [] }
 let pubkey = ''
@@ -239,41 +240,70 @@ function getResourceUsers (resource, cb) {
   cb(null, users)
 }
 
+
 // route for grant
 function grant(req, res) {
   console.log('Grant, query: ' + util.inspect(req.query))
   const token = req.query.granterToken
-  const granter = token
   const grantee  = req.query.grantee
   const resource = req.query.resource
   const readOnly = JSON.parse(req.query.readOnly)
 
-  grantPermission(granter, grantee, resource, readOnly, (err, success, msg)=>{
-     if (err) {
-        res.jsonp({success: false, msg: err})
-        return
-     }
-     res.jsonp({success: success, msg: msg})
-     return
+  console.log('  token: ' + token
+  jstoken.verifyToken (token, (decoded) => {
+    console.log('  decoded token: ' + JSON.stringify(decoded))
+    const granter = decoded.username
+    grantPermission(granter, grantee, resource, readOnly, (err, success, message)=>{
+       success = true
+       let msg = message
+       if (err) {
+          success = false
+          msg =  err
+       }
+
+       const r ={   operation: 'grant',
+                    granter: granter,
+                    grantee: grantee,
+                    resource: resource,
+                    readOnly: readOnly,
+                    success: success,
+                    msg: msg
+                 }
+       res.jsonp(r)
+    })
   })
 }
+
 
 // route for revoke
 function revoke(req, res) {
   console.log('Revoke, query: ' + util.inspect(req.query))
   const token = req.query.granterToken
-  const granter = token
   const grantee  = req.query.grantee
   const resource = req.query.resource
   const readOnly = JSON.parse(req.query.readOnly)
 
-  revokePermission(granter, grantee, resource, readOnly, (err, success, msg)=>{
-     if (err) {
-        res.jsonp({success: false, msg: err})
-        return
-     }
-     res.jsonp({success: success, msg: msg})
-     return
+  jstoken.verifyToken (token, (decoded) => {
+    console.log('  decoded token: ' + JSON.stringify(decoded))
+    const granter = decoded.username
+    revokePermission(granter, grantee, resource, readOnly, (err, success, message)=>{
+       success = true
+       let msg = message
+       if (err) {
+          success = false
+          msg = err
+       }
+
+       const r ={   operation: 'revoke',
+                    granter: granter,
+                    grantee: grantee,
+                    resource: resource,
+                    readOnly: readOnly,
+                    success: success,
+                    msg: msg
+                 }
+       res.jsonp(r)
+    })
   })
 }
 
@@ -284,3 +314,6 @@ exports.init = init
 exports.grant = grant
 exports.revoke = revoke
 
+exports.signToken = jstoken.signToken
+exports.verifyToken = jstoken.verifyToken
+exports.test = jstoken.test
