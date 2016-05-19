@@ -250,14 +250,16 @@ function grant(req, res) {
   const readOnly = JSON.parse(req.query.readOnly)
 
   console.log('  token: ' + token)
-  jstoken.verifyToken (token, (decoded) => {
-    console.log('  decoded token: ' + JSON.stringify(decoded))
+  jstoken.verifyToken (token, (err, decoded) => {
+    if(err) {
+      res.jsonp({success:false, msg: err.message })
+      return
+   }
+   console.log('  decoded token: ' + JSON.stringify(decoded))
     const granter = decoded.username
     grantPermission(granter, grantee, resource, readOnly, (err, success, message)=>{
-       success = true
        let msg = message
        if (err) {
-          success = false
           msg =  err
        }
 
@@ -283,14 +285,16 @@ function revoke(req, res) {
   const resource = req.query.resource
   const readOnly = JSON.parse(req.query.readOnly)
 
-  jstoken.verifyToken (token, (decoded) => {
+  jstoken.verifyToken (token, (err, decoded) => {
+    if(err) {
+      res.jsonp({success:false, msg: err.message })
+      return
+    }
     console.log('  decoded token: ' + JSON.stringify(decoded))
     const granter = decoded.username
     revokePermission(granter, grantee, resource, readOnly, (err, success, message)=>{
-       success = true
        let msg = message
        if (err) {
-          success = false
           msg = err
        }
 
