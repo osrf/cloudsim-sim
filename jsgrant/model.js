@@ -29,3 +29,6 @@ client.del('jsgrant')
 console.log('done')
 
 
+
+function writeGrantRevokeToDb(grant,)
+

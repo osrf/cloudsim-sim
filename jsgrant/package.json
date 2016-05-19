@@ -9,6 +9,8 @@
   "author": "hugo@osrfoundation.org",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^2.0.0",
+    "node-rsa": "^0.3.2",
     "redis": "^2.6.0-2"
   }
 }
