@@ -8,6 +8,9 @@
   },
   "author": "hugo@osrfoundation.org",
   "license": "ISC",
+  "devDependencies": {
+    "mocha": "^2.5.1"
+  },
   "dependencies": {
     "dotenv": "^2.0.0",
     "node-rsa": "^0.3.2",
