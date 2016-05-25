@@ -2,19 +2,24 @@
 
 const util = require("util")
 const jstoken = require("./token")
+const model = require("./model")
 
-let resources = {gzserver : [] }
+let resources = {}
 let pubkey = ''
 let authServerIp = ''
 
+
+// Initialization
 // ip: the authentication ip to verify that users exist
 // key: the public authentication server key, to verify tokens
-// user: the 'admin' original user
-function init(ip, key, user ) {
-  console.log('init jsgrant: ', ip, key, user)
+// me: the original user, owner of the master resource (read/write)
+// resource: the first resource
+function init(me, resource, data, key, ip) {
+  console.log('init jsgrant: ', me, resource)
   authServerIp = ip
   pubkey = key
-  resources.gzserver = [{username: user, readOnly: false}]
+  resources.resource = {data: data, users : [{username: me, readOnly: false}]}
+
   loadPermissions( () =>{
     console.log('read all grants')
   })
@@ -23,6 +28,12 @@ function init(ip, key, user ) {
 function loadPermissions(cb) {
   //resources = {}
   cb(null, resources)
+}
+
+function createResource(me, resource, data, cb) {
+  if (resources.resource) {
+    cb('resource "' + resource + '" already exists')
+  }
 }
 
 

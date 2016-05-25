@@ -3,7 +3,16 @@
 const redis = require("redis")
 const client = redis.createClient()
 
-const listName = 'jsgrant'
+// the database list where data is saved
+let listName = 'jsgrant'
+
+if (process.env.NODE_ENV === "test") {
+  console.log('jsgrant/model.js NODE_ENV: ' + process.env.NODE_ENV)
+  // test mode...
+  // use the test list instead of the live one
+  listName = 'jsgrant_test'
+}
+
 
 // inter
 function push(operation, resource, data) {
@@ -22,10 +31,10 @@ function revoke(granter, grantee, resource, readOnly ) {
   push('revoke', resource, data)
 }
 
-function setResource(resource, data) {
+// assign data for a new resource
+function setResource(owner, resource, data) {
   push('set', resource, data)
 }
-
 
 function grant(granter, grantee, resource, readOnly ) {
   const data = {granter: granter,
@@ -33,7 +42,6 @@ function grant(granter, grantee, resource, readOnly ) {
                 readOnly: readOnly}
   push('grant', resource, data)
 }
-
 
 // this function expects a callback for each item with the following interface
 //  callback (err, items) where items is a list in which each item is an
