@@ -13,12 +13,8 @@ let authServerIp = ''
 // ip: the authentication ip to verify that users exist
 // key: the public authentication server key, to verify tokens
 function init(key, ip) {
-  console.log('init jsgrant: ', me, resource)
   authServerIp = ip
   pubkey = key
-  resources.resource = {data: data, permissions: [
-    {username: me, readOnly: false}
-  ]}
 
   loadPermissions( () =>{
     console.log('read all permissions')
@@ -76,40 +72,95 @@ function loadPermissions(cb) {
 }
 
 
-
+// documented here
 function setResource(me, resource, data, cb) {
   model.setResource(me, resource, data)
   if (!data) {
     delete resources[resource]
   }
   else {
-    resources.resource = {data: data, permissions: [
+    resources[resource] = {data: data, permissions: [
       {username: me, readOnly: false}
     ]}
   }
   cb(null)
 }
 
+function createResource (me, resource, data, cb) {
+  if(resources[resource]) {
+    cb('"' + resource + '" already exists')
+    return
+  }
+  setResource(me, resource, data, cb)
+}
+
+function deleteResource (me, resource, cb) {
+  if(resources[resource]) {
+    setResource(me, resource, null, cb)
+    return
+  }
+  cb('resource "' + resource +  '" does not exist')
+}
+
+function updateResource(me, resource, data, cb) {
+  if(!resources[resource]) {
+    cb('resource "' + resource +  '" does not exist')
+    return
+  }
+  isAuthorized(me, resource, false, (err, authorized) => {
+    if(err) {
+      cb(err)
+      return
+    }
+    if(!authorized) {
+      cb('not authorized')
+      return
+    }
+    else {
+      resources[resource].data = data
+      cb(null)
+    }
+  })
+}
+
+function getResource(me, resource, cb) {
+  if(!resources[resource]) {
+    cb('"' + resource + '" does not exist')
+    return
+  }
+  isAuthorized(me, resource, true, (err, authorized) => {
+    if(authorized) {
+      const res = JSON.parse(JSON.stringify(resources[resource]))
+      cb(null, res)
+      return
+    }
+    else {
+      cb("not authorized")
+      return
+    }
+  })
+
+}
 
 function grantPermission(me, user, resource, readOnly, cb) {
   model.grant(me, user, resource, readOnly )
   // Am I authorized to grant this permission
   isAuthorized(me, resource, readOnly, (err, authorized) =>  {
-
     // Error getting my authorization
     if (err) {
+      console.log('grantPermission: Error getting my authorization')
       cb(err)
       return
     }
-
     // I'm not authorized to give this permission
     if (!authorized) {
-      cb(null, false, '"' + me + '" has insufficient priviledges to manage "'
-                     + user + '" access for "' + resource + '"')
+      const msg = '"' + me + '" has insufficient priviledges to manage "'
+                     + user + '" access for "' + resource + '"'
+      // console.log('grantPermission error: ' + msg')
+      cb(null, false, msg)
       return
     }
-
-    const resourceUsers = resources[resource]
+    const resourceUsers = resources[resource].permissions
     if (!resourceUsers)
     {
       cb(null, false, 'Resource "' + resource + '" does not exist')
@@ -161,13 +212,10 @@ function grantPermission(me, user, resource, readOnly, cb) {
       // Grant brand new permission
       let x = { username : user,
                 readOnly : readOnly,
-                resource : resource,
                 authority : me
               }
-      resources[resource].push(x)
-
+      resources[resource].permissions.push(x)
       var readOnlyTxt = readOnly? "read only" : "write"
-
       cb(null, true, '"' + user + '" now has "' + readOnlyTxt + '" access for "' + resource +'"')
       return
     }
@@ -195,7 +243,7 @@ function revokePermission (me, user, resource, readOnly, cb) {
       return
     }
 
-    const resourceUsers = resources[resource]
+    const resourceUsers = resources[resource].permissions
     if (!resourceUsers)
     {
       cb(null, false, 'Resource "' + resource + '" does not exist')
@@ -250,13 +298,11 @@ function revokePermission (me, user, resource, readOnly, cb) {
     }
 
   })
-
 }
 
 // Check if a user already has a given permission for a resource
 function isAuthorized(user, resource, readOnly, cb) {
   getResourceUsers(resource, function (err, users) {
-
     // Error getting users for this resource
     if (err) {
       cb(err)
@@ -270,7 +316,6 @@ function isAuthorized(user, resource, readOnly, cb) {
 
     // User not authorized for this resource yet
     if (!current) {
-      console.log('User not authorized yet: ', user, resource, readOnly)
       cb(null, false)
       return
     }
@@ -278,13 +323,11 @@ function isAuthorized(user, resource, readOnly, cb) {
     // Currently read only, so not write authorized
     if(current.readonly && readOnly == false) {
       // not authorized
-      console.log('read only not authorized: ', user, resource, readOnly)
       cb(null, false)
       return
     }
     // the user has access
     cb(null, true)
-
   })
 }
 
@@ -293,40 +336,42 @@ function isAuthorized(user, resource, readOnly, cb) {
 // cb: callback with params:
 // - error
 // - list of users
-function getResourceUsers (resource, cb) {
-  let users = resources[resource]
+function getResourceUsers (resourceName, cb) {
+  let resource = resources[resourceName]
 
-  // resource does not exist, therefore, no users
-  if (!users)
-    users = []
-
+  let users = []
+  if(resource) {
+    users = resource.permissions
+    if (!users) {
+      cb('resource has no permissions')
+      return
+    }
+  }
   cb(null, users)
 }
 
 
 // route for grant
 function grant(req, res) {
-  console.log('Grant, query: ' + util.inspect(req.query))
   const token = req.query.granterToken
   const grantee  = req.query.grantee
   const resource = req.query.resource
   const readOnly = JSON.parse(req.query.readOnly)
 
-  console.log('  token: ' + token)
   jstoken.verifyToken (token, (err, decoded) => {
     if(err) {
-      res.jsonp({success:false, msg: err.message })
+      const response = {success:false, msg: err.message }
+      res.jsonp(response)
       return
-   }
-   console.log('  decoded token: ' + JSON.stringify(decoded))
+    }
     const granter = decoded.username
     grantPermission(granter, grantee, resource, readOnly, (err, success, message)=>{
-       let msg = message
-       if (err) {
-          msg =  err
-       }
-
-       const r ={   operation: 'grant',
+      let msg = message
+      if (err) {
+        success = false
+        msg =  err
+      }
+      const r ={   operation: 'grant',
                     granter: granter,
                     grantee: grantee,
                     resource: resource,
@@ -334,7 +379,7 @@ function grant(req, res) {
                     success: success,
                     msg: msg
                  }
-       res.jsonp(r)
+      res.jsonp(r)
     })
   })
 }
@@ -342,7 +387,6 @@ function grant(req, res) {
 
 // route for revoke
 function revoke(req, res) {
-  console.log('Revoke, query: ' + util.inspect(req.query))
   const token = req.query.granterToken
   const grantee  = req.query.grantee
   const resource = req.query.resource
@@ -353,14 +397,12 @@ function revoke(req, res) {
       res.jsonp({success:false, msg: err.message })
       return
     }
-    console.log('  decoded token: ' + JSON.stringify(decoded))
     const granter = decoded.username
     revokePermission(granter, grantee, resource, readOnly, (err, success, message)=>{
        let msg = message
        if (err) {
           msg = err
        }
-
        const r ={   operation: 'revoke',
                     granter: granter,
                     grantee: grantee,
@@ -375,13 +417,17 @@ function revoke(req, res) {
 }
 
 
-
-
 exports.init = init
 exports.grant = grant
 exports.revoke = revoke
+exports.isAuthorized = isAuthorized
 
-exports.signToken = jstoken.signToken
-exports.verifyToken = jstoken.verifyToken
-exports.test = jstoken.test
+// crud
+exports.createResource = createResource
+exports.readResource = getResource
+exports.updateResource = updateResource
+exports.deleteResource = deleteResource
+
+//exports.signToken = jstoken.signToken
+//exports.verifyToken = jstoken.verifyToken
 

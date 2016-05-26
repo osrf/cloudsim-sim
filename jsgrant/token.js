@@ -5,12 +5,19 @@ const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv')
 const NodeRSA = require('node-rsa')
 
-// read the environment variables
-dotenv.config()
-const publicKey = process.env.CLOUDSIM_AUTH_PUB_KEY
-const privateKey = process.env.CLOUDSIM_AUTH_PRIV_KEY
-const authUrl = process.env.CLOUDSIM_AUTH_URL
 
+let  publicKey
+let  privateKey
+let  authUrl
+
+// this function sets the keys. It is called automatically with
+// the values found in the .env file. Only the test needs to
+// call it directly.
+exports.initKeys = function(publicK, privateK, authUrl) {
+  publicKey = publicK
+  privateKey = privateK
+  authUrl = authUrl
+}
 
 // generates keys that can be used with jsonwebtoken
 exports.generateKeys = function() {
@@ -55,6 +62,12 @@ exports.test = function() {
     exports.verifyToken(token, console.log)
   })
 }
+
+// read the environment variables. They contain the keys(s)
+dotenv.config()
+exports.initKeys(process.env.CLOUDSIM_AUTH_PUB_KEY,
+                 process.env.CLOUDSIM_AUTH_PRIV_KEY,
+                 process.env.CLOUDSIM_AUTH_URL)
 
 
 

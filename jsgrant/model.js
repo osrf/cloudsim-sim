@@ -46,7 +46,7 @@ function setResource(owner, resource, resourceData) {
 }
 
 function grant(granter, grantee, resource, readOnly ) {
-  const data = {resource: resource
+  const data = {resource: resource,
                 granter: granter,
                 grantee: grantee,
                 readOnly: readOnly}
@@ -78,7 +78,6 @@ function clearDb() {
 exports.grant = grant
 exports.revoke = revoke
 exports.setResource = setResource
-
 exports.readDb = readDb
 exports.clearDb = clearDb
 

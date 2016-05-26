@@ -2,14 +2,12 @@
 
 const should = require('should')
 
-console.log('NODE_ENV: ' + process.env.NODE_ENV)
 // this is the db interface
 const model = require('../model')
 
-describe('<Unit Test grant model>', function() {
+describe('<Unit Test grant database (model.js)>', function() {
 
   before(function(done) {
-      console.log('erasing data before')
       model.clearDb()
       done()
   })
@@ -29,7 +27,7 @@ describe('<Unit Test grant model>', function() {
     })
 
     it('should have a toaster', (done) => {
-      model.setResource('me', 'toaster', {capacity:2})
+      model.setResource('me', 'toaster', {slots:2})
       model.readDb((err, items)=>{
         if(err)
           should.fail(err)
@@ -38,8 +36,8 @@ describe('<Unit Test grant model>', function() {
           should.fail('no toaster added: (' + items.length + ' items)')
         }
         else {
-          if(items[0].data.capacity != 2)
-            should.fail('not our toaster')
+          if(items[0].data.data.slots != 2)
+            should.fail('not our toaster: ' + JSON.stringify(item[0]))
           done()
         }
       })
@@ -67,7 +65,7 @@ describe('<Unit Test grant model>', function() {
     })
 
     it('should be possible to remove the toaster', (done) => {
-      model.setResource('me', 'toaster', null)
+      model.setResource('me', 'toaster')
       model.readDb((err, items)=>{
         if(err)
           should.fail(err)
@@ -76,5 +74,4 @@ describe('<Unit Test grant model>', function() {
       })
     })
   })
-
 })
