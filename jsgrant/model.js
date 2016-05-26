@@ -14,33 +14,43 @@ if (process.env.NODE_ENV === "test") {
 }
 
 
-// inter
-function push(operation, resource, data) {
-  const json = JSON.stringify({
+// internal function to add an item to the list
+function push(operation, data) {
+
+  let info = {
     operation: operation,
-    resource: resource,
-    data: data
-  })
+    data: data,
+  }
+  const json = JSON.stringify(info)
   client.rpush( listName, json)
 }
 
+// revokes a permission
 function revoke(granter, grantee, resource, readOnly ) {
-  const data = {granter: granter,
+  const data = {resource: resource,
+                granter: granter,
                 grantee: grantee,
                 readOnly: readOnly}
-  push('revoke', resource, data)
+  push('revoke', data)
 }
 
-// assign data for a new resource
-function setResource(owner, resource, data) {
-  push('set', resource, data)
+// create, update or delete a resource
+// creates the resource if it does not exists
+// deletss the resource if data is null or undefined
+// updates the resource with new data if it exists
+function setResource(owner, resource, resourceData) {
+  const data = { resource: resource,
+                 data: resourceData,
+                 owner: owner}
+  push('set', data)
 }
 
 function grant(granter, grantee, resource, readOnly ) {
-  const data = {granter: granter,
+  const data = {resource: resource
+                granter: granter,
                 grantee: grantee,
                 readOnly: readOnly}
-  push('grant', resource, data)
+  push('grant', data)
 }
 
 // this function expects a callback for each item with the following interface
@@ -52,7 +62,7 @@ function readDb(cb) {
   client.lrange(listName, 0, -1, function (error, items) {
     if (error)
       cb(error)
-    // transform items from strings to data
+    // transform items (in place) from strings to data
     for (var i =0; i < items.length; i++) {
       items [i] = JSON.parse(items[i])
     }
@@ -65,11 +75,12 @@ function clearDb() {
   client.del(listName)
 }
 
-exports.clearDb = clearDb
 exports.grant = grant
 exports.revoke = revoke
 exports.setResource = setResource
+
 exports.readDb = readDb
+exports.clearDb = clearDb
 
 
 

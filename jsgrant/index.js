@@ -12,34 +12,87 @@ let authServerIp = ''
 // Initialization
 // ip: the authentication ip to verify that users exist
 // key: the public authentication server key, to verify tokens
-// me: the original user, owner of the master resource (read/write)
-// resource: the first resource
-function init(me, resource, data, key, ip) {
+function init(key, ip) {
   console.log('init jsgrant: ', me, resource)
   authServerIp = ip
   pubkey = key
-  resources.resource = {data: data, users : [{username: me, readOnly: false}]}
+  resources.resource = {data: data, permissions: [
+    {username: me, readOnly: false}
+  ]}
 
   loadPermissions( () =>{
-    console.log('read all grants')
+    console.log('read all permissions')
   })
 }
 
 function loadPermissions(cb) {
-  //resources = {}
-  cb(null, resources)
+
+  const callback = console.log
+
+  model.readDb((err, items)=>{
+    if(err) {
+      cb(err)
+      return
+    }
+    // remove the data in the db
+    model.clearDb()
+    // put the data back
+    for (let i=0; i < items.length; i++) {
+      const item = items[i]
+      console.log(JSON.stringify(item))
+      switch (item.operation) {
+        case 'set': {
+          console.log('set')
+          setResource(item.data.owner,
+                      item.data.data,
+                      console.log)
+        }
+        break
+        case 'grant': {
+          console.log('grant ')
+          grantPermission(item.data.granter,
+                          item.data.grantee,
+                          item.data.resource,
+                          item.data.readOnly,
+                          callback)
+        }
+        break
+        case 'revoke': {
+          console.log('revoke')
+          revokePermission(item.data.granter,
+                           item.data.grantee,
+                           item.data.resource,
+                           item.data.readOnly,
+                           callback)
+        }
+        default: {
+          cb('Unknown operation "' + item.operation +'"')
+          return
+        }
+      }
+    }
+    cb(null)
+  })
 }
 
-function createResource(me, resource, data, cb) {
-  if (resources.resource) {
-    cb('resource "' + resource + '" already exists')
+
+
+function setResource(me, resource, data, cb) {
+  model.setResource(me, resource, data)
+  if (!data) {
+    delete resources[resource]
   }
+  else {
+    resources.resource = {data: data, permissions: [
+      {username: me, readOnly: false}
+    ]}
+  }
+  cb(null)
 }
 
 
 function grantPermission(me, user, resource, readOnly, cb) {
-  console.log('TODO: WRITE TO DB: grant', me, ' => ', user, resource, readOnly)
-
+  model.grant(me, user, resource, readOnly )
   // Am I authorized to grant this permission
   isAuthorized(me, resource, readOnly, (err, authorized) =>  {
 
@@ -124,8 +177,7 @@ function grantPermission(me, user, resource, readOnly, cb) {
 }
 
 function revokePermission (me, user, resource, readOnly, cb) {
-
-  console.log('TODO: WRITE TO DB: revoke', me, ' => ', user, resource, readOnly)
+  model.revoke(me, user, resource, readOnly)
 
   // Am I authorized to revoke this permission
   isAuthorized(me, resource, readOnly, (err, authorized) =>  {

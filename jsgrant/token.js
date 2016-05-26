@@ -3,12 +3,35 @@
 //const pub = require('./.publickey.js').publicKey
 const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv')
+const NodeRSA = require('node-rsa')
 
 // read the environment variables
 dotenv.config()
 const publicKey = process.env.CLOUDSIM_AUTH_PUB_KEY
 const privateKey = process.env.CLOUDSIM_AUTH_PRIV_KEY
 const authUrl = process.env.CLOUDSIM_AUTH_URL
+
+
+// generates keys that can be used with jsonwebtoken
+exports.generateKeys = function() {
+  var key = new NodeRSA({b: 512, e: 5});
+
+    key.setOptions({
+        encryptionScheme: {
+        scheme: 'pkcs1',
+        label: 'Optimization-Service'
+    },
+    signingScheme: {
+        saltLength: 25
+    }
+  });
+
+  return {
+        "private" : key.exportKey('pkcs1-private-pem'),
+        "public"  : key.exportKey('pkcs8-public-pem')
+  };
+}
+
 
 // sign a token. This is done by the server
 // the private key is necessary
