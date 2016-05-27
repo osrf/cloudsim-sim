@@ -74,18 +74,26 @@ describe('<Unit Test grant>', function() {
       })
     })
 
-    it('the toaster should have 4 slots', (done) => {
+    it('the toaster should now have 4 slots', (done) => {
       grantjs.readResource('joe', 'toaster', (e, resource ) =>{
         if(e)
           should.fail(e)
         else {
-          console.log(' GET toaster: ' + JSON.stringify(resource) )
           resource.data.slots.should.equal(4, 'not updated')
           resource.permissions.length.should.equal(2, 'not shared')
           done()
         }
       })
     })
+
+    it('joe should have access to the toaster', (done) => {
+      grantjs.isAuthorized('joe', 'toaster', true, (e, authorized) => {
+        should.not.exist(e)
+        authorized.should.equal(true)
+        done()
+      })
+    })
+
 
     it('should be possible to revoke the toaster for joe', (done) => {
       const req = {
@@ -105,6 +113,14 @@ describe('<Unit Test grant>', function() {
         }
       }
       grantjs.revoke(req, response)
+    })
+
+    it('joe should not have access to the toaster', (done) => {
+      grantjs.isAuthorized('joe', 'toaster', true, (e, authorized) => {
+        should.not.exist(e)
+        authorized.should.equal(false)
+        done()
+      })
     })
 
     it('should be possible to remove the toaster', (done) => {
