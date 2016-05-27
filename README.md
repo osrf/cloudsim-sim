@@ -9,19 +9,7 @@ This is the sim/robot control server for Cloudsim
 * A json web token delivery
 
 ### How do I get set up? ###
-
-jsgrant is a  local npm module and it needs to be linked
-
-`cd jsgrant
-npm link`
-
-The last command may require sudo on some machines
-
-`cd ..
-npm link jsgrant
 `
-
-
 * npm install
 * gulp
 * Dependencies: nodejs 4 and above, gulp (sudo npm install gulp -g)

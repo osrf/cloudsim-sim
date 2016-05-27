@@ -19,10 +19,10 @@
   "dependencies": {
     "ansi-to-html": "^0.4.1",
     "body-parser": "^1.15.1",
+    "cloudsim-grant": "0.0.1",
     "cors": "^2.7.1",
     "dotenv": "^2.0.0",
     "express": "^4.13.4",
-    "jsgrant": "^1.0.0",
     "jsonwebtoken": "^5.7.0",
     "morgan": "^1.7.0",
     "nodemon": "^1.9.1",

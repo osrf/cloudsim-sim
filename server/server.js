@@ -41,16 +41,17 @@ const spawn = require('child_process').spawn
 const ansi_to_html = require('ansi-to-html')
 const ansi2html = new ansi_to_html()
 
-const jsgrant = require('jsgrant')
+const csgrant = require('cloudsim-grant')
 
 console.log('SERVER.JS')
 dotenv.load()
 const port = process.env.PORT || 4000
 
 // the values are set in the local .env file
-jsgrant.init(process.env.AUTHENTICATION_SERVER_IP,
+csgrant.init(process.env.AUTHENTICATION_SERVER_IP,
              process.env.AUTHENTICATION_PUB_KEY,
              process.env.ADMIN_USER)
+
 
 var env = {
   AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
@@ -221,8 +222,8 @@ app.get('/', function (req, res) {
   res.end(s)
 })
 
-app.get('/grant', jsgrant.grant)
-app.get('/revoke', jsgrant.revoke)
+app.get('/grant', csgrant.grant)
+app.get('/revoke', csgrant.revoke)
 
 httpServer.listen(port, function(){
 
