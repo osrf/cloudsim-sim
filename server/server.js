@@ -48,10 +48,15 @@ dotenv.load()
 const port = process.env.PORT || 4000
 
 // the values are set in the local .env file
-csgrant.init(process.env.AUTHENTICATION_SERVER_IP,
-             process.env.AUTHENTICATION_PUB_KEY,
-             process.env.ADMIN_USER)
+csgrant.init(process.env.AUTHENTICATION_PUB_KEY)
 
+if(!process.env.ADMIN_USER)
+  throw("No admin user in .env")
+console.log('admin user: ' + process.env.ADMIN_USER)
+csgrant.createResource(process.env.ADMIN_USER ,
+                       'simulation_list',
+                       {admin: process.env.ADMIN_USER},
+                       console.log)
 
 var env = {
   AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
