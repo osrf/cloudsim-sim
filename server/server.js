@@ -1,8 +1,8 @@
 'use strict'
 
-let express = require('express')
-let app=express()
-let fs = require('fs')
+const express = require('express')
+const app = express()
+const fs = require('fs')
 
 let httpServer = null
 let io = null
@@ -11,12 +11,15 @@ const bodyParser = require("body-parser")
 const cors = require('cors')
 const morgan = require('morgan')
 const util = require('util')
+const simulations = require('./simulations')
 
 const useHttps = true
 if(useHttps) {
   const privateKey  = fs.readFileSync(__dirname + '/key.pem', 'utf8')
   const certificate = fs.readFileSync(__dirname + '/key-cert.pem', 'utf8')
-  httpServer = require('https').Server({key: privateKey, cert: certificate}, app)
+  httpServer = require('https').Server({
+    key: privateKey, cert: certificate
+  }, app)
 }
 else {
   httpServer = require('http').Server(app)
@@ -30,27 +33,30 @@ app.use(bodyParser.json())
 // prints all requests to the terminal
 app.use(morgan('combined'))
 
-var socketioJwt = require('socketio-jwt');
-var dotenv = require('dotenv')
-
-var xtend = require('xtend');
-var jwt = require('jsonwebtoken');
-var UnauthorizedError = require('./UnauthorizedError');
+const socketioJwt = require('socketio-jwt');
+const dotenv = require('dotenv')
+const xtend = require('xtend');
+const jwt = require('jsonwebtoken');
+const UnauthorizedError = require('./UnauthorizedError');
 
 const spawn = require('child_process').spawn
 const ansi_to_html = require('ansi-to-html')
 const ansi2html = new ansi_to_html()
 
-const jsgrant = require('jsgrant')
+const csgrant = require('cloudsim-grant')
 
-console.log('SERVER.JS')
 dotenv.load()
 const port = process.env.PORT || 4000
 
 // the values are set in the local .env file
-jsgrant.init(process.env.AUTHENTICATION_SERVER_IP,
-             process.env.AUTHENTICATION_PUB_KEY,
-             process.env.ADMIN_USER)
+csgrant.init(process.env.AUTHENTICATION_PUB_KEY,
+             process.env.ADMIN_USER,
+             'simulation_list')
+
+if(!process.env.ADMIN_USER)
+  throw("No admin user in .env")
+
+console.log('admin user: ' + process.env.ADMIN_USER)
 
 var env = {
   AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
@@ -212,20 +218,23 @@ io
 
 // app.use(express.static(__dirname + '../public'));
 
-
 app.get('/', function (req, res) {
   // res.sendFile(__dirname + '/../public/index.html')
   let s = `
     <h1>Gazebo controller is running</h1>
-`
+  `
   res.end(s)
 })
 
-app.get('/grant', jsgrant.grant)
-app.get('/revoke', jsgrant.revoke)
+app.get('/grant', csgrant.grant)
+app.get('/revoke', csgrant.revoke)
+
+
+
+simulations.setRoutes(app)
+
 
 httpServer.listen(port, function(){
-
   console.log('ssl: ' + useHttps)
 	console.log('listening on *:' + port);
 });
