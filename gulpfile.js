@@ -7,7 +7,7 @@ var nodemon = require('gulp-nodemon');
 gulp.task('default', ['serve'], function () {
 });
 
-gulp.task('serve', ['browser-sync'], function () {
+gulp.task('serve', ['nodemon'], function () {
 });
 
 gulp.task('browser-sync', ['nodemon'], function() {
