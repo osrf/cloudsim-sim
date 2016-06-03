@@ -2,8 +2,8 @@
 
 const express = require('express')
 const router = express.Router()
-
 const csgrant = require('cloudsim-grant')
+
 
 function setRoutes(app) {
 
@@ -15,7 +15,7 @@ function setRoutes(app) {
     const userToken = req.query.token
     console.log('   req.query.token: ' + userToken)
     csgrant.readAllResourcesForUser(userToken, (err, items) => {
-      const r = {success: false}
+      const r = {success: false, operation: 'getSimulations'}
       if(err) {
         r.error = err
       }
@@ -29,43 +29,57 @@ function setRoutes(app) {
 
   // create a new simulation
   app.post('/simulations', function(req, res) {
-    console.log('create sim: ' + JSON.stringify(req.body))
+
+    console.log('create sim:')
+    console.log('  body:' +  JSON.stringify(req.body))
+    console.log('  query:' + JSON.stringify(req.query))
+
     // step 1, user verify
-    const token = req.body.token
+    const token = req.query.token
+
+    // The data for the new
+    const resourceData = {cmd: req.query.cmd}
+
+    const error = function(msg) {
+      return {operation: 'createSimulation',
+              success: false,
+              error: msg}
+    }
+    const op = 'createSimulation'
     csgrant.verifyToken(token, (err, decoded) => {
       if(err) {
-        return res.jsonp( {success: false, error: err})
+        return res.jsonp( error('invalid token'))
       }
       const user = decoded.username
       // step 2.  is user allowed?
-      csgrant.isAuthorized(user, 'sim_list', false, (err, authorized) => {
+      csgrant.isAuthorized(user, 'simulation_list', false,
+                          (err, authorized) => {
         if(err) {
-          return res.jsonp({success: false, error: err})
+          return res.jsonp(error(err))
         }
         if(!authorized){
           const msg = 'insufficient permission for user "' + user + '"'
-          return res.jsonp({success: false, error: msg})
+          return res.jsonp(error(msg))
         }
         // step 3. get unique id
         const r = {success: false}
-        csgrant.getNextResourceId('sim', (err, id) => {
-          const r = {success: false}
+        csgrant.getNextResourceId('sim', (err, resourceName) => {
           if(err) {
-            r.error = err
-            res.jsonp(r)
+            res.jsonp(error(err))
             return
           }
           // step 4. add simulation
-          csgrant.createResource(user, resource, data, (err, data) => {
+          csgrant.createResource(user, resourceName, resourceData,
+                                (err, data) => {
             if(err) {
-              r.error = err
-              res.jsonp(r)
+              res.jsonp(error(err))
               return
             }
-            r.success = true
-            r.result = data
-            r.id = id
-            // success
+            // step 5. success!
+            const r = { success: true,
+                        operation: op,
+                        result: data,
+                        id: resourceName}
             res.jsonp(r)
           })
         })
