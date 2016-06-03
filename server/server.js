@@ -164,8 +164,8 @@ io
   .on('connection', autho )
   .on('authenticated', function(socket){
     console.log('connected & authenticated: ' + JSON.stringify(socket.decoded_token));
-    let gzlauncher = {proc:null, output:'', state: 'ready', cmdline:''}
-    socket.on('gz-launcher', function(msg) {
+    let gzcmd = {proc:null, output:'', state: 'ready', cmdline:''}
+    socket.on('gz-cmd', function(msg) {
       console.log('received: ' + JSON.stringify(msg))
       if (msg.cmd === 'run'){
         const items = msg.cmdline.split(' ')
@@ -173,9 +173,9 @@ io
         const args = items.slice(1)
         console.log('spwaning: ' + proc + ' ' + args)
 
-        gzlauncher.proc = spawn(proc, args, {stdio:'pipe'})
-        gzlauncher.state = 'running'
-        gzlauncher.cmdline = msg.cmdline
+        gzcmd.proc = spawn(proc, args, {stdio:'pipe'})
+        gzcmd.state = 'running'
+        gzcmd.cmdline = msg.cmdline
 
         var onNewData = function (buf) {
           const txt = buf.toString()
@@ -184,34 +184,34 @@ io
           // convert the console color codes to html
           //   ex: "[0m[1;31m:[0m[1;31m96[0m[1;31m] [0m[1;31m"
           const ansi = ansi2html.toHtml(html)
-          gzlauncher.output += ansi
-          const msg = {output: gzlauncher.output,
-            state:gzlauncher.state,
-            pid:gzlauncher.proc.pid }
+          gzcmd.output += ansi
+          const msg = {output: gzcmd.output,
+            state:gzcmd.state,
+            pid:gzcmd.proc.pid }
           console.log(msg)
           return msg
         }
 
-        gzlauncher.proc.stdout.on('data', (data)=> {
-          io.emit('gz-launcher', onNewData(data))
+        gzcmd.proc.stdout.on('data', (data)=> {
+          io.emit('gz-cmd', onNewData(data))
         })
-        gzlauncher.proc.stderr.on('data', (data)=> {
-          io.emit('gz-launcher', onNewData(data))
+        gzcmd.proc.stderr.on('data', (data)=> {
+          io.emit('gz-cmd', onNewData(data))
         })
-        gzlauncher.proc.on('close', (code)=>{
-	        console.log('gzlauncher.proc.on close')
-          gzlauncher.state = 'closed'
+        gzcmd.proc.on('close', (code)=>{
+	        console.log('gzcmd.proc.on close')
+          gzcmd.state = 'closed'
           // tell client
-          io.emit('gz-launcher', {output: gzlauncher.output,
-            state:gzlauncher.state,
-            pid:gzlauncher.proc.pid })
-          gzlauncher = null
+          io.emit('gz-cmd', {output: gzcmd.output,
+            state:gzcmd.state,
+            pid:gzcmd.proc.pid })
+          gzcmd = null
         })
-        // io.emit('gz-launcher', msg);
+        // io.emit('gz-cmd', msg);
       }
       if (msg.cmd === 'kill'){
         console.log('kill message received')
-        gzlauncher.proc.kill()
+        gzcmd.proc.kill()
       }
 		});
 	});
