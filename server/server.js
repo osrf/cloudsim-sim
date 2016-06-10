@@ -46,11 +46,13 @@ const ansi2html = new ansi_to_html()
 const csgrant = require('cloudsim-grant')
 
 dotenv.load()
-const port = process.env.PORT || 4000
+console.log('\nenv:\n' + JSON.stringify(process.env, null, 2), '\n')
+
+// the port of the server
+const port = process.env.CLOUDSIM_PORT || 4000
 
 // the values are set in the local .env file
-csgrant.init(process.env.AUTHENTICATION_PUB_KEY,
-             process.env.ADMIN_USER,
+csgrant.init(process.env.ADMIN_USER,
              'simulation_list')
 
 if(!process.env.ADMIN_USER)
