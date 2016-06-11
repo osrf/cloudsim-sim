@@ -13,7 +13,7 @@ function setRoutes(app) {
   app.get('/simulations',function(req, res) {
     console.log('GET all simulations')
     const userToken = req.query.token
-    console.log('   req.query.token: ' + userToken)
+    console.log('  req.query.token: ' + userToken)
     csgrant.readAllResourcesForUser(userToken, (err, items) => {
       const r = {success: false, operation: 'getSimulations'}
       if(err) {
