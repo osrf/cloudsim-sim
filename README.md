@@ -9,7 +9,8 @@ This is the sim/robot control server for Cloudsim
 * A json web token delivery
 
 ### How do I get set up? ###
-`
+
+* install redis (sudo apt-get install redis-server)
 * npm install
 * gulp
 * Dependencies: nodejs 4 and above, gulp (sudo npm install gulp -g)
