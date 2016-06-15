@@ -20,8 +20,7 @@ This is the sim/robot control server for Cloudsim
 
 ### Redirect port 443
 
-    sudo iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4000
-
+Use the iptables.bash script to redirect https traffic to the node instance
 
 ### Contribution guidelines ###
 
