@@ -12,6 +12,7 @@ const cors = require('cors')
 const morgan = require('morgan')
 const util = require('util')
 const simulations = require('./simulations')
+const downloads = require('./downloads')
 
 const useHttps = true
 if(useHttps) {
@@ -46,7 +47,6 @@ const ansi2html = new ansi_to_html()
 const csgrant = require('cloudsim-grant')
 
 dotenv.load()
-console.log('\nenv:\n' + JSON.stringify(process.env, null, 2), '\n')
 
 // the port of the server
 const port = process.env.CLOUDSIM_PORT || 4000
@@ -55,15 +55,11 @@ const port = process.env.CLOUDSIM_PORT || 4000
 csgrant.init(process.env.ADMIN_USER,
              'simulation_list')
 
-if(!process.env.ADMIN_USER)
-  throw("No admin user in .env")
-
-console.log('admin user: ' + process.env.ADMIN_USER)
-
-var env = {
-  AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
-  AUTH0_DOMAIN: process.env.AUTH0_DOMAIN,
+if(!process.env.ADMIN_USER) {
+  console.log('\nenv:\n' + JSON.stringify(process.env, null, 2), '\n')
+  throw("No admin user in .env (or environment): please define ADMIN_USER")
 }
+console.log('admin user: ' + process.env.ADMIN_USER)
 
 function autho(socket) {
     console.log('\n\nautho for new socket')
@@ -223,18 +219,18 @@ io
 app.get('/', function (req, res) {
   // res.sendFile(__dirname + '/../public/index.html')
   let s = `
-    <h1>Gazebo controller is running</h1>
+    <h1>Cloudsim-sim server</h1>
+    Gazebo controller is running
   `
   res.end(s)
 })
 
+// setup the routes
 app.get('/grant', csgrant.grant)
 app.get('/revoke', csgrant.revoke)
 
-
-
 simulations.setRoutes(app)
-
+downloads.setRoutes(app)
 
 httpServer.listen(port, function(){
   console.log('ssl: ' + useHttps)
