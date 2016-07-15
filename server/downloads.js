@@ -5,11 +5,10 @@ const express = require('express')
 const router = express.Router()
 const csgrant = require('cloudsim-grant')
 
-//
 // Sets the routes for downloading the keys
 // app: the express app
 // keysFilePath: the full path to the keys.zip file
-function setRoutes(app, keysFilePath) {
+function setRoutes(app) {
   console.log('DOWNLOADS setRoutes')
   // user must have read only access to the
   // 'downloads' resource
@@ -18,19 +17,19 @@ function setRoutes(app, keysFilePath) {
   app.get('/keys.zip', function(req, res) {
     console.log('\ndownload: keys.zip ')
     console.log(keysFilePath)
-    const token = req.query.token // req.body.token
+    const token = req.query.token
     csgrant.verifyToken(token, (err, decoded) => {
       if(err) {
-        console.log(' verify token fail ' + err)
-        return res.jsonp( {success: false,
-                           error: "authorization error: no token provided"
-                          })
+        console.log(' verify token fail [' + err + ']')
+        return res.jsonp({success: false,
+                          error: "authorization error: no token provided"
+                         })
       }
       const user = decoded.username
       // step 2.  is user allowed (read only)?
       csgrant.isAuthorized(user, resourceName, true, (err, authorized) => {
         if(err) {
-          console.log (' authorization err: ' + err)
+          console.log (' authorization error: [' + err + ']')
           return res.jsonp({success: false, error: err})
         }
         if(!authorized){
@@ -46,7 +45,7 @@ function setRoutes(app, keysFilePath) {
             return res.jsonp({success: false, error: err})
           }
           console.log(' sucess: '+ JSON.stringify(data))
-          downloadFile(keysFilePath, res)
+          downloadFile(data.path, res)
           // success
           // return res.jsonp({success: true, result: data})
         })
