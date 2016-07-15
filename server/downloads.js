@@ -4,6 +4,7 @@ const fs = require('fs')
 const express = require('express')
 const router = express.Router()
 const csgrant = require('cloudsim-grant')
+const path = require('path')
 
 // Sets the routes for downloading the keys
 // app: the express app
@@ -16,7 +17,6 @@ function setRoutes(app) {
   // read a simulation
   app.get('/keys.zip', function(req, res) {
     console.log('\ndownload: keys.zip ')
-    console.log(keysFilePath)
     const token = req.query.token
     csgrant.verifyToken(token, (err, decoded) => {
       if(err) {
@@ -39,13 +39,13 @@ function setRoutes(app) {
         }
         // step 3. serve file
         const r = {success: false}
-        csgrant.readResource(user, resourceName, (err, data) => {
+        csgrant.readResource(user, resourceName, (err, resource) => {
           if(err) {
             console.log(' get resource error: ' + err)
             return res.jsonp({success: false, error: err})
           }
-          console.log(' sucess: '+ JSON.stringify(data))
-          downloadFile(data.path, res)
+          console.log(' sucess: '+ JSON.stringify(resource))
+          downloadFile(resource.data.path, res)
           // success
           // return res.jsonp({success: true, result: data})
         })
@@ -60,32 +60,33 @@ function setRoutes(app) {
 // a single file. Used for keys.zip
 // @param path the path of the local file to download
 //
-function downloadFile(path, res) {
-    fs.stat(path, function(err, stat) {
-        if(err) {
-            if('ENOENT' === err.code) {
-                res.statusCode = 404;
-                console.log('file "' + path + '" not found')
-                return res.end('Not Found');
-            }
-        } else {
-            res.setHeader('Content-type', 'application/zip')
-            const f = path.basename(path)
-            res.setHeader('Content-disposition', 'attachment; filename=' + f)
-            res.setHeader('Content-Length', stat.size)
-            var stream = fs.createReadStream(path);
-            stream.pipe(res);
-            stream.on('error', function() {
-                res.statusCode = 500;
-                console.log('Error downloading file "' + path + '"')
-                res.end('Internal Server Error');
-            });
-            stream.on('end', function() {
-                console.log('"' + path + '" downloaded')
-                res.end();
-            });
+function downloadFile(filePath, res) {
+
+  fs.stat(filePath, function(err, stat) {
+    if(err) {
+        if('ENOENT' === err.code) {
+            res.statusCode = 404;
+            console.log('file "' + filePath + '" not found')
+            return res.end('Not Found');
         }
-    });
+    } else {
+      res.setHeader('Content-type', 'application/zip')
+      const f = path.basename(filePath)
+      res.setHeader('Content-disposition', 'attachment; filename=' + f)
+      res.setHeader('Content-Length', stat.size)
+      var stream = fs.createReadStream(filePath);
+      stream.pipe(res);
+      stream.on('error', function() {
+          res.statusCode = 500;
+          console.log('Error downloading file "' + filePath + '"')
+          res.end('Internal Server Error');
+      });
+      stream.on('end', function() {
+          console.log('"' + filePath + '" downloaded')
+          res.end();
+      });
+    }
+  });
 }
 
 exports.setRoutes = setRoutes

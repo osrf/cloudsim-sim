@@ -61,10 +61,14 @@ console.log('admin user: ' + process.env.ADMIN_USER)
 
 // we create 2 initial resources
 csgrant.init(process.env.ADMIN_USER, ['simulation_list', 'downloads'], ()=> {
-   const pathToKeysFile = __dirname + '/keys.zip'
-   console.log('path to keys: ' + pathToKeysFile)
-   csgrant.setResource('downloads', {path: pathToKeysFile})
-   console.log('resources loaded ')
+  const pathToKeysFile = __dirname + '/keys.zip'
+  console.log('path to keys: ' + pathToKeysFile)
+  csgrant.updateResource(process.env.ADMIN_USER, 'downloads', {path: pathToKeysFile}, (err)=>{
+    if(err)
+      console.log('Can\'t set keys.zip path: ' + err)
+    else
+      console.log('resources loaded ')
+  })
 })
 
 
