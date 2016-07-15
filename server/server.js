@@ -46,20 +46,24 @@ const ansi2html = new ansi_to_html()
 
 const csgrant = require('cloudsim-grant')
 
+// the configuration values are set in the local .env file
+// this loads the .env content and puts it in the process environment.
 dotenv.load()
 
 // the port of the server
 const port = process.env.CLOUDSIM_PORT || 4000
-
-// the values are set in the local .env file
-csgrant.init(process.env.ADMIN_USER,
-             'simulation_list')
 
 if(!process.env.ADMIN_USER) {
   console.log('\nenv:\n' + JSON.stringify(process.env, null, 2), '\n')
   throw("No admin user in .env (or environment): please define ADMIN_USER")
 }
 console.log('admin user: ' + process.env.ADMIN_USER)
+
+// we create 2 initial resources
+csgrant.init(process.env.ADMIN_USER, ['simulation_list', 'downloads'], ()=> {
+    console.log('resources loaded ')
+})
+
 
 function autho(socket) {
     console.log('\n\nautho for new socket')
@@ -225,12 +229,13 @@ app.get('/', function (req, res) {
   res.end(s)
 })
 
+const pathToKeysFile = __dirname + '/keys.zip'
+console.log('path to keys: ' + pathToKeysFile)
 // setup the routes
 app.get('/grant', csgrant.grant)
 app.get('/revoke', csgrant.revoke)
-
 simulations.setRoutes(app)
-downloads.setRoutes(app)
+downloads.setRoutes(app, pathToKeysFile)
 
 httpServer.listen(port, function(){
   console.log('ssl: ' + useHttps)
