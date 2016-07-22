@@ -53,23 +53,32 @@ dotenv.load()
 // the port of the server
 const port = process.env.CLOUDSIM_PORT || 4000
 
-if(!process.env.ADMIN_USER) {
+if (!process.env.ADMIN_USER) {
   console.log('\nenv:\n' + JSON.stringify(process.env, null, 2), '\n')
   throw("No admin user in .env (or environment): please define ADMIN_USER")
 }
 console.log('admin user: ' + process.env.ADMIN_USER)
 
+
+const pathToKeysFile = __dirname + '/keys.zip'
+console.log('path to keys: ' + pathToKeysFile)
+// error if file is not there
+fs.statSync(pathToKeysFile)
+
+
+
 // we create 2 initial resources
-csgrant.init(process.env.ADMIN_USER, ['simulation_list', 'downloads'], ()=> {
-  const pathToKeysFile = __dirname + '/keys.zip'
-  console.log('path to keys: ' + pathToKeysFile)
-  csgrant.updateResource(process.env.ADMIN_USER, 'downloads', {path: pathToKeysFile}, (err)=>{
+csgrant.init(process.env.ADMIN_USER, {'simulation_list': {},
+                                      'downloads': {path: pathToKeysFile}
+                                     },
+                                     'cloudsim-sim',
+                                     (err)=> {
     if(err)
-      console.log('Can\'t set keys.zip path: ' + err)
+      console.log('Error loading resources: ' + err)
     else
-      console.log('resources loaded ')
-  })
+      console.log('resources loaded')
 })
+
 
 
 function autho(socket) {
