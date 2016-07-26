@@ -28,14 +28,20 @@ function setRoutes(app) {
   })
 
   // create a new simulation
-  app.post('/simulations', function(req, res) {
+  app.post('/simulations', csgrant.authenticate, function(req, res) {
 
+    const token = req.headers.authorization
+    if (!token) {
+      console.log('no token in req.headers.authorization')
+    }
+    else {
+      console.log('tokenito: ', token)
+    }
     console.log('create sim:')
     console.log('  body:' +  JSON.stringify(req.body))
     console.log('  query:' + JSON.stringify(req.query))
 
     // step 1, user verify
-    const token = req.query.token
 
     // The data for the new
     const resourceData = {cmd: req.query.cmd}
