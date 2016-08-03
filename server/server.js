@@ -59,13 +59,10 @@ if (!process.env.ADMIN_USER) {
 }
 console.log('admin user: ' + process.env.ADMIN_USER)
 
-
 const pathToKeysFile = __dirname + '/keys.zip'
 console.log('path to keys: ' + pathToKeysFile)
 // error if file is not there
 fs.statSync(pathToKeysFile)
-
-
 
 // we create 2 initial resources
 csgrant.init(process.env.ADMIN_USER, {'simulation_list': {},
@@ -78,8 +75,6 @@ csgrant.init(process.env.ADMIN_USER, {'simulation_list': {},
     else
       console.log('resources loaded')
 })
-
-
 
 function autho(socket) {
     console.log('\n\nautho for new socket')
