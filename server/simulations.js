@@ -37,7 +37,10 @@ function setRoutes(app) {
     console.log('  query:' + JSON.stringify(req.query))
 
     const data = req.query
-    const resourceData = {cmd: data.cmd, auto: data.auto}
+    const resourceData = { cmd: data.cmd, 
+                           auto: data.auto,
+                           stat:'WAITING' 
+                          }
     const error = function(msg) {
       return {operation: 'createSimulation',
               success: false,
@@ -88,15 +91,24 @@ function setRoutes(app) {
        return res.jsonp({success: false, error: 'invalid new simulation: missing auto'})
     }
 
-    csgrant.updateResource(user, resourceName, newData, (err, data) => {
-      if(err) {
-        return res.jsonp({success: false, error: err})
-      }
-      r.success = true
-      r.result = data
-      // success
-      res.jsonp(r)
+    csgrant.readResource(user, resourceName, function(err, oldData) {
+      if(err)
+        return res.jsonp({success: false, error: 'error trying to read existing data: ' + err})
+      const futureData = oldData
+      // merge with existing fields of the newData... thus keeping old fields intact
+      for (var attrname in newData) { futureData[attrname] = newData[attrname] }
+      csgrant.updateResource(user, resourceName, newData, (err, data) => {
+        if(err) {
+          return res.jsonp({success: false, error: err})
+        }
+        r.success = true
+        r.result = data
+        // success
+        res.jsonp(r)
+      })
+
     })
+
   })
 
   // Delete a simulation
