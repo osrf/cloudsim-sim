@@ -3,6 +3,7 @@
 var gulp = require('gulp');
 var browserSync = require('browser-sync');
 var nodemon = require('gulp-nodemon');
+var mocha = require('gulp-mocha');
 
 gulp.task('default', ['serve'], function () {
 });
@@ -43,4 +44,14 @@ gulp.task('nodemon', function (cb) {
 			started = true;
 		}
 	});
+});
+
+gulp.task('test', function() {
+  return gulp.src(['test/mocha/*.js'], {read: false})
+    .pipe(mocha({
+      reporter: 'spec'
+    }))
+    .once('end', function () {
+      process.exit();
+    });
 });
