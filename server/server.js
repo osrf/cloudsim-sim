@@ -238,8 +238,8 @@ app.get('/', function (req, res) {
 })
 
 // setup the routes
-app.post('/permissions', csgrant.grant)
-app.delete('/permissions', csgrant.revoke)
+app.post('/permissions', csgrant.authenticate, csgrant.grant)
+app.delete('/permissions',csgrant.authenticate, csgrant.revoke)
 simulations.setRoutes(app)
 downloads.setRoutes(app)
 
