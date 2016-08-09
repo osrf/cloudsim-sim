@@ -63,4 +63,29 @@ describe('<Unit test Permissions>', function() {
       })
     })
   })
+
+  // give user read permission to sim1
+  describe('Revoke Read Permission', function() {
+    it('should be possible to revoke user read permission', function(done) {
+      agent
+      .delete('/permissions')
+      .set('Acccept', 'application/json')
+      .set('authorization', meToken)
+      .send({ resource: 'sim-1',
+              grantee: 'user',
+              readOnly: true})
+      .end(function(err,res){
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+        var response = JSON.parse(res.text)
+        response.success.should.equal(true)
+        response.resource.should.equal('sim-1')
+        response.granter.should.equal('me')
+        response.grantee.should.equal('user')
+        response.readOnly.should.equal(true)
+        done()
+      })
+    })
+  })
+
 })
