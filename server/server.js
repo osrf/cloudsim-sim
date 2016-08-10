@@ -53,10 +53,7 @@ dotenv.load()
 // the port of the server
 const port = process.env.CLOUDSIM_PORT || 4000
 
-if (!process.env.ADMIN_USER) {
-  console.log('\nenv:\n' + JSON.stringify(process.env, null, 2), '\n')
-  throw("No admin user in .env (or environment): please define ADMIN_USER")
-}
+process.env.ADMIN_USER = process.env.ADMIN_USER || 'admin'
 console.log('admin user: ' + process.env.ADMIN_USER)
 
 const pathToKeysFile = __dirname + '/keys.zip'
@@ -241,10 +238,13 @@ app.get('/', function (req, res) {
 })
 
 // setup the routes
-app.get('/grant', csgrant.grant)
-app.get('/revoke', csgrant.revoke)
+app.post('/permissions', csgrant.authenticate, csgrant.grant)
+app.delete('/permissions',csgrant.authenticate, csgrant.revoke)
 simulations.setRoutes(app)
 downloads.setRoutes(app)
+
+// Expose app
+exports = module.exports = app;
 
 httpServer.listen(port, function(){
   console.log('ssl: ' + useHttps)
