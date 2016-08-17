@@ -94,10 +94,10 @@ function setRoutes(app) {
     csgrant.readResource(user, resourceName, function(err, oldData) {
       if(err)
         return res.jsonp({success: false, error: 'error trying to read existing data: ' + err})
-      const futureData = oldData
+      const futureData = oldData.data
       // merge with existing fields of the newData... thus keeping old fields intact
       for (var attrname in newData) { futureData[attrname] = newData[attrname] }
-      csgrant.updateResource(user, resourceName, newData, (err, data) => {
+      csgrant.updateResource(user, resourceName, futureData, (err, data) => {
         if(err) {
           return res.jsonp({success: false, error: err})
         }
