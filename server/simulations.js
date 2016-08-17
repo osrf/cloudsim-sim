@@ -5,26 +5,14 @@ const router = express.Router()
 const csgrant = require('cloudsim-grant')
 
 function setRoutes(app) {
+
   console.log('SIMULATIONS setRoutes')
+
+  // list all resources
   app.get('/simulations',
     csgrant.authenticate,
     csgrant.ownsResource('simulation_list', false),
-    function(req, res) {
-
-    console.log('GET all simulations')
-
-    csgrant.readAllResourcesForUser(req.user, (err, items) => {
-      const r = {success: false, operation: 'getSimulations'}
-      if(err) {
-        r.error = err
-      }
-      else {
-        r.success = true
-        r.result = items
-      }
-      res.jsonp(r)
-    })
-  })
+    csgrant.allResources)
 
   // create a new simulation
   app.post('/simulations',
@@ -37,9 +25,9 @@ function setRoutes(app) {
     console.log('  query:' + JSON.stringify(req.query))
 
     const data = req.query
-    const resourceData = { cmd: data.cmd, 
+    const resourceData = { cmd: data.cmd,
                            auto: data.auto,
-                           stat:'WAITING' 
+                           stat:'WAITING'
                           }
     const error = function(msg) {
       return {operation: 'createSimulation',

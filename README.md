@@ -15,8 +15,11 @@ This is the sim/robot control server for Cloudsim
 * gulp
 * Dependencies: nodejs 4 and above, gulp (sudo npm install gulp -g)
 * Database configuration: Redis for now
-* How to run tests: gulp test?
 * Deployment instructions
+
+## How do I run tests?
+
+    gulp test
 
 ### Redirect port 443
 
