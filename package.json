@@ -10,7 +10,7 @@
     "url": "https://bitbucket.org/osrf/cloudsim-sim"
   },
   "scripts": {
-    "test": "gulp test:local",
+    "test": "gulp test",
     "start": "gulp serve"
   },
   "engines": {

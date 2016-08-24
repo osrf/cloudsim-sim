@@ -14,12 +14,10 @@ function setRoutes(app) {
     csgrant.ownsResource('simulation_list', true),
     csgrant.allResources)
 
-  // a resource
   app.get('/simulations/:simId',
     csgrant.authenticate,
     csgrant.ownsResource(':simId', true),
     csgrant.resource)
-
 
   // create a new simulation
   app.post('/simulations',
