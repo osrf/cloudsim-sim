@@ -1,3 +1,5 @@
+[ ![Codeship Status for osrf/cloudsim-sim](https://codeship.com/projects/c1074290-4c5e-0134-4ebf-52026d0c47d6/status?branch=default)](https://codeship.com/projects/170204)
+
 # README #
 
 This is the sim/robot control server for Cloudsim
