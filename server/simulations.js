@@ -11,7 +11,7 @@ function setRoutes(app) {
   // list all resources
   app.get('/simulations',
     csgrant.authenticate,
-    csgrant.ownsResource('simulation_list', false),
+    csgrant.ownsResource('simulation_list', true),
     csgrant.allResources)
 
   app.get('/simulations/:simId',
