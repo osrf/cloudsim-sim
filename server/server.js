@@ -50,8 +50,11 @@ const csgrant = require('cloudsim-grant')
 // this loads the .env content and puts it in the process environment.
 dotenv.load()
 
+
 // the port of the server
 const port = process.env.CLOUDSIM_PORT || 4000
+// the delay between simulator process state machine update in ms
+const simulationsSchedulerInterval = process.env.SCHEDULER_INTERVAL || 1000
 
 process.env.ADMIN_USER = process.env.ADMIN_USER || 'admin'
 console.log('admin user: ' + process.env.ADMIN_USER)
@@ -174,7 +177,9 @@ io
   .on('connection', autho )
   .on('authenticated', function(socket){
     console.log('connected & authenticated: ' + JSON.stringify(socket.decoded_token));
+
     let gzcmd = {proc:null, output:'', state: 'ready', cmdline:''}
+
     socket.on('gz-cmd', function(msg) {
       console.log('received: ' + JSON.stringify(msg))
       if (msg.cmd === 'run'){
@@ -217,14 +222,13 @@ io
             pid:gzcmd.proc.pid })
           gzcmd = null
         })
-        // io.emit('gz-cmd', msg);
       }
       if (msg.cmd === 'kill'){
         console.log('kill message received')
         gzcmd.proc.kill()
       }
-		});
-	});
+		})
+	})
 
 // app.use(express.static(__dirname + '../public'));
 
@@ -246,8 +250,19 @@ downloads.setRoutes(app)
 // Expose app
 exports = module.exports = app;
 
+// Run the simulator process scheduler
+simulations.startSimulationsScheduler(simulationsSchedulerInterval)
+
 httpServer.listen(port, function(){
   console.log('ssl: ' + useHttps)
 	console.log('listening on *:' + port);
-});
+})
+
+process.on('SIGTERM', ()=>{
+  console.log('SIGTERM')
+  simulations.stopSimulationScheduler()
+})
+
+
+
 
