@@ -8,7 +8,7 @@ const supertest = require('supertest');
 const csgrant = require('cloudsim-grant')
 const token = csgrant.token
 
-const app = require('../../server/server')
+const app = require('../server/server')
 
 const agent = supertest.agent(app)
 

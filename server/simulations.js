@@ -1,8 +1,116 @@
 'use strict'
 
 const express = require('express')
-const router = express.Router()
 const csgrant = require('cloudsim-grant')
+const state_machine = require('./state_machine.js')
+
+const router = express.Router()
+
+const proc = state_machine.createMachine()
+
+// This is the data used in the simulation scheduler state machine
+// proc contains the process handle to the current simulation,
+// (gzserver process or roslaunch process), or null when no simulation
+// is running.
+// output is the process stdout
+// counter simply increments
+// state is the state of the scheduler
+proc.schedulerData = {
+    interval: null,
+    counter: 0,
+    proc: null,
+    output: '',
+    state: 'ready',
+    task: ''
+  }
+
+proc.boot()
+
+proc.on("transition", function (data) {
+  console.log('action:', '"' + data.action + '"',
+              'state:', '"' + this.state + '"',
+              'prior:', '"' + this.priorState + '"')
+
+  // action: "nothing.boot" state: "ready" prior: "nothing"
+  if (data.action === "nothing.boot") {
+
+  }
+  // action: "ready.start" state: "prerun" prior: "ready"
+  else if (data.action  === "ready.start") {
+    // setup (latency)
+  }
+  // action: "prerun.run" state: "running" prior: "prerun"
+  else if (data.action === "prerun.run") {
+    // start the simulator
+  }
+  // action: "running.stop" state: "postrun" prior: "running"
+  else if (data.action === "running.stop") {
+    // if necessary, stop the simulator
+  }
+  // action: "postrun.done" state: "ready" prior: "postrun"
+  else if (data.action === "postrun.done") {
+    // send the logs to the server
+  }
+  // action: "postrun.done" state: "ready" prior: "postrun"
+  else if(data.action === "postrun.done") {
+    // nothing to do (phone home?)
+  }
+  // oops ... this is not a state we expected
+  else {
+    throw 'state "' + this.state + '" is not recognized'
+  }
+})
+
+// This function is called periodically. If no simulation is running,
+// it looks for the next available one
+function schedulerUpdate() {
+
+  // Is a process running?
+  if (!proc.schedulerData.proc) {
+    const sims = getSimulationQ()
+    let nextTask = null
+    for(var i=0; i< sims.lenght; i++) {
+      const currentTask = sims[i]
+      if (currentTask.stat == 'waiting') {
+        nextTask = currentTask
+        break
+      }
+    }
+    // have we found a new task?
+    if(nextTask && nextTask !== proc.schedulerData.task){
+      if (nexTask.auto == true) {
+        proc.schedulerData.task = nextTask
+        console.log(proc.schedulerData.counter,
+          proc.schedulerData.task,
+          'task ready', JSON.stringify(proc.schedulerData.task, null, 2)
+        )
+      }
+    }
+  }
+  // increment counter for fun
+  proc.schedulerData.counter += 1
+}
+
+// starts the periodic scheduler update that launches simulations
+function startSimulationsScheduler(simulationsSchedulerInterval) {
+  console.log('Starting simulations scheduler. Interval:', simulationsSchedulerInterval)
+  try {
+    schedulerUpdate()
+  }
+  catch(e) {
+    const d = new Date()
+    console.log(d,'simulation scheduler update error:', e)
+  }
+
+  proc.schedulerData.interval = setInterval(schedulerUpdate, simulationsSchedulerInterval)
+}
+
+function stopSimulationScheduler() {
+  console.log('stopping simulation scheduler')
+  if (proc.schedulerData.interval) {
+    clearInterval(proc.schedulerData.interval)
+  }
+}
 
 
 function setRoutes(app) {
@@ -151,23 +259,6 @@ function setRoutes(app) {
 }
 
 
-// This is the data used in the simulation scheduler state machine
-// proc contains the process handle to the current simulation,
-// (gzserver process or roslaunch process), or null when no simulation
-// is running.
-// output is the process stdout
-// counter simply increments
-// state is the state of the scheduler
-const schedulerData = {
-    interval: null,
-    counter: 0,
-    proc: null,
-    output: '',
-    state: 'ready',
-    task: ''
-  }
-
-
 // this function looks into all resources (for all users), and
 // returns only the simulations
 function getSimulationQ() {
@@ -184,57 +275,6 @@ function getSimulationQ() {
   // sort according to position in the queue
   // todo
   return simQ
-}
-
-// This function is called periodically. If no simulation is running,
-// it looks for the next available one
-function schedulerUpdate() {
-
-  // Is a process running?
-  if (!schedulerData.proc) {
-    const sims = getSimulationQ()
-    let nextTask = null
-    for(var i=0; i< sims.lenght; i++) {
-      const currentTask = sims[i]
-      if (currentTask.stat == 'waiting') {
-        nextTask = currentTask
-        break
-      }
-    }
-    // have we found a new task?
-    if(nextTask && nextTask !== schedulerData.task){
-      if (nexTask.auto == true) {
-        schedulerData.task = nextTask
-        console.log(schedulerData.counter,
-          schedulerData.task,
-          'task ready', JSON.stringify(schedulerData.task, null, 2)
-        )
-      }
-    }
-  }
-  // increment counter for fun
-  schedulerData.counter += 1
-}
-
-// starts the periodic scheduler update that launches simulations
-function startSimulationsScheduler(simulationsSchedulerInterval) {
-  console.log('Starting simulations scheduler. Interval:', simulationsSchedulerInterval)
-  try {
-    schedulerUpdate()
-  }
-  catch(e) {
-    const d = new Date()
-    console.log(d,'simulation scheduler update error:', e)
-  }
-
-  schedulerData.interval = setInterval(schedulerUpdate, simulationsSchedulerInterval)
-}
-
-function stopSimulationScheduler() {
-  console.log('stopping simulation scheduler')
-  if (schedulerData.interval) {
-    clearInterval(schedulerData.interval)
-  }
 }
 
 // list of exported functions in this module
