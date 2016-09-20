@@ -2,6 +2,8 @@
 
 [![Dependency Status](https://www.versioneye.com/user/projects/57ca1ead69d949002f38dc6f/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/57ca1ead69d949002f38dc6f)
 
+[![Coverage Status](https://coveralls.io/repos/bitbucket/osrf/cloudsim-sim/badge.svg?branch=default)](https://coveralls.io/bitbucket/osrf/cloudsim-sim?branch=default)
+
 # README #
 
 This is the sim/robot control server for Cloudsim
