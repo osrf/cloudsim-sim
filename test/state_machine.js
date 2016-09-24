@@ -9,43 +9,10 @@ const proc = state_machine.createMachine()
 
 let transitions = []
 
+// this transition callback is how the state machine
+// connects to the simulation server
 proc.on("transition", function (data) {
   transitions.push(data)
-})
-
-proc.on("transition", function (data) {
-  //console.log('action:', '"' + data.action + '"',
-  //            'state:', '"' + this.state + '"',
-  //            'prior:', '"' + this.priorState + '"')
-
-  // action: "nothing.boot" state: "ready" prior: "nothing"
-  if (data.action === "nothing.boot") {
-
-  }
-  // action: "ready.start" state: "prerun" prior: "ready"
-  else if (data.action  === "ready.start") {
-    // setup (latency)
-  }
-  // action: "prerun.run" state: "running" prior: "prerun"
-  else if (data.action === "prerun.run") {
-    // start the simulator
-  }
-  // action: "running.stop" state: "postrun" prior: "running"
-  else if (data.action === "running.stop") {
-    // if necessary, stop the simulator
-  }
-  // action: "postrun.done" state: "ready" prior: "postrun"
-  else if (data.action === "postrun.done") {
-    // send the logs to the server
-  }
-  // action: "postrun.done" state: "ready" prior: "postrun"
-  else if(data.action === "postrun.done") {
-    // nothing to do (phone home?)
-  }
-  // oops ... this is not a state we expected
-  else {
-    throw 'state "' + this.state + '" is not recognized'
-  }
 })
 
 
@@ -84,7 +51,6 @@ describe('<Unit test State machine>', function() {
       done()
     })
   })
-
 
   describe('start a simulation', function() {
     it('it should make 2 transitions', function(done) {
@@ -134,7 +100,7 @@ describe('<Unit test State machine>', function() {
     })
   })
 
-  describe('can start', function() {
+  describe('can start again', function() {
     it('it should stay ready', function(done) {
       transitions = []
       proc.start()
@@ -143,7 +109,6 @@ describe('<Unit test State machine>', function() {
       done()
     })
   })
-
 
   after(function(done) {
     log('After')

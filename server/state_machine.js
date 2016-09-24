@@ -12,9 +12,6 @@ let config = {
     this.handle("start")
     this.handle("run")
   },
-//  run: function() {
-//    this.handle("run")
-//  },
   stop: function() {
     this.handle("stop")
     this.handle("done")

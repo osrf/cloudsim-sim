@@ -65,7 +65,7 @@ console.log('path to keys: ' + pathToKeysFile)
 fs.statSync(pathToKeysFile)
 
 // we create 2 initial resources
-csgrant.init(process.env.ADMIN_USER, {'simulation_list': {},
+csgrant.init(process.env.ADMIN_USER, {'simulations': {},
                                       'downloads': {path: pathToKeysFile}
                                      },
                                      'cloudsim-sim',
