@@ -70,10 +70,15 @@ csgrant.init(process.env.ADMIN_USER, {'simulations': {},
                                      },
                                      'cloudsim-sim',
                                      (err)=> {
-    if(err)
+    if(err) {
       console.log('Error loading resources: ' + err)
-    else
+      process.exit(-2)
+    }
+    else {
       console.log('resources loaded')
+      // Run the simulator process scheduler
+      simulations.startSimulationsScheduler(simulationsSchedulerInterval)
+    }
 })
 
 function autho(socket) {
@@ -249,9 +254,6 @@ downloads.setRoutes(app)
 
 // Expose app
 exports = module.exports = app;
-
-// Run the simulator process scheduler
-simulations.startSimulationsScheduler(simulationsSchedulerInterval)
 
 httpServer.listen(port, function(){
   console.log('ssl: ' + useHttps)

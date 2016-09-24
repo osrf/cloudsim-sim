@@ -7,6 +7,8 @@ const ansi_to_html = require('ansi-to-html')
 
 const ansi2html = new ansi_to_html()
 const spawn = require('child_process').spawn
+
+// create a state machine, and add data and methods to it
 const proc = state_machine.createMachine()
 
 // This is the data used in the simulation scheduler state machine
@@ -20,24 +22,54 @@ proc.schedulerData = {
     interval: null,
     counter: 0,
     proc: null,
-    output: '',
     simId: null,
-    simData: null
+    sim: null,
+    userName: null
   }
+
+// helper function to get the userName from the resource
+function getSimUser(simulation) {
+  const permissions = simulation.sim.permissions
+  // find a user with read/write permission
+  for (let user in permissions) {
+    if (!permissions[user].readOnly) {
+      return user
+      break
+    }
+  }
+  const simId = simulation.id
+  throw 'simulation "' + simId + '" has invalid permissions'
+}
 
 // machina.js state machine don't have constructor, so
 // there's a boot state for that
 proc.bootStateMachine = function() {
   console.log("Make sure no simulation is in 'RUNNING' state")
-  console.log(" Make sure no simulator process is running")
-  console.log(' Looking good', '\n\n')
+  const split = splitSimulations()
+console.log(split)
+  if (split.running) {
+    const simId = split.running.id
+    const simData = split.running.sim.data
+    const userName = getSimUser(split.running)
+    console.log('RUNNNNNING', userName, simId)
+    // set the state to "FINISHED"
+    simData.stat = 'FINISHED'
+    csgrant.updateResource(userName, simId, simData, function(){
+      console.log('sim "' + simId  + '" is FINISHED')
+    })
+  }
+  // console.log("Make sure no simulator process is running")
+  // killall gz-server? roslaunch?
+  console.log('Looking good')
 }
 
-
+// Called before the simulation starts. This
+// is for things like setting up latency, call home
 proc.getReadyTorunSimulator = function() {
   console.log('before sim run')
 }
 
+// Called to start the simulator
 proc.startTheSimulator =  function() {
   // has a sim been selected?
   if (!this.schedulerData.sim) {
@@ -49,18 +81,9 @@ proc.startTheSimulator =  function() {
   const simId = this.schedulerData.sim.id
   // the simulation data (cmd, auto ...)
   const simData = this.schedulerData.sim.sim.data
-  const permissions = this.schedulerData.sim.sim.permissions
-  // find a user with read/write permission
-  let userName = null
-  for (let user in permissions) {
-    if (!permissions[user].readOnly) {
-      userName = user
-      break
-    }
-  }
-  if (!userName) {
-    throw 'simulation "' + simId + '" has invalid permissions'
-  }
+  const userName = getSimUser(this.schedulerData.sim)
+  // keep it for later
+  this.schedulerData.userName = userName
   // isolate the cmd
   const cmdLine = simData.cmd
   // split the program name from its arguments
@@ -75,7 +98,7 @@ proc.startTheSimulator =  function() {
   csgrant.updateResource(userName, simId, simData, function(){
     console.log('sim "' + simId  + '" running')
   })
-
+  // transform ascii terminal output into colored html
   var colorize = function (buf) {
     const txt = buf.toString()
     // replace new lines with html line breaks
@@ -85,13 +108,23 @@ proc.startTheSimulator =  function() {
     const ansi = ansi2html.toHtml(html)
     return ansi
   }
-
+  // when new text is sent to std out
   this.schedulerData.proc.stdout.on('data', (data)=> {
     const newData = colorize(data)
-  })
+    // add text to the output
+    simData.output += newData
+    csgrant.updateResource(userName, simId, simData, function(){
+      console.log('sim "' + simId  + 'data:' + newData )
+     })
 
+  })
+  // when new text is sent to std err
   this.schedulerData.proc.stderr.on('data', (data)=> {
-    const newData = colorize(data)
+     const newData = colorize(data)
+     simData.output += newData
+     csgrant.updateResource(userName, simId, simData, function(){
+      console.log('sim "' + simId  + 'data:' + newData )
+     })
   })
 
   this.schedulerData.proc.on('close', (code)=>{
@@ -101,69 +134,57 @@ proc.startTheSimulator =  function() {
   })
 }
 
+// Simulation process is commanded to stop, or the process ended
+// for another reason
 proc.stopTheSimulator = function() {
   console.log("proc.stopTheSimulator")
   // if necessary, stop the simulator
   if(!this.schedulerData.proc.exitCode) {
     this.schedulerData.proc.kill()
   }
+  const simData = this.schedulerData.sim.sim.data
+  // set the state to "running"
+  simData.stat = 'FINISHED'
+  const userName = this.schedulerData.userName
+  csgrant.updateResource(userName, simId, simData, function(){
+    console.log('sim "' + simId  + '" finished')
+  })
 }
 
+// After the simulation, send the logs
 proc.sendLogs = function() {
   console.log('Todo: send logs after execution',
     'state', proc.state,
     'priorState', proc.priorState)
 }
 
+// called after sendLogs
 proc.cleanUpAfterRun = function() {
   console.log('clean up after run')
   this.schedulerData.proc = null
   this.schedulerData.simId = null
-  this.schedulerData.simData = null
+  this.schedulerData.sim = null
 }
 
-// This is state machine state changes callback.
-// This is where simulators are started and stopped
-proc.on("transition", function (data) {
-  // action: "nothing.boot" state: "ready" prior: "nothing"
-  if (data.action === "nothing.boot") {
-    this.bootStateMachine()
-    console.log('state machine ready')
+// starts the periodic scheduler update that launches simulations
+// this should only be called once
+function startSimulationsScheduler(simulationsSchedulerInterval) {
+  console.log('Starting simulations scheduler. Interval:',
+              simulationsSchedulerInterval)
+
+  // start the state machine
+  proc.boot()
+  try {
+    schedulerUpdate()
   }
-  // action: "ready.start" state: "prerun" prior: "ready"
-  else if (data.action  === "ready.start") {
-    // setup (latency)
-    this.getReadyTorunSimulator()
-    console.log('Pre simulation run setup')
-  }
-  // action: "prerun.run" state: "running" prior: "prerun"
-  else if (data.action === "prerun.run") {
-    // start the simulator
-    this.startTheSimulator()
-    console.log('simulator started')
+  catch(e) {
+    const d = new Date()
+    console.log(d,'simulation scheduler update error:', e)
   }
 
-  // action: "running.stop" state: "postrun" prior: "running"
-  else if (data.action === "running.stop") {
-    this.stopTheSimulator()
-    console.log('Simulation stopped')
-  }
-  // action: "postrun.done" state: "ready" prior: "postrun"
-  else if (data.action === "postrun.done") {
-    // send the logs to the server
-    this.sendLogs()
-    console.log('logs sent')
-  }
-  // action: "postrun.done" state: "ready" prior: "postrun"
-  else if(data.action === "postrun.done") {
-    // clean up
-    this.cleanUpAfterRun()
-  }
-  // oops ... this is not a state we expected
-  else {
-    throw 'state "' + this.state + '" is not recognized'
-  }
-})
+  proc.schedulerData.interval = setInterval(schedulerUpdate,
+                                  simulationsSchedulerInterval)
+}
 
 // This function is called periodically. If no simulation is running,
 // it looks for the next available one
@@ -178,25 +199,10 @@ function schedulerUpdate() {
   }
   // increment counter for fun
   proc.schedulerData.counter += 1
-  // console.log(proc.schedulerData.counter)
+  // console.log(proc.state, proc.schedulerData.counter)
 }
 
-// starts the periodic scheduler update that launches simulations
-function startSimulationsScheduler(simulationsSchedulerInterval) {
-  console.log('Starting simulations scheduler. Interval:',
-              simulationsSchedulerInterval)
-  try {
-    schedulerUpdate()
-  }
-  catch(e) {
-    const d = new Date()
-    console.log(d,'simulation scheduler update error:', e)
-  }
-
-  proc.schedulerData.interval = setInterval(schedulerUpdate,
-                                  simulationsSchedulerInterval)
-}
-
+// clean up... this should only be called once (end of process)
 function stopSimulationScheduler() {
   console.log('stopping simulation scheduler')
   if (proc.schedulerData.interval) {
@@ -397,7 +403,7 @@ function splitSimulations() {
       split.running = sims[i]
       continue
     }
-    if(state === "WAITING") {
+//    if(state === "WAITING") {
       if (!split.ready) {
         if (sims[i].sim.data.auto) {
           split.ready = sims[i]
@@ -405,13 +411,12 @@ function splitSimulations() {
         }
       }
       split.waiting.push(sims[i])
-    }
+//    }
   }
+//  console.log(JSON.stringify(split, null, 2))
   return split
 }
 
-// start the state machine
-proc.boot()
 
 // list of exported functions in this module
 exports.startSimulationsScheduler = startSimulationsScheduler
