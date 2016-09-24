@@ -9,11 +9,34 @@ const proc = state_machine.createMachine()
 
 let transitions = []
 
+
+proc.bootStateMachine = function() {
+  transitions.push('bootStateMachine')
+}
+
+proc.getReadyTorunSimulator = function() {
+  transitions.push('getReadyTorunSimulator')
+}
+
+proc.tartTheSimulator= function() {
+  transitions.push('startTheSimulator')
+}
+
+proc.stopTheSimulator = function() {
+  transitions.push('stopTheSimulator')
+}
+
+proc.sendLogs = function() {
+  transitions.push('sendLogs')
+}
+
+
+
 // this transition callback is how the state machine
 // connects to the simulation server
-proc.on("transition", function (data) {
-  transitions.push(data)
-})
+//proc.on("transition", function (data) {
+//  transitions.push(data)
+//})
 
 
 log(transitions)
@@ -36,7 +59,7 @@ describe('<Unit test State machine>', function() {
       transitions = []
       proc.boot()
       transitions.length.should.equal(1)
-      transitions[0].action.should.equal('nothing.boot')
+      transitions[0].should.equal('bootStateMachine')
       proc.state.should.equal("ready")
       done()
     })
@@ -58,9 +81,9 @@ describe('<Unit test State machine>', function() {
       proc.start()
       transitions.length.should.equal(2)
       // this one to set the latency and other things
-      transitions[0].action.should.equal('ready.start')
+      transitions[0].should.equal('ready.start')
       // this one to start the simulator process
-      transitions[1].action.should.equal('prerun.run')
+      transitions[1].should.equal('prerun.run')
       proc.state.should.equal('running')
       done()
     })

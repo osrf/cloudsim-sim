@@ -46,7 +46,6 @@ function getSimUser(simulation) {
 proc.bootStateMachine = function() {
   console.log("Make sure no simulation is in 'RUNNING' state")
   const split = splitSimulations()
-console.log(split)
   if (split.running) {
     const simId = split.running.id
     const simData = split.running.sim.data
