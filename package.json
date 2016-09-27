@@ -1,9 +1,10 @@
 {
   "private": true,
   "devDependencies": {
+    "supertest": "^2.0.0",
     "browser-sync": "^2.7.7",
-    "gulp": "^3.8.5",
-    "gulp-nodemon": "^2.0.6"
+    "gulp-nodemon": "^2.0.6",
+    "gulp-mocha": "^3.0.1"
   },
   "repository": {
     "type": "mercurial",
@@ -23,7 +24,7 @@
     "cors": "^2.8.0",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
-    "gulp-mocha": "^3.0.1",
+    "gulp": "^3.8.5",
     "jsonwebtoken": "^7.1.9",
     "mocha": "^3.0.2",
     "morgan": "^1.7.0",
@@ -31,7 +32,6 @@
     "should": "^11.1.0",
     "socket.io": "^1.4.8",
     "socketio-jwt": "^4.5.0",
-    "supertest": "^2.0.0",
     "xtend": "^4.0.1"
   }
 }

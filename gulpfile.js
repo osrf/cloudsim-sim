@@ -1,7 +1,6 @@
 'use strict';
 
 var gulp = require('gulp');
-var browserSync = require('browser-sync');
 var nodemon = require('gulp-nodemon');
 var mocha = require('gulp-mocha');
 var istanbul = require('gulp-istanbul');
@@ -11,23 +10,6 @@ gulp.task('default', ['serve'], function () {
 });
 
 gulp.task('serve', ['nodemon'], function () {
-});
-
-gulp.task('browser-sync', ['nodemon'], function() {
-	browserSync.init(null, {
-//      middleware: [
-//
-//      ]
-
-//     socket: {
-//      domain: "localhost:5000"
-//    }
-
-//		proxy: "http://localhost:5000",
-//        files: ["public/**/*.*"],
-//        browser: "google chrome",
-//        port: 7000,
-	});
 });
 
 gulp.task('nodemon', function (cb) {

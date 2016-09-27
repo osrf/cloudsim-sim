@@ -1,7 +1,6 @@
 'use strict'
 
 const express = require('express')
-
 const csgrant = require('cloudsim-grant')
 const state_machine = require('./state_machine.js')
 const ansi_to_html = require('ansi-to-html')
