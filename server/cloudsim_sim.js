@@ -46,11 +46,11 @@ app.use(bodyParser.json())
 app.use(morgan('combined'))
 
 // the port of the server
-const port = process.env.CLOUDSIM_PORT || 4000
+const port = process.env.PORT || 4000
 // the delay between simulator process state machine update in ms
 const simulationsSchedulerInterval = process.env.SCHEDULER_INTERVAL || 1000
 
-process.env.ADMIN_USER = process.env.ADMIN_USER || 'admin'
+process.env.CLOUDSIM_ADMIN = process.env.CLOUDSIM_ADMIN || 'admin'
 
 // setup
 // error if file is not there
@@ -60,7 +60,7 @@ fs.statSync(pathToKeysFile)
 
 const dbName = 'cloudsim-sim' + process.env.NODE_ENV == 'test'? 'test': ''
 // we create 2 initial resources
-csgrant.init(process.env.ADMIN_USER, {'simulations': {},
+csgrant.init(process.env.CLOUDSIM_ADMIN, {'simulations': {},
                                       'downloads': {path: pathToKeysFile}
                                      },
                                      dbName,
@@ -77,7 +77,7 @@ csgrant.init(process.env.ADMIN_USER, {'simulations': {},
     }
 })
 
-console.log('admin user: ' + process.env.ADMIN_USER)
+console.log('admin user: ' + process.env.CLOUDSIM_ADMIN)
 console.log ('database: ' + dbName)
 
 app.get('/', function (req, res) {
