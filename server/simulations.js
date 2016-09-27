@@ -122,7 +122,7 @@ proc.bootStateMachine = function() {
 
 // Called before the simulation starts. This
 // is for things like setting up latency, call home
-proc.getReadyTorunSimulator = function() {
+proc.getReadyToRunSimulator = function() {
   log('before sim run')
 }
 
