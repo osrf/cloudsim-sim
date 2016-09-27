@@ -103,7 +103,6 @@ app.delete('/permissions',
 // get all user permissions for all resources
 app.get('/permissions',
     csgrant.authenticate,
-    csgrant.ownsResource('simulations', true),
     csgrant.userResources,
     csgrant.allResources
 )
