@@ -4,9 +4,19 @@ const express = require('express')
 const csgrant = require('cloudsim-grant')
 const state_machine = require('./state_machine.js')
 const ansi_to_html = require('ansi-to-html')
-
 const ansi2html = new ansi_to_html()
 const spawn = require('child_process').spawn
+
+// when false, log output is suppressed
+exports.showLog = false
+
+// log to console
+// @s string to log
+function log(s) {
+  if (exports.showLog) {
+    console.log('fsm> ', s)
+  }
+}
 
 // create a state machine, and add data and methods to it
 const proc = state_machine.createMachine()
@@ -44,28 +54,27 @@ function getSimUser(simulation) {
 // machina.js state machine don't have constructor, so
 // there's a boot state for that
 proc.bootStateMachine = function() {
-  console.log("Make sure no simulation is in 'RUNNING' state")
+  log("Make sure no simulation is in 'RUNNING' state")
   const split = splitSimulations()
   if (split.running) {
     const simId = split.running.id
     const simData = split.running.sim.data
     const userName = getSimUser(split.running)
-    console.log('RUNNNNNING', userName, simId)
+    log('RUNNNNNING', userName, simId)
     // set the state to "FINISHED"
     simData.stat = 'FINISHED'
     csgrant.updateResource(userName, simId, simData, function(){
-      console.log('sim "' + simId  + '" is FINISHED')
+      log('sim "' + simId  + '" is FINISHED')
     })
   }
-  // console.log("Make sure no simulator process is running")
   // killall gz-server? roslaunch?
-  console.log('Looking good')
+  log('state machine booted')
 }
 
 // Called before the simulation starts. This
 // is for things like setting up latency, call home
 proc.getReadyTorunSimulator = function() {
-  console.log('before sim run')
+  log('before sim run')
 }
 
 // Called to start the simulator
@@ -89,20 +98,20 @@ proc.startTheSimulator =  function() {
   const items = cmdLine.split(' ')
   const procName = items[0]
   const args = items.slice(1)
-  console.log('spwaning: ' + procName + ' ' + args)
+  log('spwaning: ' + procName + ' ' + args)
   this.schedulerData.proc = spawn(procName, args, {stdio:'pipe'})
 
   // set the state to "running"
   simData.stat = 'RUNNING'
   csgrant.updateResource(userName, simId, simData, function(){
-    console.log('sim "' + simId  + '" running')
+    log('sim "' + simId  + '" running')
   })
   // transform ascii terminal output into colored html
   var colorize = function (buf) {
     const txt = buf.toString()
     // replace new lines with html line breaks
     const html = txt.split('\n').join('<br>')
-    // convert the console color codes to html
+    // convert the color codes to html
     //   ex: "[0m[1;31m:[0m[1;31m96[0m[1;31m] [0m[1;31m"
     const ansi = ansi2html.toHtml(html)
     return ansi
@@ -113,7 +122,7 @@ proc.startTheSimulator =  function() {
     // add text to the output
     simData.output += newData
     csgrant.updateResource(userName, simId, simData, function(){
-      console.log('sim "' + simId  + 'data:' + newData )
+      log('sim "' + simId  + 'data:' + newData )
      })
 
   })
@@ -122,12 +131,12 @@ proc.startTheSimulator =  function() {
      const newData = colorize(data)
      simData.output += newData
      csgrant.updateResource(userName, simId, simData, function(){
-      console.log('sim "' + simId  + 'data:' + newData )
+      log('sim "' + simId  + 'data:' + newData )
      })
   })
-
+  //
   this.schedulerData.proc.on('close', (code)=>{
-    console.log('simulation process has terminated')
+    log('simulation process has terminated')
     // turn the state machine into stopping action
     this.stop()
   })
@@ -136,7 +145,7 @@ proc.startTheSimulator =  function() {
 // Simulation process is commanded to stop, or the process ended
 // for another reason
 proc.stopTheSimulator = function() {
-  console.log("proc.stopTheSimulator")
+  log("proc.stopTheSimulator")
   // if necessary, stop the simulator
   if(!this.schedulerData.proc.exitCode) {
     this.schedulerData.proc.kill()
@@ -146,20 +155,17 @@ proc.stopTheSimulator = function() {
   simData.stat = 'FINISHED'
   const userName = this.schedulerData.userName
   csgrant.updateResource(userName, simId, simData, function(){
-    console.log('sim "' + simId  + '" finished')
+    log('sim "' + simId  + '" finished')
   })
 }
 
 // After the simulation, send the logs
 proc.sendLogs = function() {
-  console.log('Todo: send logs after execution',
+  log('Todo: send logs after execution',
     'state', proc.state,
     'priorState', proc.priorState)
-}
 
-// called after sendLogs
-proc.cleanUpAfterRun = function() {
-  console.log('clean up after run')
+  log('clean up after run')
   this.schedulerData.proc = null
   this.schedulerData.simId = null
   this.schedulerData.sim = null
@@ -168,7 +174,7 @@ proc.cleanUpAfterRun = function() {
 // starts the periodic scheduler update that launches simulations
 // this should only be called once
 function startSimulationsScheduler(simulationsSchedulerInterval) {
-  console.log('Starting simulations scheduler. Interval:',
+  log('Starting simulations scheduler. Interval:',
               simulationsSchedulerInterval)
 
   // start the state machine
@@ -178,7 +184,7 @@ function startSimulationsScheduler(simulationsSchedulerInterval) {
   }
   catch(e) {
     const d = new Date()
-    console.log(d,'simulation scheduler update error:', e)
+    log(d,'simulation scheduler update error:', e)
   }
 
   proc.schedulerData.interval = setInterval(schedulerUpdate,
@@ -196,24 +202,22 @@ function schedulerUpdate() {
       proc.start()
     }
   }
-  // increment counter for fun
-  proc.schedulerData.counter += 1
-  // console.log(proc.state, proc.schedulerData.counter)
+  // increment counter
+  // proc.schedulerData.counter += 1
+  // log(proc.state, proc.schedulerData.counter)
 }
 
 // clean up... this should only be called once (end of process)
 function stopSimulationScheduler() {
-  console.log('stopping simulation scheduler')
+  log('stopping simulation scheduler')
   if (proc.schedulerData.interval) {
     clearInterval(proc.schedulerData.interval)
   }
 }
 
-
+// set the simulations urls for the server
 function setRoutes(app) {
-
-  console.log('SIMULATIONS setRoutes')
-
+  log('SIMULATIONS setRoutes')
   // list all resources
   app.get('/simulations',
     csgrant.authenticate,

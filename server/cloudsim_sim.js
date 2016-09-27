@@ -3,16 +3,29 @@
 const express = require('express')
 const app = express()
 const fs = require('fs')
-
-let httpServer = null
-let io = null
-
 const bodyParser = require("body-parser")
 const cors = require('cors')
 const morgan = require('morgan')
 const util = require('util')
 const simulations = require('./simulations')
 const downloads = require('./downloads')
+const socketioJwt = require('socketio-jwt');
+const dotenv = require('dotenv')
+const xtend = require('xtend');
+const jwt = require('jsonwebtoken');
+const UnauthorizedError = require('./UnauthorizedError');
+const spawn = require('child_process').spawn
+const ansi_to_html = require('ansi-to-html')
+const ansi2html = new ansi_to_html()
+const csgrant = require('cloudsim-grant')
+
+// the configuration values are set in the local .env file
+// this loads the .env content and puts it in the process environment.
+dotenv.load()
+
+let httpServer = null
+let io = null
+
 
 const useHttps = true
 if(useHttps) {
@@ -34,41 +47,24 @@ app.use(bodyParser.json())
 // prints all requests to the terminal
 app.use(morgan('combined'))
 
-const socketioJwt = require('socketio-jwt');
-const dotenv = require('dotenv')
-const xtend = require('xtend');
-const jwt = require('jsonwebtoken');
-const UnauthorizedError = require('./UnauthorizedError');
-
-const spawn = require('child_process').spawn
-const ansi_to_html = require('ansi-to-html')
-const ansi2html = new ansi_to_html()
-
-const csgrant = require('cloudsim-grant')
-
-// the configuration values are set in the local .env file
-// this loads the .env content and puts it in the process environment.
-dotenv.load()
-
-
 // the port of the server
 const port = process.env.CLOUDSIM_PORT || 4000
 // the delay between simulator process state machine update in ms
 const simulationsSchedulerInterval = process.env.SCHEDULER_INTERVAL || 1000
 
 process.env.ADMIN_USER = process.env.ADMIN_USER || 'admin'
-console.log('admin user: ' + process.env.ADMIN_USER)
-
 const pathToKeysFile = __dirname + '/keys.zip'
 console.log('path to keys: ' + pathToKeysFile)
 // error if file is not there
 fs.statSync(pathToKeysFile)
 
+const dbName = 'cloudsim-sim' + process.env.NODE_ENV == 'test'? 'test': ''
 // we create 2 initial resources
 csgrant.init(process.env.ADMIN_USER, {'simulations': {},
                                       'downloads': {path: pathToKeysFile}
                                      },
-                                     'cloudsim-sim',
+                                     dbName,
+                                     'localhost',
                                      (err)=> {
     if(err) {
       console.log('Error loading resources: ' + err)
@@ -80,6 +76,9 @@ csgrant.init(process.env.ADMIN_USER, {'simulations': {},
       simulations.startSimulationsScheduler(simulationsSchedulerInterval)
     }
 })
+
+console.log('admin user: ' + process.env.ADMIN_USER)
+console.log ('database: ' + dbName)
 
 function autho(socket) {
     console.log('\n\nautho for new socket')
@@ -155,7 +154,8 @@ function autho(socket) {
           return onError(err, 'invalid_token');
         }
 
-        if(options.additional_auth && typeof options.additional_auth === 'function') {
+        if(options.additional_auth &&
+            typeof options.additional_auth === 'function') {
           options.additional_auth(decoded, onSuccess, onError);
         } else {
           onSuccess();
@@ -247,8 +247,44 @@ app.get('/', function (req, res) {
 })
 
 // setup the routes
-app.post('/permissions', csgrant.authenticate, csgrant.grant)
-app.delete('/permissions',csgrant.authenticate, csgrant.revoke)
+
+// grant user permission to a resource
+// (add user to a group)
+app.post('/permissions',
+    csgrant.authenticate,
+    csgrant.grant)
+
+// revoke user permission
+// (delete user from a group)
+app.delete('/permissions',
+    csgrant.authenticate,
+    csgrant.revoke)
+
+// get all user permissions for all resources
+// (get all users for all groups)
+app.get('/permissions',
+    csgrant.authenticate,
+    csgrant.ownsResource('simulations', true),
+    csgrant.userResources,
+    csgrant.allResources
+)
+
+// get user permissions for a resource
+// (get users in a group)
+app.get('/permissions/:resourceId',
+    csgrant.authenticate,
+    csgrant.ownsResource(':resourceId', true),
+    csgrant.resource
+)
+
+/// param for resource name
+app.param('resourceId', function(req, res, next, id) {
+  req.resourceId = id
+  next()
+})
+
+
+
 simulations.setRoutes(app)
 downloads.setRoutes(app)
 

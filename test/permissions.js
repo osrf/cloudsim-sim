@@ -8,31 +8,33 @@ const supertest = require('supertest');
 const csgrant = require('cloudsim-grant')
 const token = csgrant.token
 
-const app = require('../server/server')
-
+const app = require('../server/cloudsim_sim')
 const agent = supertest.agent(app)
-
-/*
-// let's seed the database with a "sim-1"
-csgrant.init('admin',
-  {'sim-1':{data:'new data'}}, 'cloudsim-sim-test', function() {
-  console.log('init')
-})
-*/
 
 // we need fresh keys for this test
 const keys = csgrant.token.generateKeys()
 token.initKeys(keys.public, keys.private)
 
-const adminTokenData = {username:'admin'}
+const admin = process.env.ADMIN_USER
+const adminTokenData = {
+    identities: [admin]
+  }
+
 let adminToken
 
-const bobTokenData = {username:'bob'}
+const bobTokenData = {identities: ['bob']}
 let bobToken
 
 
 function parseResponse(text, log) {
-  const res = JSON.parse(text)
+  let res
+  try {
+   res = JSON.parse(text)
+  }
+  catch (e) {
+    console.log(text)
+    throw e
+  }
   if(log){
     csgrant.dump()
     const s = JSON.stringify(res, null, 2)
@@ -42,7 +44,6 @@ function parseResponse(text, log) {
 }
 
 describe('<Unit test Permissions>', function() {
-
   before(function(done) {
     setTimeout(function(){
       done()
@@ -50,24 +51,28 @@ describe('<Unit test Permissions>', function() {
   })
 
   before(function(done) {
-    csgrant.init('admin',
-      {'sim-1':{data:'new data'}}, 'cloudsim-sim-test', function() {
-      console.log('init')
+    csgrant.model.clearDb()
+    csgrant.init(admin,
+      {'sim-1':{data:'new data'}},
+      'cloudsim-sim-test',
+      'localhost',
+      function(e) {
+        if(e) {
+          should.fail(e)
+        }
+        console.log('init')
       done()
     })
   })
 
 
   before(function(done) {
-    csgrant.model.clearDb()
-
     token.signToken(adminTokenData, (e, tok)=>{
-      console.log('token signed for user "admin"')
+      console.log('token signed for "' + admin + '"')
       if(e) {
         console.log('sign error: ' + e)
       }
       adminToken = tok
-
       token.signToken(bobTokenData, (e, tok)=>{
         console.log('token signed for user "bob"')
         if(e) {
@@ -83,18 +88,18 @@ describe('<Unit test Permissions>', function() {
   describe('Get all resources', function() {
     it('should be possible for admin to get all resources', function(done) {
       agent
-      .get('/simulations')
+      .get('/permissions')
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
       .send({})
       .end(function(err,res){
-        const response = parseResponse(res.text, true)
+        const response = parseResponse(res.text)
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
         response.success.should.equal(true)
-        response.requester.should.equal('admin')
+        response.requester.should.equal(admin)
         response.result.length.should.equal(3)
-        response.result[0].name.should.equal('simulation_list')
+        response.result[0].name.should.equal('simulations')
         response.result[1].name.should.equal('downloads')
         response.result[2].name.should.equal('sim-1')
         done()
@@ -118,7 +123,7 @@ describe('<Unit test Permissions>', function() {
         var response = JSON.parse(res.text)
         response.success.should.equal(true)
         response.resource.should.equal('sim-1')
-        response.requester.should.equal('admin')
+        response.requester.should.equal(admin)
         response.grantee.should.equal('bob')
         response.readOnly.should.equal(true)
         done()
@@ -145,7 +150,7 @@ describe('<Unit test Permissions>', function() {
         response.result.permissions.length.should.equal(2)
         response.result.permissions[0].username.should.equal('bob')
         response.result.permissions[0].permissions.readOnly.should.equal(true)
-        response.result.permissions[1].username.should.equal('admin')
+        response.result.permissions[1].username.should.equal(admin)
         response.result.permissions[1].permissions.readOnly.should.equal(false)
         done()
       })
@@ -168,7 +173,7 @@ describe('<Unit test Permissions>', function() {
         var response = JSON.parse(res.text)
         response.success.should.equal(true)
         response.resource.should.equal('sim-1')
-        response.requester.should.equal('admin')
+        response.requester.should.equal(admin)
         response.grantee.should.equal('bob')
         response.readOnly.should.equal(true)
         done()

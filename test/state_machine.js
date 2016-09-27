@@ -1,24 +1,28 @@
 'use strict'
 
 const state_machine = require('../server/state_machine')
-const log = console.log
+const should = require('should');
+const csgrant = require('cloudsim-grant')
+const token = csgrant.token
 
+
+
+// we use this list to record the successive transitions, and
+// verify that they are correct in the tests
+let transitions = []
 
 const proc = state_machine.createMachine()
 
-
-let transitions = []
-
-
+// add the necessary callbacks. For testing,
 proc.bootStateMachine = function() {
   transitions.push('bootStateMachine')
 }
 
-proc.getReadyTorunSimulator = function() {
-  transitions.push('getReadyTorunSimulator')
+proc.getReadyToRunSimulator = function() {
+  transitions.push('getReadyToRunSimulator')
 }
 
-proc.tartTheSimulator= function() {
+proc.startTheSimulator= function() {
   transitions.push('startTheSimulator')
 }
 
@@ -30,26 +34,9 @@ proc.sendLogs = function() {
   transitions.push('sendLogs')
 }
 
-
-
-// this transition callback is how the state machine
-// connects to the simulation server
-//proc.on("transition", function (data) {
-//  transitions.push(data)
-//})
-
-
-log(transitions)
-
-const util = require('util');
-const should = require('should');
-const csgrant = require('cloudsim-grant')
-const token = csgrant.token
-
 describe('<Unit test State machine>', function() {
 
   before(function(done) {
-    log('before')
     proc.state.should.equal("nothing")
     done()
   })
@@ -81,9 +68,9 @@ describe('<Unit test State machine>', function() {
       proc.start()
       transitions.length.should.equal(2)
       // this one to set the latency and other things
-      transitions[0].should.equal('ready.start')
+      transitions[0].should.equal('getReadyToRunSimulator')
       // this one to start the simulator process
-      transitions[1].should.equal('prerun.run')
+      transitions[1].should.equal('startTheSimulator')
       proc.state.should.equal('running')
       done()
     })
@@ -100,14 +87,14 @@ describe('<Unit test State machine>', function() {
   })
 
   describe('stop a simulation', function() {
-    it('it should make 2 transitions', function(done) {
+    it('it should make 3 transitions', function(done) {
       transitions = []
       proc.stop()
       transitions.length.should.equal(2)
       // this one to stop the simulator process
-      transitions[0].action.should.equal('running.stop')
+      transitions[0].should.equal('stopTheSimulator')
       // this one to send the log files
-      transitions[1].action.should.equal('postrun.done')
+      transitions[1].should.equal('sendLogs')
       proc.state.should.equal('ready')
       done()
     })
@@ -134,7 +121,6 @@ describe('<Unit test State machine>', function() {
   })
 
   after(function(done) {
-    log('After')
     done()
   })
 
