@@ -7,25 +7,27 @@ const bodyParser = require("body-parser")
 const cors = require('cors')
 const morgan = require('morgan')
 const util = require('util')
-const simulations = require('./simulations')
-const downloads = require('./downloads')
-const socketioJwt = require('socketio-jwt');
 const dotenv = require('dotenv')
 const xtend = require('xtend');
-const jwt = require('jsonwebtoken');
-const UnauthorizedError = require('./UnauthorizedError');
 const spawn = require('child_process').spawn
-const ansi_to_html = require('ansi-to-html')
-const ansi2html = new ansi_to_html()
 const csgrant = require('cloudsim-grant')
+
+const simulations = require('./simulations')
+const downloads = require('./downloads')
+const websocket = require('./websocket')
+
+//const ansi_to_html = require('ansi-to-html')
+//const socketioJwt = require('socketio-jwt');
+//const UnauthorizedError = require('./UnauthorizedError');
+//const jwt = require('jsonwebtoken');
+//const ansi2html = new ansi_to_html()
+
 
 // the configuration values are set in the local .env file
 // this loads the .env content and puts it in the process environment.
 dotenv.load()
 
 let httpServer = null
-let io = null
-
 
 const useHttps = true
 if(useHttps) {
@@ -39,7 +41,7 @@ else {
   httpServer = require('http').Server(app)
 }
 
-io = require('socket.io')(httpServer)
+const io = websocket.init(httpServer)
 
 app.use(cors())
 app.use(bodyParser.json())
@@ -79,7 +81,7 @@ csgrant.init(process.env.ADMIN_USER, {'simulations': {},
 
 console.log('admin user: ' + process.env.ADMIN_USER)
 console.log ('database: ' + dbName)
-
+/*
 function autho(socket) {
     console.log('\n\nautho for new socket')
 
@@ -236,6 +238,7 @@ io
 	})
 
 // app.use(express.static(__dirname + '../public'));
+*/
 
 app.get('/', function (req, res) {
   // res.sendFile(__dirname + '/../public/index.html')
