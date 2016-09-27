@@ -15,7 +15,7 @@ const agent = supertest.agent(app)
 const keys = csgrant.token.generateKeys()
 token.initKeys(keys.public, keys.private)
 
-const admin = process.env.ADMIN_USER
+const admin = process.env.CLOUDSIM_ADMIN
 const adminTokenData = {
     identities: [admin]
   }

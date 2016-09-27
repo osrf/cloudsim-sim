@@ -6,10 +6,7 @@ const fs = require('fs')
 const bodyParser = require("body-parser")
 const cors = require('cors')
 const morgan = require('morgan')
-const util = require('util')
 const dotenv = require('dotenv')
-const xtend = require('xtend');
-const spawn = require('child_process').spawn
 // cloudsim module
 const csgrant = require('cloudsim-grant')
 // local modules
