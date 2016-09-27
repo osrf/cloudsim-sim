@@ -400,6 +400,19 @@ function setRoutes(app) {
     })
   })
 
+  // This is the route to stop a simulation (before starting a new one)
+  app.get('/stopsimulation',
+          csgrant.authenticate,
+          csgrant.ownsResource('simulations', false),
+          function(req, res) {
+    console.log('STOP received', proc.state)
+    proc.stop()
+    console.log('STOP done', proc.state, '(', proc.priorState, ')')
+    res.jsonp({state: proc.state,
+               prior: proc.priorState
+              })
+  })
+
   // simId
   app.param('simId', function( req, res, next, id) {
     req.simId = id
