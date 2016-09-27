@@ -30,7 +30,15 @@ gulp.task('nodemon', function (cb) {
 	});
 });
 
-gulp.task('test', function() {
+gulp.task('pre-test', function () {
+  return gulp.src(['server/**/*.js'])
+    // Covering files
+    .pipe(istanbul())
+    // Force `require` to return covered files
+    .pipe(istanbul.hookRequire());
+})
+
+gulp.task('test', ['pre-test'],  function() {
   return gulp.src(['test/**/*.js'], {read: false})
     .pipe(mocha({
       reporter: 'spec'
