@@ -1,6 +1,7 @@
 'use strict'
 
 const express = require('express')
+
 const csgrant = require('cloudsim-grant')
 const state_machine = require('./state_machine.js')
 const ansi_to_html = require('ansi-to-html')
@@ -16,6 +17,55 @@ function log(s) {
   if (exports.showLog) {
     console.log('fsm> ', s)
   }
+}
+
+// this function looks into all resources (for all users), and
+// returns the simulations
+function splitSimulations() {
+  const db = csgrant.copyInternalDatabase()
+  const keys = Object.keys(db)
+  keys.sort()
+
+  const sims =[]
+  for (let i in keys) {
+    const resource = keys[i]
+    // is it a simulation task?
+    if (resource.indexOf('simulation-') == 0) {
+      sims.push({id: resource, sim: db[resource]})
+    }
+  }
+  const split = {finished : [],
+                 running: null,
+                 ready: null,
+                 waiting: []}
+
+  // sort according to position in the queue
+  //   todo
+  // get next waiting sim and return it if it is auto
+  // find next available task (hasn't run already)
+  // skip the terminated
+  for (let i in sims) {
+    const state = sims[i].sim.data.stat
+    if(state === "FINISHED"){
+      split.finished.push(sims[i])
+      continue
+    }
+    if (state === "RUNNING") {
+      // state indicates a running sim. But this may not be
+      split.running = sims[i]
+      continue
+    }
+    if(state === "WAITING") {
+      if (!split.ready) {
+        if (sims[i].sim.data.auto) {
+          split.ready = sims[i]
+          continue
+        }
+      }
+      split.waiting.push(sims[i])
+    }
+  }
+  return split
 }
 
 // create a state machine, and add data and methods to it
@@ -249,12 +299,15 @@ function setRoutes(app) {
            csgrant.ownsResource('simulations', false),
            function(req, res) {
 
-    const data = req.body
+    console.log('create sim:')
+    console.log('  body:' +  JSON.stringify(req.body))
+    console.log('  query:' + JSON.stringify(req.query))
+
+    const data = req.query
     const resourceData = { cmd: data.cmd,
                            auto: data.auto,
                            stat:'WAITING'
                           }
-
     const error = function(msg) {
       return {operation: 'createSimulation',
               success: false,
@@ -296,13 +349,12 @@ function setRoutes(app) {
     console.log(' Update simulation: ' + resourceName)
     console.log(' new data: ' + JSON.stringify(newData))
     const user = req.user
-    const r = {success: false}
 
+    const r = {success: false}
     if (!newData.cmd) {
        return res.jsonp({success: false,
                          error: 'invalid new simulation: missing cmd'})
     }
-
     if (!newData.auto) {
        return res.jsonp({success: false,
                          error: 'invalid new simulation: missing auto'})
@@ -354,72 +406,7 @@ function setRoutes(app) {
     req.simId = id
     next()
   })
-
-  // This is the route to start a simulation (when no sim is running)
-  // This is the route to stop a simulation (before starting a new one)
-  app.get('/stopsimulation',
-          csgrant.authenticate,
-          csgrant.ownsResource('simulations', false),
-          function(req, res) {
-    console.log('STOP received', proc.state)
-    proc.stop()
-    console.log('STOP done', proc.state, '(', proc.priorState, ')')
-    res.jsonp({state: proc.state,
-               prior: proc.priorState
-              })
-  })
 }
-
-// this function looks into all resources (for all users), and
-// returns the simulations
-function splitSimulations() {
-  const db = csgrant.copyInternalDatabase()
-  const keys = Object.keys(db)
-  keys.sort()
-
-  const sims =[]
-  for (let i in keys) {
-    const resource = keys[i]
-    // is it a simulation task?
-    if (resource.indexOf('simulation-') == 0) {
-      sims.push({id: resource, sim: db[resource]})
-    }
-  }
-  const split = {finished : [],
-                 running: null,
-                 ready: null,
-                 waiting: []}
-
-  // sort according to position in the queue
-  //   todo
-  // get next waiting sim and return it if it is auto
-  // find next available task (hasn't run already)
-  // skip the terminated
-  for (let i in sims) {
-    const state = sims[i].sim.data.stat
-    if(state === "FINISHED"){
-      split.finished.push(sims[i])
-      continue
-    }
-    if (state === "RUNNING") {
-      // state indicates a running sim. But this may not be
-      split.running = sims[i]
-      continue
-    }
-//    if(state === "WAITING") {
-      if (!split.ready) {
-        if (sims[i].sim.data.auto) {
-          split.ready = sims[i]
-          continue
-        }
-      }
-      split.waiting.push(sims[i])
-//    }
-  }
-//  console.log(JSON.stringify(split, null, 2))
-  return split
-}
-
 
 // list of exported functions in this module
 exports.startSimulationsScheduler = startSimulationsScheduler

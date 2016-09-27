@@ -23,16 +23,15 @@
     "cors": "^2.8.0",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
-    "gulp-mocha": "^2.2.0",
-    "jsonwebtoken": "^5.7.0",
-    "machina": "^2.0.0",
-    "mocha": "^2.5.3",
+    "gulp-mocha": "^3.0.1",
+    "jsonwebtoken": "^7.1.9",
+    "mocha": "^3.0.2",
     "morgan": "^1.7.0",
     "nodemon": "^1.10.2",
-    "should": "^8.4.0",
+    "should": "^11.1.0",
     "socket.io": "^1.4.8",
     "socketio-jwt": "^4.5.0",
-    "supertest": "^1.2.0",
+    "supertest": "^2.0.0",
     "xtend": "^4.0.1"
   }
 }
