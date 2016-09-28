@@ -23,6 +23,8 @@ function log(s) {
 function splitSimulations() {
   const db = csgrant.copyInternalDatabase()
   const keys = Object.keys(db)
+
+  // sort according to position in the queue
   keys.sort()
 
   const sims =[]
@@ -38,8 +40,6 @@ function splitSimulations() {
                  ready: null,
                  waiting: []}
 
-  // sort according to position in the queue
-  //   todo
   // get next waiting sim and return it if it is auto
   // find next available task (hasn't run already)
   // skip the terminated
@@ -122,7 +122,7 @@ proc.bootStateMachine = function() {
 
 // Called before the simulation starts. This
 // is for things like setting up latency, call home
-proc.getReadyTorunSimulator = function() {
+proc.getReadyToRunSimulator = function() {
   log('before sim run')
 }
 
@@ -267,7 +267,7 @@ function stopSimulationScheduler() {
 // set the simulations urls for the server
 function setRoutes(app) {
   log('SIMULATIONS setRoutes')
-  // list all resources
+  // list all simulations for the user
   app.get('/simulations',
     csgrant.authenticate,
     csgrant.ownsResource('simulations', true),
@@ -320,14 +320,12 @@ function setRoutes(app) {
         res.jsonp(error(err))
         return
       }
-      // step 4. add simulation
       csgrant.createResource(user, resourceName, resourceData,
                             (err, data) => {
         if(err) {
           res.jsonp(error(err))
           return
         }
-        // step 5. success!
         const r = { success: true,
                     operation: op,
                     result: data,
@@ -340,7 +338,7 @@ function setRoutes(app) {
   // Update a simulation
   app.put('/simulations/:simId',
           csgrant.authenticate,
-          csgrant.ownsResource(':simId', true),
+          csgrant.ownsResource(':simId', false),
           function(req, res) {
 
     const resourceName = req.simId

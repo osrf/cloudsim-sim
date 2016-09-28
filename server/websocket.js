@@ -1,3 +1,5 @@
+'use strict'
+
 const ansi_to_html = require('ansi-to-html')
 const socketioJwt = require('socketio-jwt');
 const UnauthorizedError = require('./UnauthorizedError');
