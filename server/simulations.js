@@ -302,7 +302,7 @@ function setRoutes(app) {
     console.log('  body:' +  JSON.stringify(req.body))
     console.log('  query:' + JSON.stringify(req.query))
 
-    const data = req.query
+    const data = req.body
     const resourceData = { cmd: data.cmd,
                            auto: data.auto,
                            stat:'WAITING'

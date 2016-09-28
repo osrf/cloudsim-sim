@@ -24,7 +24,7 @@ let adminToken
 
 const bobTokenData = {identities: ['bob']}
 let bobToken
-
+let simId
 
 function parseResponse(text, log) {
   let res
@@ -52,17 +52,8 @@ describe('<Unit test Permissions>', function() {
 
   before(function(done) {
     csgrant.model.clearDb()
-    csgrant.init(admin,
-      {'sim-1':{data:'new data'}},
-      'cloudsim-sim-test',
-      'localhost',
-      function(e) {
-        if(e) {
-          should.fail(e)
-        }
-        console.log('init')
-      done()
-    })
+    token.initKeys(keys.public, keys.private)
+    done()
   })
 
 
@@ -79,6 +70,32 @@ describe('<Unit test Permissions>', function() {
           console.log('sign error: ' + e)
         }
         bobToken = tok
+        done()
+      })
+    })
+  })
+
+  // create a sim
+  let simId
+  describe('Create a sim', function() {
+    it('should be possible to create a simulation', function(done) {
+      agent
+      .post('/simulations')
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .send({ cmd: 'ls -l',
+              auto: true,
+            })
+      .end(function(err,res){
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+        var response = parseResponse(res.text, true)
+        response.success.should.equal(true)
+        simId = response.result
+        response.resource.should.equal('sim-1')
+        response.requester.should.equal(admin)
+        response.grantee.should.equal('bob')
+        response.readOnly.should.equal(true)
         done()
       })
     })
@@ -101,7 +118,9 @@ describe('<Unit test Permissions>', function() {
         response.result.length.should.equal(3)
         response.result[0].name.should.equal('simulations')
         response.result[1].name.should.equal('downloads')
-        response.result[2].name.should.equal('sim-1')
+        simId = response.result[2].name
+        if (!simId.startsWith('simulation-'))
+          should.fail('"'+ simId + +'" invalid sim name')
         done()
       })
     })
@@ -109,7 +128,7 @@ describe('<Unit test Permissions>', function() {
 
   // give user read permission to sim1
   describe('Grant Read Permission', function() {
-    it('should be possible to grant bob read permission for sim-1', function(done) {
+    it('should be possible to grant bob read permission for sim', function(done) {
       agent
       .post('/permissions')
       .set('Acccept', 'application/json')
@@ -122,7 +141,7 @@ describe('<Unit test Permissions>', function() {
         res.redirect.should.equal(false)
         var response = JSON.parse(res.text)
         response.success.should.equal(true)
-        response.resource.should.equal('sim-1')
+        response.resource.should.equal(simId)
         response.requester.should.equal(admin)
         response.grantee.should.equal('bob')
         response.readOnly.should.equal(true)
@@ -145,7 +164,7 @@ describe('<Unit test Permissions>', function() {
         var response = JSON.parse(res.text)
         response.success.should.equal(true)
         response.requester.should.equal('bob')
-        response.result.name.should.equal('sim-1')
+        response.result.name.should.equal(simId)
 
         response.result.permissions.length.should.equal(2)
         response.result.permissions[0].username.should.equal('bob')
@@ -164,7 +183,7 @@ describe('<Unit test Permissions>', function() {
       .delete('/permissions')
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
-      .send({ resource: 'sim-1',
+      .send({ resource: simId,
               grantee: 'bob',
               readOnly: true})
       .end(function(err,res){
@@ -185,7 +204,7 @@ describe('<Unit test Permissions>', function() {
   describe('Get resource', function() {
     it('should not be possible for bob to get sim-1 anymore', function(done) {
       agent
-      .get('/simulations/sim-1')
+      .get('/simulations/' + simId)
       .set('Acccept', 'application/json')
       .set('authorization', bobToken)
       .send({})
@@ -198,5 +217,4 @@ describe('<Unit test Permissions>', function() {
       })
     })
   })
-
 })
