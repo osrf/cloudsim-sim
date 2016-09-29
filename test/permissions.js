@@ -19,7 +19,7 @@ const keys = csgrant.token.generateKeys()
 //console.log('asdasasdas',keys.public, keys.private)
 token.initKeys(keys.public, keys.private)
 
-const admin = process.env.CLOUDSIM_ADMIN
+const admin = process.env.CLOUDSIM_ADMIN || "admin"
 const adminTokenData = {
     identities: [admin]
   }
