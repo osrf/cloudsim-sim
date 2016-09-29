@@ -199,6 +199,7 @@ proc.stopTheSimulator = function() {
   if(!this.schedulerData.proc.exitCode) {
     this.schedulerData.proc.kill()
   }
+  const simId = this.schedulerData.sim.id
   const simData = this.schedulerData.sim.sim.data
   // set the state to "running"
   simData.stat = 'FINISHED'
@@ -329,7 +330,9 @@ function setRoutes(app) {
         const r = { success: true,
                     operation: op,
                     result: data,
-                    id: resourceName}
+                    id: resourceName,
+                    requester: req.user
+                  }
         res.jsonp(r)
       })
     })

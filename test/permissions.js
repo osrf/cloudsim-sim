@@ -6,13 +6,17 @@ const util = require('util');
 const should = require('should');
 const supertest = require('supertest');
 const csgrant = require('cloudsim-grant')
-const token = csgrant.token
 
 const app = require('../server/cloudsim_sim')
+//const csgrant = app.csgrant
+const token = csgrant.token
+
 const agent = supertest.agent(app)
 
 // we need fresh keys for this test
 const keys = csgrant.token.generateKeys()
+
+//console.log('asdasasdas',keys.public, keys.private)
 token.initKeys(keys.public, keys.private)
 
 const admin = process.env.CLOUDSIM_ADMIN
@@ -24,9 +28,11 @@ let adminToken
 
 const bobTokenData = {identities: ['bob']}
 let bobToken
-let simId
 
 function parseResponse(text, log) {
+  if(log) {
+    csgrant.dump()
+  }
   let res
   try {
    res = JSON.parse(text)
@@ -36,7 +42,6 @@ function parseResponse(text, log) {
     throw e
   }
   if(log){
-    csgrant.dump()
     const s = JSON.stringify(res, null, 2)
     console.log(s)
   }
@@ -44,18 +49,11 @@ function parseResponse(text, log) {
 }
 
 describe('<Unit test Permissions>', function() {
-  before(function(done) {
-    setTimeout(function(){
-      done()
-    }, 1000);
-  })
 
   before(function(done) {
-    csgrant.model.clearDb()
     token.initKeys(keys.public, keys.private)
     done()
   })
-
 
   before(function(done) {
     token.signToken(adminTokenData, (e, tok)=>{
@@ -87,15 +85,16 @@ describe('<Unit test Permissions>', function() {
               auto: true,
             })
       .end(function(err,res){
+        var response = parseResponse(res.text)
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
-        var response = parseResponse(res.text, true)
         response.success.should.equal(true)
-        simId = response.result
-        response.resource.should.equal('sim-1')
+        simId = response.id
+        if(!simId.startsWith("simulation-")) {
+          console.log(simId,'fsdahuasldhfluh')
+          should.fail('"'+ simId + +'" invalid sim name')
+        }
         response.requester.should.equal(admin)
-        response.grantee.should.equal('bob')
-        response.readOnly.should.equal(true)
         done()
       })
     })
@@ -118,12 +117,16 @@ describe('<Unit test Permissions>', function() {
         response.result.length.should.equal(3)
         response.result[0].name.should.equal('simulations')
         response.result[1].name.should.equal('downloads')
-        simId = response.result[2].name
-        if (!simId.startsWith('simulation-'))
-          should.fail('"'+ simId + +'" invalid sim name')
+        response.result[2].name.should.equal(simId)
         done()
       })
     })
+  })
+
+  after(function(done) {
+console.log('AFTER')
+    csgrant.model.clearDb()
+    done()
   })
 
   // give user read permission to sim1
@@ -133,13 +136,13 @@ describe('<Unit test Permissions>', function() {
       .post('/permissions')
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
-      .send({ resource: 'sim-1',
+      .send({ resource: simId,
               grantee: 'bob',
               readOnly: true})
       .end(function(err,res){
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
-        var response = JSON.parse(res.text)
+        const response = parseResponse(res.text)
         response.success.should.equal(true)
         response.resource.should.equal(simId)
         response.requester.should.equal(admin)
@@ -152,9 +155,9 @@ describe('<Unit test Permissions>', function() {
 
   // get resource
   describe('Get resource', function() {
-    it('should be possible for bob to get sim-1', function(done) {
+    it('should be possible for bob to get sim', function(done) {
       agent
-      .get('/simulations/sim-1')
+      .get('/simulations/' + simId)
       .set('Acccept', 'application/json')
       .set('authorization', bobToken)
       .send({})
@@ -189,9 +192,9 @@ describe('<Unit test Permissions>', function() {
       .end(function(err,res){
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
-        var response = JSON.parse(res.text)
+        const response = parseResponse(res.text)
         response.success.should.equal(true)
-        response.resource.should.equal('sim-1')
+        response.resource.should.equal(simId)
         response.requester.should.equal(admin)
         response.grantee.should.equal('bob')
         response.readOnly.should.equal(true)
@@ -217,4 +220,5 @@ describe('<Unit test Permissions>', function() {
       })
     })
   })
+
 })

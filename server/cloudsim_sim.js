@@ -55,7 +55,9 @@ const pathToKeysFile = __dirname + '/keys.zip'
 console.log('path to keys: ' + pathToKeysFile)
 fs.statSync(pathToKeysFile)
 
-const dbName = 'cloudsim-sim' + process.env.NODE_ENV == 'test'? 'test': ''
+const dbName = 'cloudsim-sim' + (process.env.NODE_ENV == 'test'? '-test': '')
+csgrant.showLog = true
+
 // we create 2 initial resources
 csgrant.init(process.env.CLOUDSIM_ADMIN, {'simulations': {},
                                       'downloads': {path: pathToKeysFile}
@@ -130,6 +132,8 @@ process.on('SIGTERM', ()=>{
   simulations.stopSimulationScheduler()
 })
 
+// make csgrant available to tests
+app.csgrant = csgrant
 // Expose app
 exports = module.exports = app;
 

@@ -6,7 +6,6 @@ const machina = require('machina')
 exports.showLog = false
 const log = exports.showLog? console.log: ()=>{}
 
-
 // The state machine configuration. It defines the states and transitions.
 // It is used to create a new FSM. The new FSM is expected to implement the
 // following functions:
