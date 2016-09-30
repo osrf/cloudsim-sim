@@ -1,14 +1,12 @@
 'use strict';
 
-console.log('test/mocha/permissions.js');
+console.log('test/permissions.js');
 
-const util = require('util');
 const should = require('should');
 const supertest = require('supertest');
 const csgrant = require('cloudsim-grant')
 
 const app = require('../server/cloudsim_sim')
-//const csgrant = app.csgrant
 const token = csgrant.token
 
 const agent = supertest.agent(app)
@@ -16,7 +14,6 @@ const agent = supertest.agent(app)
 // we need fresh keys for this test
 const keys = csgrant.token.generateKeys()
 
-//console.log('asdasasdas',keys.public, keys.private)
 token.initKeys(keys.public, keys.private)
 
 const admin = process.env.CLOUDSIM_ADMIN || "admin"
@@ -91,7 +88,6 @@ describe('<Unit test Permissions>', function() {
         response.success.should.equal(true)
         simId = response.id
         if(!simId.startsWith("simulation-")) {
-          console.log(simId,'fsdahuasldhfluh')
           should.fail('"'+ simId + +'" invalid sim name')
         }
         response.requester.should.equal(admin)
@@ -123,10 +119,23 @@ describe('<Unit test Permissions>', function() {
     })
   })
 
-  after(function(done) {
-console.log('AFTER')
-    csgrant.model.clearDb()
-    done()
+  // get resource fail
+  describe('Get resource fail', function() {
+    it('should not be possible for bob to get sim', function(done) {
+      agent
+      .get('/simulations/' + simId)
+      .set('Acccept', 'application/json')
+      .set('authorization', bobToken)
+      .send({})
+      .end(function(err,res){
+        res.status.should.be.equal(401)
+        res.redirect.should.equal(false)
+        var response = JSON.parse(res.text)
+        response.success.should.equal(false)
+        should.exist(response.error)
+        done()
+      })
+    })
   })
 
   // give user read permission to sim1
@@ -148,6 +157,27 @@ console.log('AFTER')
         response.requester.should.equal(admin)
         response.grantee.should.equal('bob')
         response.readOnly.should.equal(true)
+        done()
+      })
+    })
+  })
+
+  // get all resources for bob
+  describe('Get all resources for bob', function() {
+    it('should see sim', function(done) {
+      agent
+      .get('/permissions')
+      .set('Acccept', 'application/json')
+      .set('authorization', bobToken)
+      .send({})
+      .end(function(err,res){
+        const response = parseResponse(res.text)
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+        response.success.should.equal(true)
+        response.requester.should.equal('bob')
+        response.result.length.should.equal(1)
+        response.result[0].name.should.equal(simId)
         done()
       })
     })
@@ -179,7 +209,7 @@ console.log('AFTER')
     })
   })
 
-  // give user read permission to sim1
+  // revoke read permission to sim1
   describe('Revoke Read Permission', function() {
     it('should be possible to revoke user read permission', function(done) {
       agent
@@ -219,6 +249,71 @@ console.log('AFTER')
         done()
       })
     })
+  })
+
+  // update resource
+  describe('Update resource', function() {
+    it('should be possible for admin to update resource', function(done) {
+      agent
+      .put('/simulations/' + simId)
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .send({ auto: false})
+      .end(function(err,res){
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+        const response = parseResponse(res.text)
+        response.success.should.equal(true)
+console.log('--------------------')
+console.log(response)
+console.log('--------------------')
+        done()
+      })
+    })
+  })
+
+  // delete resource
+  describe('Delete simulation', function() {
+    it('should be possible for admin to delete sim', function(done) {
+      agent
+      .delete('/simulations/' + simId)
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .send({})
+      .end(function(err,res){
+        res.status.should.be.equal(200)
+        var response = JSON.parse(res.text)
+        response.success.should.equal(true)
+        done()
+      })
+    })
+  })
+
+  // check that sim is not in all resources
+  describe('Get all resources for admin', function() {
+    it('should not have sim anymore', function(done) {
+      agent
+      .get('/permissions')
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .send({})
+      .end(function(err,res){
+        const response = parseResponse(res.text)
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+        response.success.should.equal(true)
+        response.requester.should.equal(admin)
+        response.result.length.should.equal(2)
+        response.result[0].name.should.equal('simulations')
+        response.result[1].name.should.equal('downloads')
+        done()
+      })
+    })
+  })
+
+  after(function(done) {
+    csgrant.model.clearDb()
+    done()
   })
 
 })
