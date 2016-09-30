@@ -14,7 +14,7 @@ const util = require('util')
 const simulations = require('./simulations')
 const downloads = require('./downloads')
 
-const useHttps = true
+const useHttps = false
 if(useHttps) {
   const privateKey  = fs.readFileSync(__dirname + '/key.pem', 'utf8')
   const certificate = fs.readFileSync(__dirname + '/key-cert.pem', 'utf8')
