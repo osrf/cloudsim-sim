@@ -159,6 +159,8 @@ proc.startTheSimulator =  function() {
   var colorize = function (buf) {
     const txt = buf.toString()
     // replace new lines with html line breaks
+    if (txt.length == 0)
+      return ""
     const html = txt.split('\n').join('<br>')
     // convert the color codes to html
     //   ex: "[0m[1;31m:[0m[1;31m96[0m[1;31m] [0m[1;31m"
@@ -389,8 +391,9 @@ function setRoutes(app) {
     const resourceName = req.simId
     const r = {success: false}
     const user = req.user  // from previous middleware
-    const resource = req.simId // from app.param (see below)
-    csgrant.deleteResource(user, resource, (err, data) => {
+    const resourceId = req.simId // from app.param (see below)
+
+    csgrant.deleteResource(user, resourceId, (err, data) => {
       if(err) {
         return res.jsonp({success: false, error: err})
       }
