@@ -1,6 +1,6 @@
 'use strict';
 
-console.log('test/mocha/permissions.js');
+console.log('test/permissions.js');
 
 const util = require('util');
 const should = require('should');
@@ -8,7 +8,7 @@ const supertest = require('supertest');
 const csgrant = require('cloudsim-grant')
 const token = csgrant.token
 
-const app = require('../../server/server')
+const app = require('../server/cloudsim_sim.js')
 
 const agent = supertest.agent(app)
 

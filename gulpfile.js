@@ -17,7 +17,7 @@ gulp.task('nodemon', function (cb) {
 	var started = false;
 
 	return nodemon({
-		script: 'server/server.js',
+		script: 'server/cloudsim_sim.js',
     watch: ['server/**/*.*']
 	}).on('start', function () {
     console.log('start nodemon')
@@ -30,10 +30,6 @@ gulp.task('nodemon', function (cb) {
 	});
 });
 
-gulp.task('set-test-env', function () {
-  return process.env.NODE_ENV = 'test';
-});
-
 gulp.task('pre-test', function () {
   return gulp.src(['server/**/*.js'])
     // Covering files
@@ -42,8 +38,8 @@ gulp.task('pre-test', function () {
     .pipe(istanbul.hookRequire());
 });
 
-gulp.task('test', ['set-test-env', 'pre-test'], function() {
-  return gulp.src(['test/mocha/*.js'], {read: false})
+gulp.task('test', ['pre-test'], function() {
+  return gulp.src(['test/**/*.js'], {read: false})
     .pipe(mocha({
       reporter: 'spec'
     }))
