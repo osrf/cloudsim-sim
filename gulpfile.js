@@ -36,9 +36,9 @@ gulp.task('pre-test', function () {
     .pipe(istanbul())
     // Force `require` to return covered files
     .pipe(istanbul.hookRequire());
-})
+});
 
-gulp.task('test', ['pre-test'],  function() {
+gulp.task('test', ['pre-test'], function() {
   return gulp.src(['test/**/*.js'], {read: false})
     .pipe(mocha({
       reporter: 'spec'
