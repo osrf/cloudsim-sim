@@ -7,10 +7,12 @@
 #iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 4000
 
 # http
-iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 4000
+iptables -A PREROUTING -t nat -i ens3 -p tcp --dport 80 -j REDIRECT --to-port 4000
 
 # then, you can make the rule persistent by installing this package
 # and answering yes to the 'copy existing rules' question
 #
 # sudo apt install iptables-persistent
 # sudo npm install -g pm2
+
+# if you want to change them again, edit /etc/iptables/rules.v4
