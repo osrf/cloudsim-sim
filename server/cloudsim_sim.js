@@ -20,7 +20,7 @@ dotenv.load()
 
 let httpServer = null
 
-const useHttps = true
+const useHttps = false
 if(useHttps) {
   const privateKey  = fs.readFileSync(__dirname + '/key.pem', 'utf8')
   const certificate = fs.readFileSync(__dirname + '/key-cert.pem', 'utf8')
