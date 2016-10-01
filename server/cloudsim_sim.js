@@ -47,22 +47,21 @@ const port = process.env.PORT || 4000
 // the delay between simulator process state machine update in ms
 const simulationsSchedulerInterval = process.env.SCHEDULER_INTERVAL || 1000
 
-process.env.CLOUDSIM_ADMIN = process.env.CLOUDSIM_ADMIN || 'admin'
+const adminUser = process.env.CLOUDSIM_ADMIN || 'admin'
 
 // setup
 // error if file is not there
 const pathToKeysFile = __dirname + '/keys.zip'
-console.log('path to keys: ' + pathToKeysFile)
 fs.statSync(pathToKeysFile)
 
 const dbName = 'cloudsim-sim' + (process.env.NODE_ENV == 'test'? '-test': '')
 // we create 2 initial resources
-csgrant.init(process.env.CLOUDSIM_ADMIN, {'simulations': {},
-                                      'downloads': {path: pathToKeysFile}
-                                     },
-                                     dbName,
-                                     'localhost',
-                                     (err)=> {
+csgrant.init(adminUser, { 'simulations': {},
+                          'downloads': {path: pathToKeysFile}
+                        },
+                        dbName,
+                        'localhost',
+                        (err)=> {
     if(err) {
       console.log('Error loading resources: ' + err)
       process.exit(-2)
@@ -74,14 +73,41 @@ csgrant.init(process.env.CLOUDSIM_ADMIN, {'simulations': {},
     }
 })
 
-console.log('admin user: ' + process.env.CLOUDSIM_ADMIN)
-console.log ('database: ' + dbName)
+function details() {
+  const x = 'xxxxxxxxxxxxxxxxxxxx'
+  const date = new Date()
+  const version = require('../package.json').version
+  const csgrantVersion = require('cloudsim-grant/package.json').version
+  const env = app.get('env')
+
+  const s = `
+============================================
+date: ${date}
+cloudsim-sim version: ${version}
+port: ${port}
+cloudsim-grant version: ${csgrantVersion}
+admin user: ${adminUser}
+environment: ${env}
+redis database name: ${dbName}
+redis database url: localhost
+path to keys: ${pathToKeysFile}
+============================================
+`
+  return s
+
+
+}
+
+console.log(details())
 
 app.get('/', function (req, res) {
-  // res.sendFile(__dirname + '/../public/index.html')
-  let s = `
+  const info = details()
+  const s = `
     <h1>Cloudsim-sim server</h1>
-    Gazebo controller is running
+    <div>Gazebo controller is running</div>
+    <pre>
+  	${info}   
+    </pre>
   `
   res.end(s)
 })
