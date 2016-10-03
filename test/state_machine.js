@@ -85,7 +85,7 @@ describe('<Unit test State machine>', function() {
   })
 
   describe('stop a simulation', function() {
-    it('it should make 3 transitions', function(done) {
+    it('it should make 2 transitions', function(done) {
       transitions = []
       proc.stop()
       transitions.length.should.equal(2)
