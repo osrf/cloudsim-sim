@@ -262,7 +262,7 @@ describe('<Unit test Permissions>', function() {
       .end(function(err,res){
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
-        const response = parseResponse(res.text, true)
+        const response = parseResponse(res.text)
         // response.success.should.equal(true)
         done()
       })
