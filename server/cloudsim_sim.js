@@ -32,7 +32,6 @@ else {
   httpServer = require('http').Server(app)
 }
 
-const io = websocket.init(httpServer)
 
 // The Cross-Origin Resource Sharing standard
 app.use(cors())
@@ -56,12 +55,14 @@ fs.statSync(pathToKeysFile)
 
 const dbName = 'cloudsim-sim' + (process.env.NODE_ENV == 'test'? '-test': '')
 // we create 2 initial resources
-csgrant.init(adminUser, { 'simulations': {},
-                          'downloads': {path: pathToKeysFile}
-                        },
-                        dbName,
-                        'localhost',
-                        (err)=> {
+csgrant.init(adminUser,
+             { 'simulations': {},
+               'downloads': {path: pathToKeysFile}
+             },
+             dbName,
+             'localhost',
+//             httpServer,   // this is reserved for the next PR
+             (err)=> {
     if(err) {
       console.log('Error loading resources: ' + err)
       process.exit(-2)
@@ -73,15 +74,15 @@ csgrant.init(adminUser, { 'simulations': {},
     }
 })
 
+const io = websocket.init(httpServer)
+
 function details() {
-  const x = 'xxxxxxxxxxxxxxxxxxxx'
   const date = new Date()
   const version = require('../package.json').version
   const csgrantVersion = require('cloudsim-grant/package.json').version
   const env = app.get('env')
 
   const s = `
-============================================
 date: ${date}
 cloudsim-sim version: ${version}
 port: ${port}
@@ -91,14 +92,13 @@ environment: ${env}
 redis database name: ${dbName}
 redis database url: localhost
 path to keys: ${pathToKeysFile}
-============================================
 `
   return s
-
-
 }
 
+console.log('============================================')
 console.log(details())
+console.log('============================================')
 
 app.get('/', function (req, res) {
   const info = details()
@@ -106,7 +106,7 @@ app.get('/', function (req, res) {
     <h1>Cloudsim-sim server</h1>
     <div>Gazebo controller is running</div>
     <pre>
-  	${info}   
+  	${info}
     </pre>
   `
   res.end(s)
@@ -158,6 +158,7 @@ process.on('SIGTERM', ()=>{
 
 // make csgrant available to tests
 app.csgrant = csgrant
+
 // Expose app
 exports = module.exports = app;
 
