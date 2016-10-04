@@ -165,7 +165,9 @@ proc.startTheSimulator =  function() {
     // convert the color codes to html
     //   ex: "[0m[1;31m:[0m[1;31m96[0m[1;31m] [0m[1;31m"
     const ansi = ansi2html.toHtml(html)
-    return ansi
+    // hot fix!!! hack todo superbad
+    const x = ansi.replace('undefinedGazebo', 'Gazebo')
+    return x
   }
   // when new text is sent to std out
   this.schedulerData.proc.stdout.on('data', (data)=> {
