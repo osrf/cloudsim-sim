@@ -61,7 +61,7 @@ csgrant.init(adminUser,
              },
              dbName,
              'localhost',
-//             httpServer,   // this is reserved for the next PR
+             httpServer,
              (err)=> {
     if(err) {
       console.log('Error loading resources: ' + err)

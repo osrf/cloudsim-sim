@@ -22,7 +22,7 @@
   "dependencies": {
     "ansi-to-html": "^0.4.2",
     "body-parser": "^1.15.2",
-    "cloudsim-grant": "0.2.1",
+    "cloudsim-grant": "0.3.0",
     "cors": "^2.8.0",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
