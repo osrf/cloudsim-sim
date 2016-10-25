@@ -1,6 +1,5 @@
 'use strict'
 
-const express = require('express')
 const csgrant = require('cloudsim-grant')
 const state_machine = require('./state_machine.js')
 const ansi_to_html = require('ansi-to-html')
@@ -78,13 +77,13 @@ const proc = state_machine.createMachine()
 // counter simply increments
 // state is the state of the scheduler
 proc.schedulerData = {
-    interval: null,
-    counter: 0,
-    proc: null,
-    simId: null,
-    sim: null,
-    userName: null
-  }
+  interval: null,
+  counter: 0,
+  proc: null,
+  simId: null,
+  sim: null,
+  userName: null
+}
 
 // helper function to get the userName from the resource
 function getSimUser(simulation) {
@@ -93,7 +92,6 @@ function getSimUser(simulation) {
   for (let user in permissions) {
     if (!permissions[user].readOnly) {
       return user
-      break
     }
   }
   const simId = simulation.id
@@ -176,19 +174,19 @@ proc.startTheSimulator =  function() {
     simData.output += newData
     csgrant.updateResource(userName, simId, simData, function(){
       log('sim "' + simId  + 'data:' + newData )
-     })
+    })
 
   })
   // when new text is sent to std err
   this.schedulerData.proc.stderr.on('data', (data)=> {
-     const newData = colorize(data)
-     simData.output += newData
-     csgrant.updateResource(userName, simId, simData, function(){
+    const newData = colorize(data)
+    simData.output += newData
+    csgrant.updateResource(userName, simId, simData, function(){
       log('sim "' + simId  + 'data:' + newData )
-     })
+    })
   })
   //
-  this.schedulerData.proc.on('close', (code)=>{
+  this.schedulerData.proc.on('close', ()=>{
     log('simulation process has terminated')
     // turn the state machine into stopping action
     this.stop()
@@ -299,80 +297,101 @@ function setRoutes(app) {
 
   // create a new simulation
   app.post('/simulations',
-           csgrant.authenticate,
-           csgrant.ownsResource('simulations', false),
-           function(req, res) {
+    csgrant.authenticate,
+    csgrant.ownsResource('simulations', false),
+    function(req, res) {
 
-    console.log('create sim:')
-    console.log('  body:' +  JSON.stringify(req.body))
-    console.log('  query:' + JSON.stringify(req.query))
+      console.log('create sim:')
+      console.log('  body:' +  JSON.stringify(req.body))
+      console.log('  query:' + JSON.stringify(req.query))
 
-    const data = req.body
-    const resourceData = { cmd: data.cmd,
-                           auto: data.auto,
-                           stat:'WAITING'
-                          }
-    const error = function(msg) {
-      return {operation: 'createSimulation',
-              success: false,
-              error: msg}
-    }
-    const op = 'createSimulation'
-    const user = req.user
-    const r = {success: false}
-    csgrant.getNextResourceId('simulation', (err, resourceName) => {
-      if(err) {
-        res.jsonp(error(err))
-        return
+      const data = req.body
+      const resourceData = { cmd: data.cmd,
+                             auto: data.auto,
+                             stat:'WAITING'
+                            }
+      const error = function(msg) {
+        return {operation: 'createSimulation',
+                success: false,
+                error: msg}
       }
-      csgrant.createResource(user, resourceName, resourceData,
-                            (err, data) => {
+      const op = 'createSimulation'
+      const user = req.user
+      csgrant.getNextResourceId('simulation', (err, resourceName) => {
         if(err) {
           res.jsonp(error(err))
           return
         }
-        const r = { success: true,
-                    operation: op,
-                    result: data,
-                    id: resourceName,
-                    requester: req.user
-                  }
-        res.jsonp(r)
+        csgrant.createResource(user, resourceName, resourceData,
+          (err, data) => {
+            if(err) {
+              res.jsonp(error(err))
+              return
+            }
+            const r = { success: true,
+                        operation: op,
+                        result: data,
+                        id: resourceName,
+                        requester: req.user
+                      }
+            res.jsonp(r)
+          })
       })
     })
-  })
 
   // Update a simulation
   app.put('/simulations/:simId',
-          csgrant.authenticate,
-          csgrant.ownsResource(':simId', false),
-          function(req, res) {
+    csgrant.authenticate,
+    csgrant.ownsResource(':simId', false),
+    function(req, res) {
 
-    const resourceName = req.simId
-    const newData = req.body
-    console.log(' Update simulation: ' + resourceName)
-    console.log(' new data: ' + JSON.stringify(newData))
-    const user = req.user
+      const resourceName = req.simId
+      const newData = req.body
+      console.log(' Update simulation: ' + resourceName)
+      console.log(' new data: ' + JSON.stringify(newData))
+      const user = req.user
 
-    const r = {success: false}
-    if (!newData.cmd) {
-       return res.jsonp({success: false,
-                         error: 'invalid new simulation: missing cmd'})
-    }
-    if (!newData.auto) {
-       return res.jsonp({success: false,
-                         error: 'invalid new simulation: missing auto'})
-    }
-
-    csgrant.readResource(user, resourceName, function(err, oldData) {
-      if(err)
+      const r = {success: false}
+      if (!newData.cmd) {
         return res.jsonp({success: false,
-                          error: 'error trying to read existing data: ' + err})
-      const futureData = oldData.data
-      // merge with existing fields of the newData...
-      // thus keeping old fields intact
-      for (var attrname in newData) {futureData[attrname] = newData[attrname]}
-      csgrant.updateResource(user, resourceName, futureData, (err, data) => {
+                          error: 'invalid new simulation: missing cmd'})
+      }
+      if (!newData.auto) {
+        return res.jsonp({success: false,
+                          error: 'invalid new simulation: missing auto'})
+      }
+
+      csgrant.readResource(user, resourceName, function(err, oldData) {
+        if(err)
+          return res.jsonp({success: false,
+                            error: 'error trying to read existing data: ' + err})
+        const futureData = oldData.data
+        // merge with existing fields of the newData...
+        // thus keeping old fields intact
+        for (var attrname in newData) {futureData[attrname] = newData[attrname]}
+        csgrant.updateResource(user, resourceName, futureData, (err, data) => {
+          if(err) {
+            return res.jsonp({success: false, error: err})
+          }
+          r.success = true
+          r.result = data
+          // success
+          res.jsonp(r)
+        })
+      })
+    })
+
+  // Delete a simulation
+  app.delete('/simulations/:simId',
+    csgrant.authenticate,
+    csgrant.ownsResource(':simId', false),
+    function(req, res) {
+      console.log('delete simulation ' + req.simId)
+      const r = {success: false}
+      const user = req.user  // from previous middleware
+      const resourceId = req.simId // from app.param (see below)
+
+      csgrant.deleteResource(user, resourceId, (err, data) => {
         if(err) {
           return res.jsonp({success: false, error: err})
         }
@@ -382,42 +401,19 @@ function setRoutes(app) {
         res.jsonp(r)
       })
     })
-  })
-
-  // Delete a simulation
-  app.delete('/simulations/:simId',
-             csgrant.authenticate,
-             csgrant.ownsResource(':simId', false),
-             function(req, res) {
-    console.log('delete simulation ' + req.simId)
-    const resourceName = req.simId
-    const r = {success: false}
-    const user = req.user  // from previous middleware
-    const resourceId = req.simId // from app.param (see below)
-
-    csgrant.deleteResource(user, resourceId, (err, data) => {
-      if(err) {
-        return res.jsonp({success: false, error: err})
-      }
-      r.success = true
-      r.result = data
-      // success
-      res.jsonp(r)
-    })
-  })
 
   // This is the route to stop a simulation (before starting a new one)
   app.get('/stopsimulation',
-          csgrant.authenticate,
-          csgrant.ownsResource('simulations', false),
-          function(req, res) {
-    console.log('STOP received', proc.state)
-    proc.stop()
-    console.log('STOP done', proc.state, '(', proc.priorState, ')')
-    res.jsonp({state: proc.state,
-               prior: proc.priorState
-              })
-  })
+    csgrant.authenticate,
+    csgrant.ownsResource('simulations', false),
+    function(req, res) {
+      console.log('STOP received', proc.state)
+      proc.stop()
+      console.log('STOP done', proc.state, '(', proc.priorState, ')')
+      res.jsonp({state: proc.state,
+                 prior: proc.priorState
+                })
+    })
 
   // simId
   app.param('simId', function( req, res, next, id) {

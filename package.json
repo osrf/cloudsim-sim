@@ -2,6 +2,7 @@
   "private": true,
   "version": "0.1.4",
   "devDependencies": {
+    "eslint": "^3.8.1",
     "gulp-coveralls": "^0.1.4",
     "gulp-istanbul": "^1.1.1",
     "gulp-mocha": "^3.0.1",
@@ -13,7 +14,7 @@
     "url": "https://bitbucket.org/osrf/cloudsim-sim"
   },
   "scripts": {
-    "test": "export NODE_ENV=test && gulp test",
+    "test": "./node_modules/.bin/eslint . && export NODE_ENV=test && gulp test",
     "start": "gulp serve"
   },
   "engines": {
@@ -22,19 +23,15 @@
   "dependencies": {
     "ansi-to-html": "^0.4.2",
     "body-parser": "^1.15.2",
-    "cloudsim-grant": "0.3.0",
+    "cloudsim-grant": "0.3.1",
     "cors": "^2.8.0",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
     "gulp": "^3.8.5",
     "jsonwebtoken": "^7.1.9",
     "machina": "^2.0.0",
-    "mocha": "^3.0.2",
     "morgan": "^1.7.0",
-    "nodemon": "^1.10.2",
     "should": "^11.1.0",
-    "socket.io": "^1.4.8",
-    "socketio-jwt": "^4.5.0",
-    "xtend": "^4.0.1"
+    "socket.io": "^1.4.8"
   }
 }

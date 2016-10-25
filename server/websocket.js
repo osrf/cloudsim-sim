@@ -1,7 +1,6 @@
 'use strict'
 
 const ansi_to_html = require('ansi-to-html')
-const socketioJwt = require('socketio-jwt');
 const UnauthorizedError = require('./UnauthorizedError');
 const jwt = require('jsonwebtoken');
 const ansi2html = new ansi_to_html()
@@ -37,16 +36,16 @@ function autho(socket) {
     }
     // error handler
     var onError = function(err, code) {
-        if (err) {
-          code = code || 'unknown';
-          var error = new UnauthorizedError(code, {
-            message: (Object.prototype.toString.call(err) === '[object Object]' && err.message) ? err.message : err
-          });
-          socket.emit('unauthorized', error, function() {
-            socket.disconnect('unauthorized');
-          });
-          return; // stop logic, socket will be close on next tick
-        }
+      if (err) {
+        code = code || 'unknown';
+        var error = new UnauthorizedError(code, {
+          message: (Object.prototype.toString.call(err) === '[object Object]' && err.message) ? err.message : err
+        });
+        socket.emit('unauthorized', error, function() {
+          socket.disconnect('unauthorized');
+        });
+        return; // stop logic, socket will be close on next tick
+      }
     };
     if(typeof data.token !== "string") {
       return onError({message: 'invalid token datatype'}, 'invalid_token');
@@ -75,17 +74,17 @@ function autho(socket) {
       console.log('BYPASS!!')
       return onSuccess()
 
-      if (err) {
-        console.log('error during validation');
-        return onError(err, 'invalid_token');
-      }
-
-      if(options.additional_auth &&
-          typeof options.additional_auth === 'function') {
-        options.additional_auth(decoded, onSuccess, onError)
-      } else {
-        onSuccess()
-      }
+//      if (err) {
+//        console.log('error during validation');
+//        return onError(err, 'invalid_token');
+//      }
+//
+//      if(options.additional_auth &&
+//          typeof options.additional_auth === 'function') {
+//        options.additional_auth(decoded, onSuccess, onError)
+//      } else {
+//        onSuccess()
+//      }
     }
 
     var onSecretReady = function(err, secret) {
@@ -147,7 +146,7 @@ function init(httpServer) {
           gzcmd.proc.stderr.on('data', (data)=> {
             io.emit('gz-cmd', onNewData(data))
           })
-          gzcmd.proc.on('close', (code)=>{
+          gzcmd.proc.on('close', ()=>{
             console.log('gzcmd.proc.on close')
             gzcmd.state = 'closed'
             // tell client
