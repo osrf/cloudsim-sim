@@ -1,9 +1,6 @@
 'use strict'
 
 const state_machine = require('../server/state_machine')
-const should = require('should');
-const csgrant = require('cloudsim-grant')
-const token = csgrant.token
 
 // we use this list to record the successive transitions, and
 // verify that they are correct in the tests

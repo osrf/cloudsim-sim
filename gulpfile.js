@@ -14,20 +14,20 @@ gulp.task('serve', ['nodemon'], function () {
 
 gulp.task('nodemon', function (cb) {
 
-	var started = false;
+  var started = false;
 
-	return nodemon({
-		script: 'server/cloudsim_sim.js',
+  return nodemon({
+    script: 'server/cloudsim_sim.js',
     watch: ['server/**/*.*']
-	}).on('start', function () {
+  }).on('start', function () {
     console.log('start nodemon')
-		// to avoid nodemon being started multiple times
-		// thanks @matthisk
-		if (!started) {
-			cb();
-			started = true;
-		}
-	});
+    // to avoid nodemon being started multiple times
+    // thanks @matthisk
+    if (!started) {
+      cb();
+      started = true;
+    }
+  });
 });
 
 gulp.task('pre-test', function () {

@@ -18,8 +18,8 @@ token.initKeys(keys.public, keys.private)
 
 const admin = process.env.CLOUDSIM_ADMIN || "admin"
 const adminTokenData = {
-    identities: [admin]
-  }
+  identities: [admin]
+}
 
 let adminToken
 
@@ -32,7 +32,7 @@ function parseResponse(text, log) {
   }
   let res
   try {
-   res = JSON.parse(text)
+    res = JSON.parse(text)
   }
   catch (e) {
     console.log(text)
@@ -262,7 +262,7 @@ describe('<Unit test Permissions>', function() {
       .end(function(err,res){
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
-        const response = parseResponse(res.text)
+        // const response = parseResponse(res.text)
         // response.success.should.equal(true)
         done()
       })

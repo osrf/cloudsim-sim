@@ -63,18 +63,18 @@ csgrant.init(adminUser,
              'localhost',
              httpServer,
              (err)=> {
-    if(err) {
-      console.log('Error loading resources: ' + err)
-      process.exit(-2)
-    }
-    else {
-      console.log('resources loaded')
-      // Run the simulator process scheduler
-      simulations.startSimulationsScheduler(simulationsSchedulerInterval)
-    }
-})
+               if(err) {
+                 console.log('Error loading resources: ' + err)
+                 process.exit(-2)
+               }
+               else {
+                 console.log('resources loaded')
+                 // Run the simulator process scheduler
+                 simulations.startSimulationsScheduler(simulationsSchedulerInterval)
+               }
+             })
 
-const io = websocket.init(httpServer)
+websocket.init(httpServer)
 
 function details() {
   const date = new Date()
@@ -165,5 +165,5 @@ exports = module.exports = app;
 // start the server
 httpServer.listen(port, function(){
   console.log('ssl: ' + useHttps)
-	console.log('listening on *:' + port);
+  console.log('listening on *:' + port);
 })
