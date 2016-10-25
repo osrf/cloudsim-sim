@@ -12,7 +12,6 @@ const csgrant = require('cloudsim-grant')
 // local modules
 const simulations = require('./simulations')
 const downloads = require('./downloads')
-const websocket = require('./websocket')
 
 // the configuration values are set in the local .env file
 // this loads the .env content and puts it in the process environment.
@@ -74,8 +73,7 @@ csgrant.init(adminUser,
                }
              })
 
-websocket.init(httpServer)
-
+// gets info that is printed in the console, as well as /
 function details() {
   const date = new Date()
   const version = require('../package.json').version
@@ -96,6 +94,7 @@ path to keys: ${pathToKeysFile}
   return s
 }
 
+// write details to the console
 console.log('============================================')
 console.log(details())
 console.log('============================================')
