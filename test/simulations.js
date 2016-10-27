@@ -54,12 +54,6 @@ describe('<Unit test Simulations>', function() {
   })
 
   before(function(done) {
-    csgrant.model.clearDb()
-    done()
-  })
-
-
-  before(function(done) {
     token.signToken(adminTokenData, (e, tok)=>{
       console.log('token signed for "' + admin + '"')
       if(e) {
@@ -178,4 +172,11 @@ describe('<Unit test Simulations>', function() {
       })
     })
   })
+
+  after(function(done) {
+    csgrant.model.clearDb()
+    done()
+  })
+
+
 })
