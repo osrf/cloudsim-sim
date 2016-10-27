@@ -50,7 +50,7 @@ describe('<Unit test Simulations>', function() {
   before(function(done) {
     setTimeout(function(){
       done()
-    }, 1000);
+    }, 1500);
   })
 
   before(function(done) {
