@@ -354,11 +354,11 @@ function setRoutes(app) {
       const r = {success: false}
       if (!newData.cmd) {
         return res.jsonp({success: false,
-                          error: 'invalid new simulation: missing cmd'})
+                          error: 'Can\'t update simulation: missing cmd'})
       }
-      if (!newData.auto) {
+      if (newData.auto === undefined) {
         return res.jsonp({success: false,
-                          error: 'invalid new simulation: missing auto'})
+                          error: 'Can\'t update simulation: missing auto'})
       }
 
       csgrant.readResource(user, resourceName, function(err, oldData) {
@@ -375,6 +375,8 @@ function setRoutes(app) {
           }
           r.success = true
           r.result = data
+          r.id = resourceName
+          r.requester = req.user
           // success
           res.jsonp(r)
         })
@@ -397,6 +399,7 @@ function setRoutes(app) {
         }
         r.success = true
         r.result = data
+        r.id = resourceId
         // success
         res.jsonp(r)
       })

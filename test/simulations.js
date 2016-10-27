@@ -24,10 +24,6 @@ const adminTokenData = {
 
 let adminToken
 
-const bobTokenData = {identities: ['bob']}
-let bobToken
-
-
 // holds the simulation id
 let simId1
 
@@ -70,14 +66,7 @@ describe('<Unit test Simulations>', function() {
         console.log('sign error: ' + e)
       }
       adminToken = tok
-      token.signToken(bobTokenData, (e, tok)=>{
-        console.log('token signed for user "bob"')
-        if(e) {
-          console.log('sign error: ' + e)
-        }
-        bobToken = tok
-        done()
-      })
+      done()
     })
   })
 
@@ -101,6 +90,7 @@ describe('<Unit test Simulations>', function() {
     })
   })
 
+  // Create simulation
   describe('Create a sim', function() {
     it('should be possible for admin to create a simulation', function(done) {
       agent
@@ -121,63 +111,107 @@ describe('<Unit test Simulations>', function() {
         }
         response.requester.should.equal(admin)
         response.result.data.cmd.should.equal('ls -l')
+        response.result.data.auto.should.equal(true)
         done()
       })
     })
   })
 
-  // get resource
+  // Get simulation
   describe('Get resource', function() {
-    it('should be not possible for bob to get sim', function(done) {
+    it('should be possible for admin to get sim', function(done) {
       agent
       .get('/simulations/' + simId1)
       .set('Acccept', 'application/json')
-      .set('authorization', bobToken)
+      .set('authorization', adminToken)
       .send({})
       .end(function(err,res){
-        res.status.should.be.equal(401)
-        done()
-      })
-    })
-  })
+        should.not.exist(err)
 
-  // give user read permission to sim1
-  describe('Revoke Read Permission', function() {
-    it('should be possible to revoke user read permission', function(done) {
-      agent
-      .delete('/permissions')
-      .set('Acccept', 'application/json')
-      .set('authorization', adminToken)
-      .send({ resource: simId1,
-              grantee: 'bob',
-              readOnly: true})
-      .end(function(err,res){
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
-        var response = parseResponse(res.text, true)
+
+        const response = parseResponse(res.text)
         response.success.should.equal(true)
         response.resource.should.equal(simId1)
         response.requester.should.equal(admin)
-        response.grantee.should.equal('bob')
-        response.readOnly.should.equal(true)
+        response.result.data.cmd.should.equal('ls -l')
+        response.result.data.auto.should.equal(true)
+
         done()
       })
     })
   })
 
-  // get resource
-  describe('Get resource', function() {
-    it('should not be possible for bob to get sim-1 anymore', function(done) {
+  // Update simulation
+  describe('Update a sim', function() {
+    it('should be possible for admin to update a simulation', function(done) {
       agent
-      .get('/simulations/sim-1')
+      .put('/simulations/' + simId1)
       .set('Acccept', 'application/json')
-      .set('authorization', bobToken)
+      .set('authorization', adminToken)
+      .send({ cmd: 'ls -la',
+              auto: false,
+            })
+      .end(function(err,res){
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+
+        var response = parseResponse(res.text)
+        response.success.should.equal(true)
+        response.requester.should.equal(admin)
+        response.id.should.equal(simId1)
+        response.result.data.cmd.should.equal('ls -la')
+        response.result.data.auto.should.equal(false)
+        done()
+      })
+    })
+  })
+
+  // Get to check update
+  describe('Get resource', function() {
+    it('should have the updated fields', function(done) {
+      agent
+      .get('/simulations/' + simId1)
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
       .send({})
       .end(function(err,res){
-        res.status.should.be.equal(401)
-        var response = JSON.parse(res.text)
-        response.success.should.equal(false)
-        should.exist(response.error)
+        should.not.exist(err)
+
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+
+        const response = parseResponse(res.text)
+        response.success.should.equal(true)
+        response.resource.should.equal(simId1)
+        response.requester.should.equal(admin)
+        response.result.data.cmd.should.equal('ls -la')
+        response.result.data.auto.should.equal(false)
+
+        done()
+      })
+    })
+  })
+
+  // Delete simulation
+  describe('Delete resource', function() {
+    it('should be possible for admin to delete simulation', function(done) {
+      agent
+      .delete('/simulations/' + simId1)
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .send({})
+      .end(function(err,res){
+        should.not.exist(err)
+
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+
+        const response = parseResponse(res.text)
+        response.success.should.equal(true)
+        response.id.should.equal(simId1)
+
         done()
       })
     })
