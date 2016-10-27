@@ -15,6 +15,9 @@ const keys = csgrant.token.generateKeys()
 token.initKeys(keys.public, keys.private)
 
 const admin = process.env.CLOUDSIM_ADMIN
+
+console.log('admin user:', admin)
+
 const adminTokenData = {
   identities: [admin]
 }
@@ -52,6 +55,13 @@ describe('<Unit test Simulations>', function() {
       done()
     }, 1500);
   })
+
+  before(function(done) {
+    if (!admin || admin === "")
+      should.fail('Admin user not specified')
+    done()
+  })
+
 
   before(function(done) {
     token.signToken(adminTokenData, (e, tok)=>{
