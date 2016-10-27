@@ -82,7 +82,7 @@ describe('<Unit test Permissions>', function() {
               auto: true,
             })
       .end(function(err,res){
-        var response = parseResponse(res.text)
+        var response = parseResponse(res.text, res.status != 200)
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
         response.success.should.equal(true)
