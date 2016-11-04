@@ -17,9 +17,9 @@ function setRoutes(app) {
     function(req,res, next) {
 
       req.fileInfo = { path: req.resourceData.data.path ,
-                       type: 'application/zip',
-                       name: 'keys.zip'
-                     }
+        type: 'application/zip',
+        name: 'keys.zip'
+      }
       next()
     },
     // with a req.fileInfo in place, this middleware will

@@ -148,7 +148,7 @@ exports = module.exports = app;
 // when ready
 csgrant.init(adminUser,
   { 'simulations': {},
-   'downloads': {path: pathToKeysFile}
+    'downloads': {path: pathToKeysFile}
   },
   dbName,
   'localhost',

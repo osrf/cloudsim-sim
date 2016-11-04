@@ -98,8 +98,8 @@ describe('<Unit test Simulations>', function() {
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
       .send({ cmd: 'ls -l',
-              auto: true,
-            })
+        auto: true,
+      })
       .end(function(err,res){
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
@@ -151,8 +151,8 @@ describe('<Unit test Simulations>', function() {
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
       .send({ cmd: 'ls -la',
-              auto: false,
-            })
+        auto: false,
+      })
       .end(function(err,res){
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
