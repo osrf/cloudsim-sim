@@ -93,39 +93,8 @@ app.get('/', function (req, res) {
   res.end(s)
 })
 
-// setup the routes
-
-// grant user permission to a resource
-// (add user to a group)
-app.post('/permissions',
-    csgrant.authenticate,
-    csgrant.grant)
-
-// revoke user permission
-// (delete user from a group)
-app.delete('/permissions',
-    csgrant.authenticate,
-    csgrant.revoke)
-
-// get all user permissions for all resources
-app.get('/permissions',
-    csgrant.authenticate,
-    csgrant.userResources,
-    csgrant.allResources
-)
-
-// get user permissions for a resource
-app.get('/permissions/:resourceId',
-    csgrant.authenticate,
-    csgrant.ownsResource(':resourceId', true),
-    csgrant.resource
-)
-
-/// param for resource name
-app.param('resourceId', function(req, res, next, id) {
-  req.resourceId = id
-  next()
-})
+// setup the /permissions routes
+csgrant.setPermissionsRoutes(app)
 
 // local modules have routes too
 simulations.setRoutes(app)
@@ -146,10 +115,15 @@ exports = module.exports = app;
 // we create 2 initial resources,
 // load the database and start serving
 // when ready
+const resources = {
+  'simulations': {},
+  'downloads': {
+    path: pathToKeysFile
+  }
+}
+
 csgrant.init(adminUser,
-  { 'simulations': {},
-    'downloads': {path: pathToKeysFile}
-  },
+  resources,
   dbName,
   'localhost',
   httpServer,
