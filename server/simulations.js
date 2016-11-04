@@ -35,9 +35,9 @@ function splitSimulations() {
     }
   }
   const split = {finished : [],
-                 running: null,
-                 ready: null,
-                 waiting: []}
+    running: null,
+    ready: null,
+    waiting: []}
 
   // get next waiting sim and return it if it is auto
   // find next available task (hasn't run already)
@@ -307,13 +307,13 @@ function setRoutes(app) {
 
       const data = req.body
       const resourceData = { cmd: data.cmd,
-                             auto: data.auto,
-                             stat:'WAITING'
-                            }
+        auto: data.auto,
+        stat:'WAITING'
+      }
       const error = function(msg) {
         return {operation: 'createSimulation',
-                success: false,
-                error: msg}
+          success: false,
+          error: msg}
       }
       const op = 'createSimulation'
       const user = req.user
@@ -329,11 +329,11 @@ function setRoutes(app) {
               return
             }
             const r = { success: true,
-                        operation: op,
-                        result: data,
-                        id: resourceName,
-                        requester: req.user
-                      }
+              operation: op,
+              result: data,
+              id: resourceName,
+              requester: req.user
+            }
             res.jsonp(r)
           })
       })
@@ -354,17 +354,17 @@ function setRoutes(app) {
       const r = {success: false}
       if (!newData.cmd) {
         return res.jsonp({success: false,
-                          error: 'invalid new simulation: missing cmd'})
+          error: 'invalid new simulation: missing cmd'})
       }
       if (!newData.auto) {
         return res.jsonp({success: false,
-                          error: 'invalid new simulation: missing auto'})
+          error: 'invalid new simulation: missing auto'})
       }
 
       csgrant.readResource(user, resourceName, function(err, oldData) {
         if(err)
           return res.jsonp({success: false,
-                            error: 'error trying to read existing data: ' + err})
+            error: 'error trying to read existing data: ' + err})
         const futureData = oldData.data
         // merge with existing fields of the newData...
         // thus keeping old fields intact
@@ -411,8 +411,8 @@ function setRoutes(app) {
       proc.stop()
       console.log('STOP done', proc.state, '(', proc.priorState, ')')
       res.jsonp({state: proc.state,
-                 prior: proc.priorState
-                })
+        prior: proc.priorState
+      })
     })
 
   // simId

@@ -79,8 +79,8 @@ describe('<Unit test Permissions>', function() {
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
       .send({ cmd: 'ls -l',
-              auto: true,
-            })
+        auto: true,
+      })
       .end(function(err,res){
         var response = parseResponse(res.text)
         res.status.should.be.equal(200)
@@ -146,8 +146,8 @@ describe('<Unit test Permissions>', function() {
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
       .send({ resource: simId,
-              grantee: 'bob',
-              readOnly: true})
+        grantee: 'bob',
+        readOnly: true})
       .end(function(err,res){
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
@@ -217,8 +217,8 @@ describe('<Unit test Permissions>', function() {
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
       .send({ resource: simId,
-              grantee: 'bob',
-              readOnly: true})
+        grantee: 'bob',
+        readOnly: true})
       .end(function(err,res){
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)

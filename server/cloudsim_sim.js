@@ -56,9 +56,9 @@ fs.statSync(pathToKeysFile)
 const dbName = 'cloudsim-sim' + (process.env.NODE_ENV == 'test'? '-test': '')
 // we create 2 initial resources
 csgrant.init(adminUser,
-             { 'simulations': {},
-               'downloads': {path: pathToKeysFile}
-             },
+  { 'simulations': {},
+    'downloads': {path: pathToKeysFile}
+  },
              dbName,
              'localhost',
              httpServer,
