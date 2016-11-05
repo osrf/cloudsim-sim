@@ -356,7 +356,7 @@ function setRoutes(app) {
         return res.jsonp({success: false,
           error: 'invalid new simulation: missing cmd'})
       }
-      if (!newData.auto) {
+      if (newData.auto == undefined) {
         return res.jsonp({success: false,
           error: 'invalid new simulation: missing auto'})
       }
