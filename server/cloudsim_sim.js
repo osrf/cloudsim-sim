@@ -13,7 +13,6 @@ const csgrant = require('cloudsim-grant')
 // local modules
 const simulations = require('./simulations')
 const downloads = require('./downloads')
-const websocket = require('./websocket')
 
 // the configuration values are set in the local .env file
 // this loads the .env content and puts it in the process environment.
@@ -64,28 +63,8 @@ const pathToKeysFile = __dirname + '/keys.zip'
 fs.statSync(pathToKeysFile)
 
 const dbName = 'cloudsim-sim' + (process.env.NODE_ENV == 'test'? '-test': '')
-// we create 2 initial resources
-csgrant.init(adminUser,
-  { 'simulations': {},
-    'downloads': {path: pathToKeysFile}
-  },
-             dbName,
-             'localhost',
-             httpServer,
-             (err)=> {
-               if(err) {
-                 console.log('Error loading resources: ' + err)
-                 process.exit(-2)
-               }
-               else {
-                 console.log('resources loaded')
-                 // Run the simulator process scheduler
-                 simulations.startSimulationsScheduler(simulationsSchedulerInterval)
-               }
-             })
 
-websocket.init(httpServer)
-
+// gets info that is printed in the console, as well as /
 function details() {
   const date = new Date()
   const version = require('../package.json').version
@@ -106,6 +85,7 @@ path to keys: ${pathToKeysFile}
   return s
 }
 
+// write details to the console
 console.log('============================================')
 console.log(details())
 console.log('============================================')
@@ -174,8 +154,32 @@ app.csgrant = csgrant
 // Expose app
 exports = module.exports = app;
 
-// start the server
-httpServer.listen(port, function(){
-  console.log('ssl: ' + useHttps)
-  console.log('listening on *:' + port);
-})
+// we create 2 initial resources,
+// load the database and start serving
+// when ready
+csgrant.init(adminUser,
+  { 'simulations': {},
+    'downloads': {path: pathToKeysFile}
+  },
+  dbName,
+  'localhost',
+  httpServer,
+  (err)=> {
+    if(err) {
+      console.log('Error loading resources: ' + err)
+      process.exit(-2)
+    }
+    else {
+      console.log('resources loaded')
+      // Run the simulator process scheduler
+      simulations.startSimulationsScheduler(simulationsSchedulerInterval)
+
+      // start the server
+      httpServer.listen(port, function(){
+        console.log('ssl: ' + useHttps)
+        console.log('listening on *:' + port);
+      })
+    }
+  }
+)
+
