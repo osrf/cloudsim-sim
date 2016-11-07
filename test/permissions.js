@@ -56,13 +56,13 @@ describe('<Unit test Permissions>', function() {
     token.signToken(adminTokenData, (e, tok)=>{
       console.log('token signed for "' + admin + '"')
       if(e) {
-        console.log('sign error: ' + e)
+        should.fail('sign error: ' + e)
       }
       adminToken = tok
       token.signToken(bobTokenData, (e, tok)=>{
         console.log('token signed for user "bob"')
         if(e) {
-          console.log('sign error: ' + e)
+          should.fail('sign error: ' + e)
         }
         bobToken = tok
         done()
@@ -79,10 +79,10 @@ describe('<Unit test Permissions>', function() {
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
       .send({ cmd: 'ls -l',
-              auto: true,
-            })
+        auto: true,
+      })
       .end(function(err,res){
-        var response = parseResponse(res.text)
+        var response = parseResponse(res.text, res.status != 200)
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
         response.success.should.equal(true)
@@ -146,8 +146,8 @@ describe('<Unit test Permissions>', function() {
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
       .send({ resource: simId,
-              grantee: 'bob',
-              readOnly: true})
+        grantee: 'bob',
+        readOnly: true})
       .end(function(err,res){
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
@@ -217,8 +217,8 @@ describe('<Unit test Permissions>', function() {
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
       .send({ resource: simId,
-              grantee: 'bob',
-              readOnly: true})
+        grantee: 'bob',
+        readOnly: true})
       .end(function(err,res){
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
