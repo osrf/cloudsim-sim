@@ -7,6 +7,7 @@ const bodyParser = require("body-parser")
 const cors = require('cors')
 const morgan = require('morgan')
 const dotenv = require('dotenv')
+const path = require('path')
 // cloudsim module
 const csgrant = require('cloudsim-grant')
 // local modules
@@ -38,7 +39,16 @@ app.use(cors())
 app.use(bodyParser.json())
 
 // prints all requests to the terminal
-app.use(morgan('combined'))
+app.use(morgan('combined', {
+  skip: function (req) {
+    // skip /api stuff
+    const isApi = req.originalUrl.startsWith('/api/')
+    if (isApi) {
+      return true
+    }
+    return false
+  }
+}))
 
 // the port of the server
 const port = process.env.PORT || 4000
@@ -53,7 +63,6 @@ const pathToKeysFile = __dirname + '/keys.zip'
 fs.statSync(pathToKeysFile)
 
 const dbName = 'cloudsim-sim' + (process.env.NODE_ENV == 'test'? '-test': '')
-
 
 // gets info that is printed in the console, as well as /
 function details() {
@@ -80,6 +89,8 @@ path to keys: ${pathToKeysFile}
 console.log('============================================')
 console.log(details())
 console.log('============================================')
+
+app.use("/api", express.static(path.join(__dirname, '/../api')));
 
 app.get('/', function (req, res) {
   const info = details()
