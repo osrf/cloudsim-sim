@@ -63,14 +63,13 @@ const pathToKeysFile = __dirname + '/keys.zip'
 fs.statSync(pathToKeysFile)
 
 const dbName = 'cloudsim-sim' + (process.env.NODE_ENV == 'test'? '-test': '')
+const dbUrl = '127.0.0.1'
 
-// gets info that is printed in the console, as well as /
 function details() {
   const date = new Date()
   const version = require('../package.json').version
   const csgrantVersion = require('cloudsim-grant/package.json').version
   const env = app.get('env')
-
   const s = `
 date: ${date}
 cloudsim-sim version: ${version}
@@ -79,7 +78,7 @@ cloudsim-grant version: ${csgrantVersion}
 admin user: ${adminUser}
 environment: ${env}
 redis database name: ${dbName}
-redis database url: localhost
+redis database url: ${dbUrl}
 path to keys: ${pathToKeysFile}
 `
   return s
@@ -136,7 +135,7 @@ const resources = {
 csgrant.init(adminUser,
   resources,
   dbName,
-  'localhost',
+  dbUrl, 
   httpServer,
   (err)=> {
     if(err) {
