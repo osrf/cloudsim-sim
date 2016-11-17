@@ -20,9 +20,9 @@ sudo shred /home/ubuntu/authorized_keys
 
 # remove old env:
 cd $DIR/..
-rm .env
-rm ../cloudsim-env.bash
-rm ../cloudsim.log
+sudo rm .env
+sudo rm ../cloudsim-env.bash
+sudo rm ../cloudsim.log
 
 # reinstall cloudsim-sim
 rm -rf node_modules
