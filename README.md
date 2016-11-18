@@ -21,7 +21,10 @@ This is the sim/robot control server for Cloudsim
  
 ### on AWS
 
- * sudo apt install -y vim mercurial 
+ * sudo apt install -y vim mercurial
+ * sudo npm install pm2@latest -g
+ 
+ see the [wiki](https://bitbucket.org/osrf/cloudsim/wiki/Developing_sim)
  
 If you need a vpn:
  
