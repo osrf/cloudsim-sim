@@ -17,18 +17,15 @@ This is the sim/robot control server for Cloudsim
 ### required software
 
  * install redis (sudo apt-get install redis-server)
- * install nodejs and npm
+ * install nodejs and npm [nodesource](https://github.com/nodesource/distributions)
  
 ### on AWS
 
  * sudo apt install -y vim mercurial
  * sudo npm install pm2@latest -g
+ * sudo apt install -y openvpn bridge-utils (if you need a vpn)
  
- see the [wiki](https://bitbucket.org/osrf/cloudsim/wiki/Developing_sim)
- 
-If you need a vpn:
- 
- * sudo apt install -y openvpn bridge-utils
+ Checkout the [wiki](https://bitbucket.org/osrf/cloudsim/wiki/Developing_sim)
 
 ### How do I get set up? ###
 
