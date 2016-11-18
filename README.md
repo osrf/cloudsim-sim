@@ -14,9 +14,21 @@ This is the sim/robot control server for Cloudsim
 * Starts and stops ROS nodes
 * A json web token delivery
 
+### required software
+
+ * install redis (sudo apt-get install redis-server)
+ * install nodejs and npm
+ 
+### on AWS
+
+ * sudo apt install -y vim mercurial 
+ 
+If you need a vpn:
+ 
+ * sudo apt install -y openvpn bridge-utils
+
 ### How do I get set up? ###
 
-* install redis (sudo apt-get install redis-server)
 * npm install
 * gulp
 * Dependencies: nodejs 4 and above, gulp (sudo npm install gulp -g)
