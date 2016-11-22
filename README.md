@@ -24,7 +24,6 @@ This is the sim/robot control server for Cloudsim
  * sudo apt install -y vim mercurial
  * sudo npm install pm2@latest -g
  * sudo apt install -y openvpn bridge-utils (if you need a vpn)
- * Start and daemonize server: `pm2 start server/cloudsim_sim.js`
  
  Checkout the [wiki](https://bitbucket.org/osrf/cloudsim/wiki/Developing_sim)
 

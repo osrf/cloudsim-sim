@@ -35,6 +35,14 @@ echo "server_ip: $server_ip"
 echo "client_id: $client_id"
 
 if [ $role == "arbiter" ]; then
+  # Update cloudsim-sim
+  cd $DIR/cloudsim-sim
+  hg up
+  # Potentially install new deps
+  npm install
+
+  node $DIR/server/cloudsim_sim.js &
+
   # Fetch bundles
   mkdir -p $DIR/blue $DIR/gold
   curl -X GET --header 'Accept: application/json' --header "authorization: $token" $blue_route > $DIR/blue/bundle.tgz
