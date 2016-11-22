@@ -42,7 +42,8 @@ echo "gold_subnet: $gold_subnet"
 echo "server_ip: $server_ip"
 echo "client_id: $client_id"
 
-apt install sasc-gazebo-sitl
+apt-get update
+apt-get install sasc-gazebo-sitl
 
 if [ $role == "arbiter" ]; then
 
