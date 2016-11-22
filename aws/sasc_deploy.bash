@@ -15,11 +15,11 @@ optionsfile=$DIR/cloudsim-options.json
 cp $DIR/cloudsim-env.bash $DIR/cloudsim-sim/.env
 # Update cloudsim-sim
 cd $DIR/cloudsim-sim
-hg up
+#hg up
 # Potentially install new deps
-npm install
-node $DIR/cloudsim-sim/server/cloudsim_sim.js &
-
+#npm install
+#node $DIR/cloudsim-sim/server/cloudsim_sim.js &
+echo "DIR is $DIR"
 # Common options
 role=`get_option $optionsfile role`
 token=`get_option $optionsfile token`
@@ -42,8 +42,8 @@ echo "gold_subnet: $gold_subnet"
 echo "server_ip: $server_ip"
 echo "client_id: $client_id"
 
-apt-get update
-apt-get install sasc-gazebo-sitl
+#apt-get update
+#apt-get install sasc-gazebo-sitl
 
 if [ $role == "arbiter" ]; then
 
