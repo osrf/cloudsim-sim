@@ -12,6 +12,14 @@ get_option(){
 # This file is created by cloudsim when the machine is launched
 optionsfile=$DIR/cloudsim-options.json
 
+cp $DIR/cloudsim-env.bash $DIR/cloudsim-sim/.env
+# Update cloudsim-sim
+cd $DIR/cloudsim-sim
+hg up
+# Potentially install new deps
+npm install
+node $DIR/cloudsim-sim/server/cloudsim_sim.js &
+
 # Common options
 role=`get_option $optionsfile role`
 token=`get_option $optionsfile token`
@@ -34,14 +42,9 @@ echo "gold_subnet: $gold_subnet"
 echo "server_ip: $server_ip"
 echo "client_id: $client_id"
 
-if [ $role == "arbiter" ]; then
-  # Update cloudsim-sim
-  cd $DIR/cloudsim-sim
-  hg up
-  # Potentially install new deps
-  npm install
+apt install sasc-gazebo-sitl
 
-  node $DIR/server/cloudsim_sim.js &
+if [ $role == "arbiter" ]; then
 
   # Fetch bundles
   mkdir -p $DIR/blue $DIR/gold

@@ -25,11 +25,11 @@ sudo rm ../cloudsim-env.bash
 sudo rm ../cloudsim.log
 
 # reinstall cloudsim-sim
-rm -rf node_modules
-npm install
+sudo rm -rf node_modules
+sudo npm install
 
 # clear pm2 logs
-pm2 flush
+#pm2 flush
 
 # empty database
 redis-cli flushdb
