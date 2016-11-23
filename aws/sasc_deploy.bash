@@ -58,12 +58,18 @@ if [ $role == "arbiter" ]; then
   tar xf bundle.tgz
   cd $DIR/gold
   tar xf bundle.tgz
+
+  # Create static IP configuration for each subnet
+  mkdir -p $DIR/blue/staticclients
+  echo "ifconfig-push ${blue_subnet}.10 255.255.255.0" > $DIR/blue/staticclients/payload
+  mkdir -p $DIR/gold/staticclients
+  echo "ifconfig-push ${gold_subnet}.10 255.255.255.0" > $DIR/gold/staticclients/payload
   
   # Start servers
   cd $DIR/blue
   $DIR/blue/start_vpn.bash blue $blue_subnet openvpn.conf
   cd $DIR/gold
-  $DIR/gold/start_vpn.bash blue $gold_subnet openvpn.conf
+  $DIR/gold/start_vpn.bash gold $gold_subnet openvpn.conf
 elif [ $role == "payload" ]; then
   # Fetch bundle
   mkdir -p $DIR/vpn
