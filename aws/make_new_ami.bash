@@ -23,6 +23,8 @@ cd $DIR/..
 sudo rm .env
 sudo rm ../cloudsim-env.bash
 sudo rm ../cloudsim.log
+sudo rm ../cloudsim-options.json
+
 
 # reinstall cloudsim-sim
 sudo rm -rf node_modules
