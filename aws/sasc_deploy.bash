@@ -2,6 +2,8 @@
 
 # To be executed after the machine is created. It can read from cloudsim-options.json.
 
+set -x
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 codedir="$DIR/../.."
 
