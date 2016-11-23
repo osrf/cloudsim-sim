@@ -59,9 +59,9 @@ if [ $role == "arbiter" ]; then
 
   # Start servers
   cd $DIR/blue
-  $DIR/blue/start_vpn.bash blue $blue_subnet openvpn.conf
+  $DIR/blue/start_vpn.bash blue $blue_subnet openvpn.conf $gold_subnet
   cd $DIR/gold
-  $DIR/gold/start_vpn.bash gold $gold_subnet openvpn.conf
+  $DIR/gold/start_vpn.bash gold $gold_subnet openvpn.conf $blue_subnet
 elif [ $role == "payload" ]; then
   # Fetch bundle
   mkdir -p $DIR/vpn
