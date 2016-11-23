@@ -10,17 +10,17 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #}
 
 # This file is created by cloudsim when the machine is launched
-optionsfile=$DIR/cloudsim-options.json
+optionsfile=$DIR/../../cloudsim-options.json
 
-cp $DIR/cloudsim-env.bash $DIR/cloudsim-sim/.env
-cp $DIR/cloudsim-options.json $DIR/cloudsim-sim/options.json
+cp $DIR/../../cloudsim-env.bash $DIR/../.env
+cp $optionsfile $DIR/../options.json
 
 # Update cloudsim-sim
-cd $DIR/cloudsim-sim
+cd $DIR/..
 hg up
 # Potentially install new deps
 npm install
-node $DIR/cloudsim-sim/server/cloudsim_sim.js &
+node $DIR/../server/cloudsim_sim.js &
 
 
 
