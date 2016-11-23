@@ -2,6 +2,8 @@
 
 # To be executed after the machine is created. It can read from cloudsim-options.json.
 
+set -x
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 codedir="$DIR/../.."
 
@@ -60,9 +62,9 @@ if [ $role == "arbiter" ]; then
 
   # Start servers
   cd $codedir/blue
-  $codedir/blue/start_vpn.bash blue $blue_subnet openvpn.conf
+  $codedir/blue/start_vpn.bash blue $blue_subnet openvpn.conf $gold_subnet
   cd $codedir/gold
-  $codedir/gold/start_vpn.bash gold $gold_subnet openvpn.conf
+  $codedir/gold/start_vpn.bash gold $gold_subnet openvpn.conf $blue_subnet
 elif [ $role == "payload" ]; then
   # Fetch bundle
   mkdir -p $codedir/vpn

@@ -16,6 +16,7 @@ cp $codedir/cloudsim-options.json $simdir/options.json
 
 # Update cloudsim-sim
 cd $simdir
+hg pull
 hg up
 # Potentially install new deps
 npm install
