@@ -3,25 +3,23 @@
 # To be executed after the machine is created. It can read from cloudsim-options.json.
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
+simdir="$DIR/.."
+codedir="$DIR/../.."
 # Helper to parse options from cloudsim-options.json
 #get_option(){
 #  echo `node -pe "var f = \"$1\"; var query = \"$2\"; var j=require(f); j[query] "`
 #}
 
-# This file is created by cloudsim when the machine is launched
-optionsfile=$DIR/../../cloudsim-options.json
 
-cp $DIR/../../cloudsim-env.bash $DIR/../.env
-cp $optionsfile $DIR/../options.json
+cp $codedir/cloudsim-env.bash $simdir/.env
+cp $codedir/cloudsim-options.json $simdir/options.json
 
 # Update cloudsim-sim
-cd $DIR/..
+cd $simdir
 hg up
 # Potentially install new deps
 npm install
-node $DIR/../server/cloudsim_sim.js &
+node $simdir/server/cloudsim_sim.js &
 
 
-
-
+echo "cloudsim_sim_deploy.bash done"
