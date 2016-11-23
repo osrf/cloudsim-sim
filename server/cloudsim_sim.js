@@ -84,6 +84,7 @@ path to keys: ${pathToKeysFile}
   return s
 }
 
+
 // write details to the console
 console.log('============================================')
 console.log(details())
@@ -125,17 +126,51 @@ exports = module.exports = app;
 // we create 2 initial resources,
 // load the database and start serving
 // when ready
-const resources = {
-  'simulations': {},
-  'downloads': {
-    path: pathToKeysFile
+// these may be overriden by the options.json
+let resources = [
+  {
+    "name": "simulations",
+    "data": {},
+    "permissions": [
+      {
+        "username": adminUser,
+        "permissions": {
+          "readOnly": false
+        }
+      }
+    ]
+  },
+  {
+    "name": "downloads",
+    "data": {
+      "path": pathToKeysFile
+    },
+    "permissions": [
+      {
+        "username": adminUser,
+        "permissions": {
+        "readOnly": false
+      }
+      }
+    ]
+  }
+]
+
+console.log('loading options.json...')
+try {
+  const options = require('../options.json')
+  if (options.resources) {
+    console.log('replacing default options with:' + options.resources)
+    resources = options.resources
   }
 }
+catch(e) {
+  console.log('Can\'t load ./options.json: ' + e)
+}
 
-csgrant.init(adminUser,
-  resources,
+csgrant.init(resources,
   dbName,
-  dbUrl, 
+  dbUrl,
   httpServer,
   (err)=> {
     if(err) {
@@ -152,6 +187,7 @@ csgrant.init(adminUser,
         console.log('ssl: ' + useHttps)
         console.log('listening on *:' + port);
       })
+      csgrant.dump()
     }
   }
 )
