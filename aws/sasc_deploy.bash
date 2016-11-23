@@ -4,21 +4,13 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Helper to parse options from cloudsim-options.json 
+# Helper to parse options from cloudsim-options.json
 get_option(){
   echo `node -pe "var f = \"$1\"; var query = \"$2\"; var j=require(f); j[query] "`
 }
 
 # This file is created by cloudsim when the machine is launched
 optionsfile=$DIR/cloudsim-options.json
-
-cp $DIR/cloudsim-env.bash $DIR/cloudsim-sim/.env
-# Update cloudsim-sim
-cd $DIR/cloudsim-sim
-hg up
-# Potentially install new deps
-npm install
-node $DIR/cloudsim-sim/server/cloudsim_sim.js &
 
 echo "DIR is $DIR"
 # Common options
@@ -52,7 +44,7 @@ if [ $role == "arbiter" ]; then
   mkdir -p $DIR/blue $DIR/gold
   curl -X GET --header 'Accept: application/json' --header "authorization: $token" $blue_route > $DIR/blue/bundle.tgz
   curl -X GET --header 'Accept: application/json' --header "authorization: $token" $gold_route > $DIR/gold/bundle.tgz
-  
+
   # Unpack bundles
   cd $DIR/blue
   tar xf bundle.tgz
@@ -64,7 +56,7 @@ if [ $role == "arbiter" ]; then
   echo "ifconfig-push ${blue_subnet}.10 255.255.255.0" > $DIR/blue/staticclients/payload
   mkdir -p $DIR/gold/staticclients
   echo "ifconfig-push ${gold_subnet}.10 255.255.255.0" > $DIR/gold/staticclients/payload
-  
+
   # Start servers
   cd $DIR/blue
   $DIR/blue/start_vpn.bash blue $blue_subnet openvpn.conf
@@ -75,11 +67,11 @@ elif [ $role == "payload" ]; then
   mkdir -p $DIR/vpn
   echo curl -X GET --header 'Accept: application/json' --header "authorization: $token" "${client_route}?serverIp=${server_ip}&id=${client_id}"
   curl -X GET --header 'Accept: application/json' --header "authorization: $token" "${client_route}?serverIp=${server_ip}&id=${client_id}" > $DIR/vpn/bundle.tgz
-  
+
   # Unpack bundle
   cd $DIR/vpn
   tar xf bundle.tgz
-  
+
   # Start server
   echo cd $DIR/vpn
   cd $DIR/vpn
