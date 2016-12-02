@@ -25,6 +25,8 @@ sudo rm ../cloudsim-env.bash
 sudo rm ../cloudsim.log
 sudo rm ../cloudsim-options.json
 
+sudo rm -f /var/log/cloud-init-output.log
+sudo rm -f /var/log/cloud-init.log
 
 # reinstall cloudsim-sim
 sudo rm -rf node_modules
