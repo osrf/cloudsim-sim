@@ -86,6 +86,11 @@ elif [ $role == "payload" ]; then
   cd $codedir/vpn
   echo openvpn --config openvpn.conf --daemon
   openvpn --config openvpn.conf --daemon
+
+  # Make the client come back up on reboot
+  echo "#!/bin/bash" > /etc/rc.local
+  echo "cd $codedir/vpn && openvpn --config openvpn.conf --daemon" >> /etc/rc.local
+  echo "exit 0" >> /etc/rc.local
 else
   echo "ERROR: Unknown role \"$role\"."
 fi
