@@ -65,6 +65,12 @@ if [ $role == "arbiter" ]; then
   $codedir/blue/start_vpn.bash blue $blue_subnet openvpn.conf $gold_subnet
   cd $codedir/gold
   $codedir/gold/start_vpn.bash gold $gold_subnet openvpn.conf $blue_subnet
+
+  # Make the servers come back up on reboot
+  echo "#!/bin/bash" > /etc/rc.local
+  echo "cd $codedir/blue && $codedir/blue/start_vpn.bash blue $blue_subnet openvpn.conf $gold_subnet" >> /etc/rc.local
+  echo "cd $codedir/gold && $codedir/gold/start_vpn.bash gold $gold_subnet openvpn.conf $blue_subnet" >> /etc/rc.local
+  echo "exit 0" >> /etc/rc.local
 elif [ $role == "payload" ]; then
   # Fetch bundle
   mkdir -p $codedir/vpn
