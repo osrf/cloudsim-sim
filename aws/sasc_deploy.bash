@@ -24,6 +24,7 @@ blue_route=`get_option $optionsfile blue_route`
 gold_route=`get_option $optionsfile gold_route`
 blue_subnet=`get_option $optionsfile blue_subnet`
 gold_subnet=`get_option $optionsfile gold_subnet`
+payload_count=`get_option $optionsfile payload_count`
 # Payload options
 client_route=`get_option $optionsfile client_route`
 server_ip=`get_option $optionsfile server_ip`
@@ -54,11 +55,21 @@ if [ $role == "arbiter" ]; then
   cd $codedir/gold
   tar xf bundle.tgz
 
-  # Create static IP configuration for each subnet
+  # Create static IP configuration for each client on each of the two subnets
   mkdir -p $codedir/blue/staticclients
-  echo "ifconfig-push ${blue_subnet}.10 255.255.255.0" > $codedir/blue/staticclients/payload
   mkdir -p $codedir/gold/staticclients
-  echo "ifconfig-push ${gold_subnet}.10 255.255.255.0" > $codedir/gold/staticclients/payload
+  # Just a bit of backward compatibility
+  if [ $payload_count == "undefined" ]; then
+    echo "No payload_count; falling back to old behavior of one payload per team."
+    echo "ifconfig-push ${blue_subnet}.10 255.255.255.0" > $codedir/blue/staticclients/payload
+    echo "ifconfig-push ${gold_subnet}.10 255.255.255.0" > $codedir/gold/staticclients/payload
+  else
+    echo "Creating static IPs for $payload_count payloads per team"
+    for (( payload_num=0; payload_num<$payload_count; payload_num++ )); do
+      echo "ifconfig-push ${blue_subnet}.$((10+payload_num)) 255.255.255.0" > $codedir/blue/staticclients/payload${payload_num}
+      echo "ifconfig-push ${gold_subnet}.$((10+payload_num)) 255.255.255.0" > $codedir/gold/staticclients/payload${payload_num}
+    done
+  fi
 
   # Start servers
   cd $codedir/blue
