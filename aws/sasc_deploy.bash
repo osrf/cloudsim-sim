@@ -76,6 +76,14 @@ if [ $role == "arbiter" ]; then
   $codedir/blue/start_vpn.bash blue $blue_subnet openvpn.conf $gold_subnet
   cd $codedir/gold
   $codedir/gold/start_vpn.bash gold $gold_subnet openvpn.conf $blue_subnet
+
+  # Make the servers come back up on reboot
+  cat << EOF > /etc/rc.local
+#!/bin/bash
+cd $codedir/blue && $codedir/blue/start_vpn.bash blue $blue_subnet openvpn.conf $gold_subnet
+cd $codedir/gold && $codedir/gold/start_vpn.bash gold $gold_subnet openvpn.conf $blue_subnet
+exit 0
+EOF
 elif [ $role == "payload" ]; then
   # Fetch bundle
   mkdir -p $codedir/vpn
@@ -91,6 +99,13 @@ elif [ $role == "payload" ]; then
   cd $codedir/vpn
   echo openvpn --config openvpn.conf --daemon
   openvpn --config openvpn.conf --daemon
+
+  # Make the client come back up on reboot
+  cat << EOF > /etc/rc.local
+#!/bin/bash
+cd $codedir/vpn && openvpn --config openvpn.conf --daemon" >> /etc/rc.local
+exit 0
+EOF
 else
   echo "ERROR: Unknown role \"$role\"."
 fi
