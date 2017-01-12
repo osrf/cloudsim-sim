@@ -10,7 +10,6 @@ get_option(){
   echo `node -pe "var f = \"$1\"; var query = \"$2\"; var j=require(f); j[query] "`
 }
 
-codedir="$DIR/../.."
 optionsfile=$codedir/cloudsim-options.json
 ssh_route=`get_option $optionsfile ssh`
 
