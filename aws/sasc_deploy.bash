@@ -103,7 +103,7 @@ elif [ $role == "payload" ]; then
   # Make the client come back up on reboot
   cat << EOF > /etc/rc.local
 #!/bin/bash
-cd $codedir/vpn && openvpn --config openvpn.conf --daemon" >> /etc/rc.local
+cd $codedir/vpn && openvpn --config openvpn.conf --daemon
 exit 0
 EOF
 else
