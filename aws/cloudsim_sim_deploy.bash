@@ -12,12 +12,15 @@ get_option(){
 
 optionsfile=$codedir/cloudsim-options.json
 ssh_route=`get_option $optionsfile ssh`
+token=`get_option $optionsfile token`
 
 # if ssh_route is valid, download the key and place it in the server directory
 if [ "$ssh_route" != "undefined" ]; then  
   echo "ssh key [$ssh_route]"
   curl -X GET --header 'Accept: application/json' --header "authorization: $token" $ssh_route > $codedir/sshkeys.zip
   cp $codedir/sshkeys.zip $simdir/server/keys.zip
+else
+  echo "default ssh key"
 fi
 
 cp $codedir/cloudsim-env.bash $simdir/.env
