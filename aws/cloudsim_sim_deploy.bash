@@ -11,8 +11,11 @@ get_option(){
 }
 
 optionsfile=$codedir/cloudsim-options.json
+echo "optionsfile $optionsfile"
 ssh_route=`get_option $optionsfile ssh`
+echo "ssh route $ssh_route"
 token=`get_option $optionsfile token`
+echo "token $token"
 
 # if ssh_route is valid, download the key and place it in the server directory
 if [ "$ssh_route" != "undefined" ]; then  
