@@ -16,7 +16,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 sudo shred -u /etc/ssh/*_key /etc/ssh/*_key.pub
 sudo shred -u ~/.*history
 sudo shred /root/.ssh/authorized_keys
-sudo shred /home/ubuntu/authorized_keys
+sudo shred /home/ubuntu/.ssh/authorized_keys
 
 # remove old env:
 cd $DIR/..
