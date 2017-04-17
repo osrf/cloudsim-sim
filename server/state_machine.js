@@ -53,6 +53,13 @@ let config = {
       },
     },
     "postrun": {
+      "cleanup": function() {
+        // send the logs to the server
+        this.sendLogs(() => {
+          log('logs sent')
+          this.handle("done")
+        })
+      },
       "done": function () {
         this.transition("ready")
       },
@@ -89,15 +96,13 @@ exports.createMachine = function () {
     // action: "running.stop" state: "postrun" prior: "running"
     else if (data.action === "running.stop") {
       this.stopTheSimulator(() => {
-        this.handle("done")
+        log('Simulation stopped')
+        this.handle("cleanup")
       })
-      log('Simulation stopped')
     }
     // action: "postrun.done" state: "ready" prior: "postrun"
     else if (data.action === "postrun.done") {
-      // send the logs to the server
-      this.sendLogs()
-      log('logs sent')
+      log('about to execute postrun.done')
     }
     // oops ... this is not a state we expected
     else {

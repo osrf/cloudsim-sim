@@ -234,15 +234,34 @@ proc.stopTheSimulator = function(done) {
 }
 
 // After the simulation, send the logs
-proc.sendLogs = function() {
+// @param done A callback to let caller know the sendLogs has been done
+proc.sendLogs = function(done) {
   log('Todo: send logs after execution',
     'state', proc.state,
-    'priorState', proc.priorState)
+    'priorState', proc.priorState
+  )
 
-  log('clean up after run')
-  this.schedulerData.proc = null
-  this.schedulerData.simId = null
-  this.schedulerData.sim = null
+  // Get custom log command
+  const simData = this.schedulerData.sim.sim.data
+  // isolate the cmd
+  const cmdLine = simData.logCmd
+  // split the program name from its arguments
+  const items = cmdLine.split(' ')
+  const procName = items[0]
+  const args = items.slice(1)
+  log('spawning: ' + procName + ' ' + args)
+  this.schedulerData.logProc = spawn(procName, args, {stdio:'pipe'})
+
+  this.schedulerData.logProc.on('close', () => {
+    log('clean up after run')
+    this.schedulerData.proc = null
+    this.schedulerData.stopProc = null
+    this.schedulerData.logProc = null
+    this.schedulerData.simId = null
+    this.schedulerData.sim = null
+    done()
+  })
+
 }
 
 // starts the periodic scheduler update that launches simulations

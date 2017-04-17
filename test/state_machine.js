@@ -26,8 +26,9 @@ proc.stopTheSimulator = function(done) {
   done()
 }
 
-proc.sendLogs = function() {
+proc.sendLogs = function(done) {
   transitions.push('sendLogs')
+  done()
 }
 
 describe('<Unit test State machine>', function() {

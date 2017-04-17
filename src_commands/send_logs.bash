@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-echo 'sending logs'
+echo 'sending logs' > /home/ubuntu/code/gazebo-logs/sendLogs.txt
