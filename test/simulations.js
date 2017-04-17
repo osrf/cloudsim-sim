@@ -151,6 +151,8 @@ describe('<Unit test Simulations>', function() {
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
       .send({ cmd: 'ls -la',
+        stopCmd: 'ls -la',
+        logCmd: 'ls -la',
         auto: false,
       })
       .end(function(err,res){

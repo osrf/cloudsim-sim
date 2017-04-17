@@ -145,7 +145,7 @@ proc.startTheSimulator =  function() {
   const items = cmdLine.split(' ')
   const procName = items[0]
   const args = items.slice(1)
-  log('spwaning: ' + procName + ' ' + args)
+  log('spawning: ' + procName + ' ' + args)
   this.schedulerData.proc = spawn(procName, args, {stdio:'pipe'})
 
   // set the state to "running"
@@ -197,17 +197,37 @@ proc.startTheSimulator =  function() {
 // for another reason
 proc.stopTheSimulator = function() {
   log("proc.stopTheSimulator")
-  // if necessary, stop the simulator
-  if(!this.schedulerData.proc.exitCode) {
+  // has a sim been selected?
+  if (!this.schedulerData.sim) {
+    console.warn('No simulation is running')
+    return
+  }
+
+  if (this.schedulerData.stopProc
+    && !this.schedulerData.proc.exitCode) {
+    console.warn('something went wrong stopping the process. Kill it')
     this.schedulerData.proc.kill()
   }
+
   const simId = this.schedulerData.sim.id
-  const simData = this.schedulerData.sim.sim.data
-  // set the state to "running"
-  simData.stat = 'FINISHED'
   const userName = this.schedulerData.userName
-  csgrant.updateResource(userName, simId, simData, function(){
-    log('sim "' + simId  + '" finished')
+  const simData = this.schedulerData.sim.sim.data
+  const runningProc = this.schedulerData.proc 
+  // isolate the cmd
+  const cmdLine = simData.stopCmd
+  // split the program name from its arguments
+  const items = cmdLine.split(' ')
+  const procName = items[0]
+  const args = items.slice(1)
+  log('spawning: ' + procName + ' ' + args)
+  this.schedulerData.stopProc = spawn(procName, args, {stdio:'pipe'})
+
+  this.schedulerData.stopProc.on('close', (code)=>{
+    log('simulation process has terminated')
+    simData.stat = 'FINISHED'
+    csgrant.updateResource(userName, simId, simData, function() {
+      log('sim "' + simId  + '" finished')
+    })
   })
 }
 
@@ -307,6 +327,8 @@ function setRoutes(app) {
 
       const data = req.body
       const resourceData = { cmd: data.cmd,
+        stopCmd: data.stopCmd,
+        logCmd: data.logCmd,
         auto: data.auto,
         stat:'WAITING'
       }
@@ -352,12 +374,12 @@ function setRoutes(app) {
       const user = req.user
 
       const r = {success: false}
-      if (!newData.cmd) {
-        return res.jsonp({success: false,
-          error: 'Can\'t update simulation: missing cmd'})
+      if (!newData.cmd || !newData.stopCmd || !newData.logCmd) {
+        return res.status(400).jsonp({success: false,
+          error: 'Can\'t update simulation: missing [cmd||stopCmd||logCmd]'})
       }
       if (newData.auto === undefined) {
-        return res.jsonp({success: false,
+        return res.status(400).jsonp({success: false,
           error: 'Can\'t update simulation: missing auto'})
       }
 

@@ -258,12 +258,32 @@ describe('<Unit test Permissions>', function() {
       .put('/simulations/' + simId)
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
-      .send({ auto: false})
+      .send({ 
+        cmd: 'ls -la',
+        stopCmd: 'ls -la',
+        logCmd: 'ls -la',
+        auto: false,
+      })
       .end(function(err,res){
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
-        // const response = parseResponse(res.text)
-        // response.success.should.equal(true)
+        const response = parseResponse(res.text)
+        response.success.should.equal(true)
+        done()
+      })
+    })
+  })
+  // update resource
+  describe('Update resource', function() {
+    it('should NOT be possible for admin to update resource if there are missing fields', function(done) {
+      agent
+      .put('/simulations/' + simId)
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .send({ auto: false})
+      .end(function(err,res){
+        res.status.should.be.equal(400)
+        res.redirect.should.equal(false)
         done()
       })
     })
