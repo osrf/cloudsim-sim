@@ -28,7 +28,7 @@ let config = {
   // called to set
   stop: function() {
     this.handle("stop")
-    this.handle("done")
+    // "done" will be handled as a callback from the stop state
   },
   initialState: "nothing",
   states: {
@@ -88,7 +88,9 @@ exports.createMachine = function () {
 
     // action: "running.stop" state: "postrun" prior: "running"
     else if (data.action === "running.stop") {
-      this.stopTheSimulator()
+      this.stopTheSimulator(() => {
+        this.handle("done")
+      })
       log('Simulation stopped')
     }
     // action: "postrun.done" state: "ready" prior: "postrun"

@@ -195,12 +195,13 @@ proc.startTheSimulator =  function() {
 
 // Simulation process is commanded to stop, or the process ended
 // for another reason
-proc.stopTheSimulator = function() {
+// @param done A callback to let caller know the stop has been done
+proc.stopTheSimulator = function(done) {
   log("proc.stopTheSimulator")
   // has a sim been selected?
   if (!this.schedulerData.sim) {
     console.warn('No simulation is running')
-    return
+    return done()
   }
 
   if (this.schedulerData.stopProc
@@ -212,7 +213,6 @@ proc.stopTheSimulator = function() {
   const simId = this.schedulerData.sim.id
   const userName = this.schedulerData.userName
   const simData = this.schedulerData.sim.sim.data
-  const runningProc = this.schedulerData.proc 
   // isolate the cmd
   const cmdLine = simData.stopCmd
   // split the program name from its arguments
@@ -222,12 +222,14 @@ proc.stopTheSimulator = function() {
   log('spawning: ' + procName + ' ' + args)
   this.schedulerData.stopProc = spawn(procName, args, {stdio:'pipe'})
 
-  this.schedulerData.stopProc.on('close', (code)=>{
+  this.schedulerData.stopProc.on('close', () => {
     log('simulation process has terminated')
     simData.stat = 'FINISHED'
-    csgrant.updateResource(userName, simId, simData, function() {
+    csgrant.updateResource(userName, simId, simData, () => {
       log('sim "' + simId  + '" finished')
     })
+    log('About to invoke done() callback')
+    done()
   })
 }
 

@@ -21,8 +21,9 @@ proc.startTheSimulator= function() {
   transitions.push('startTheSimulator')
 }
 
-proc.stopTheSimulator = function() {
+proc.stopTheSimulator = function(done) {
   transitions.push('stopTheSimulator')
+  done()
 }
 
 proc.sendLogs = function() {
