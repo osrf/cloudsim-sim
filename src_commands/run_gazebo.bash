@@ -14,7 +14,7 @@ cat <<DELIM > launch_server.bash
 # and thus, be able to receive process signals.
 #exec gzserver -r --record_path ~/gazebo-logs/$WORLD_NAME worlds/$WORLD_NAME.world
 source /opt/nasa/indigo/setup.bash
-roslaunch srcsim unique.launch init:="true"
+exec roslaunch srcsim unique.launch init:="true"
 DELIM
 chmod a+x launch_server.bash
 
