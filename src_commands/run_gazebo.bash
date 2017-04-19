@@ -14,7 +14,7 @@ cat <<DELIM > launch_server.bash
 # and thus, be able to receive process signals.
 exec gzserver -r --record_path ~/gazebo-logs/$WORLD_NAME worlds/$WORLD_NAME.world
 DELIM
-chmod u+x launch_server.bash
+chmod a+x launch_server.bash
 
 $dockerdir/run_container.bash \
     gazebo_run \
