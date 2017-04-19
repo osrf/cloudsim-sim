@@ -12,7 +12,9 @@ cat <<DELIM > launch_server.bash
 #!/usr/bin/env bash
 # Note: we use the 'exec' to allow gzserver be the PID 1 in the docker container,
 # and thus, be able to receive process signals.
-exec gzserver -r --record_path ~/gazebo-logs/$WORLD_NAME worlds/$WORLD_NAME.world
+#exec gzserver -r --record_path ~/gazebo-logs/$WORLD_NAME worlds/$WORLD_NAME.world
+source /opt/nasa/indigo/setup.bash
+roslaunch srcsim unique.launch init:="true"
 DELIM
 chmod a+x launch_server.bash
 
