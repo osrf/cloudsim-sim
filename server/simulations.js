@@ -139,14 +139,7 @@ proc.startTheSimulator =  function() {
   const userName = getSimUser(this.schedulerData.sim)
   // keep it for later
   this.schedulerData.userName = userName
-  // isolate the cmd
-  const cmdLine = simData.cmd
-  // split the program name from its arguments
-  const items = cmdLine.split(' ')
-  const procName = items[0]
-  const args = items.slice(1)
-  log('spawning: ' + procName + ' ' + args)
-  this.schedulerData.proc = spawn(procName, args, {stdio:'pipe'})
+  this.schedulerData.proc = this.spawnProcess(simData.cmd)
 
   // set the state to "running"
   simData.stat = 'RUNNING'
@@ -193,6 +186,18 @@ proc.startTheSimulator =  function() {
   })
 }
 
+// spawns a process from the given cmd arg. Returns the process handle
+proc.spawnProcess = function(command) {
+  // isolate the cmd
+  const cmdLine = command
+  // split the program name from its arguments
+  const items = cmdLine.split(' ')
+  const procName = items[0]
+  const args = items.slice(1)
+  log('spawning: ' + procName + ' ' + args)
+  return spawn(procName, args, {stdio:'pipe'})
+}
+
 // Simulation process is commanded to stop, or the process ended
 // for another reason
 // @param done A callback to let caller know the stop has been done
@@ -210,18 +215,11 @@ proc.stopTheSimulator = function(done) {
     this.schedulerData.proc.kill()
   }
 
+  const simData = this.schedulerData.sim.sim.data
+  this.schedulerData.stopProc = this.spawnProcess(simData.stopCmd)
+
   const simId = this.schedulerData.sim.id
   const userName = this.schedulerData.userName
-  const simData = this.schedulerData.sim.sim.data
-  // isolate the cmd
-  const cmdLine = simData.stopCmd
-  // split the program name from its arguments
-  const items = cmdLine.split(' ')
-  const procName = items[0]
-  const args = items.slice(1)
-  log('spawning: ' + procName + ' ' + args)
-  this.schedulerData.stopProc = spawn(procName, args, {stdio:'pipe'})
-
   this.schedulerData.stopProc.on('close', () => {
     log('simulation process has terminated')
     simData.stat = 'FINISHED'
@@ -240,17 +238,9 @@ proc.sendLogs = function(done) {
     'state', proc.state,
     'priorState', proc.priorState
   )
-
   // Get custom log command
   const simData = this.schedulerData.sim.sim.data
-  // isolate the cmd
-  const cmdLine = simData.logCmd
-  // split the program name from its arguments
-  const items = cmdLine.split(' ')
-  const procName = items[0]
-  const args = items.slice(1)
-  log('spawning: ' + procName + ' ' + args)
-  this.schedulerData.logProc = spawn(procName, args, {stdio:'pipe'})
+  this.schedulerData.logProc = this.spawnProcess(simData.logCmd)
 
   this.schedulerData.logProc.on('close', () => {
     log('clean up after run')
@@ -261,7 +251,6 @@ proc.sendLogs = function(done) {
     this.schedulerData.sim = null
     done()
   })
-
 }
 
 // starts the periodic scheduler update that launches simulations
