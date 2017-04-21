@@ -4,15 +4,11 @@ console.log('test/mocha/simulations.js');
 
 const should = require('should');
 const supertest = require('supertest');
-const csgrant = require('cloudsim-grant')
-const token = csgrant.token
+const clearRequire = require('clear-require');
 
-const app = require('../server/cloudsim_sim')
-const agent = supertest.agent(app)
-
-// we need fresh keys for this test
-const keys = csgrant.token.generateKeys()
-token.initKeys(keys.public, keys.private)
+let csgrant
+let app
+let agent
 
 const admin = process.env.CLOUDSIM_ADMIN || 'admin'
 
@@ -46,10 +42,24 @@ function parseResponse(text, log) {
 
 describe('<Unit test Simulations>', function() {
 
+  // before(function(done) {
+  //   setTimeout(function(){
+  //     done()
+  //   }, 1500);
+  // })
+
   before(function(done) {
-    setTimeout(function(){
-      done()
-    }, 1500);
+    // Important: the database has to be cleared early, before
+    // the server is launched (otherwise, root resources will be missing)
+    csgrant = require('cloudsim-grant')
+    csgrant.model.clearDb()
+    done()
+  })
+
+  before(function(done) {
+    app = require('../server/cloudsim_sim')
+    agent = supertest.agent(app)
+    done()
   })
 
   before(function(done) {
@@ -58,9 +68,11 @@ describe('<Unit test Simulations>', function() {
     done()
   })
 
-
   before(function(done) {
-    token.signToken(adminTokenData, (e, tok)=>{
+    // we need fresh keys for this test
+    const keys = csgrant.token.generateKeys()
+    csgrant.token.initKeys(keys.public, keys.private)
+    csgrant.token.signToken(adminTokenData, (e, tok)=>{
       console.log('token signed for "' + admin + '"')
       if(e) {
         console.log('sign error: ' + e)
@@ -90,14 +102,17 @@ describe('<Unit test Simulations>', function() {
     })
   })
 
-  // Create simulation
+  // Create a simulation with all commands as arguments 
   describe('Create a sim', function() {
     it('should be possible for admin to create a simulation', function(done) {
       agent
       .post('/simulations')
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
-      .send({ cmd: 'ls -l',
+      .send({ 
+        cmd: 'ls -l',
+        stopCmd: 'ls -la',
+        logCmd: 'ls -lah',        
         auto: true,
       })
       .end(function(err,res){
@@ -111,10 +126,28 @@ describe('<Unit test Simulations>', function() {
         }
         response.requester.should.equal(admin)
         response.result.data.cmd.should.equal('ls -l')
+        response.result.data.stopCmd.should.equal('ls -la')
+        response.result.data.logCmd.should.equal('ls -lah')
         response.result.data.auto.should.equal(true)
         done()
       })
     })
+    it('there should be one sim', function(done) {
+      agent
+      .get('/simulations')
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .send({})
+      .end(function(err,res){
+        const response = parseResponse(res.text)
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+        response.success.should.equal(true)
+        response.requester.should.equal(admin)
+        response.result.length.should.equal(1)
+        done()
+      })
+    })    
   })
 
   // Get simulation
@@ -150,9 +183,8 @@ describe('<Unit test Simulations>', function() {
       .put('/simulations/' + simId1)
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
-      .send({ cmd: 'ls -la',
-        stopCmd: 'ls -la',
-        logCmd: 'ls -la',
+      .send({ 
+        cmd: 'ls -la',
         auto: false,
       })
       .end(function(err,res){
@@ -164,8 +196,73 @@ describe('<Unit test Simulations>', function() {
         response.requester.should.equal(admin)
         response.id.should.equal(simId1)
         response.result.data.cmd.should.equal('ls -la')
+        // other commands should have stayed the same
+        response.result.data.stopCmd.should.equal('ls -la')
+        response.result.data.logCmd.should.equal('ls -lah')
         response.result.data.auto.should.equal(false)
         done()
+      })
+    })
+  })
+
+  // Update simulation
+  describe('Update a sim', function() {
+    it('should be possible for admin to update a simulation with all commands', function(done) {
+      agent
+      .put('/simulations/' + simId1)
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .send({ 
+        cmd: 'ls -la',
+        stopCmd: 'ls -la',
+        logCmd: 'ls -lah',
+        auto: false,
+      })
+      .end(function(err,res){
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+
+        const response = parseResponse(res.text)
+        response.success.should.equal(true)
+        response.requester.should.equal(admin)
+        response.id.should.equal(simId1)
+        response.result.data.cmd.should.equal('ls -la')
+        response.result.data.auto.should.equal(false)
+        done()
+      })
+    })
+  })
+
+  // Update simulation
+  describe('Update a sim', function() {
+    it('should not be able to update sim if cmd or auto args are not sent', function(done) {
+      agent
+      .put('/simulations/' + simId1)
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .send({
+        auto: false,
+      })
+      .end(function(err,res){
+        res.status.should.be.equal(400)
+        res.redirect.should.equal(false)
+        const response = parseResponse(res.text)
+        response.success.should.equal(false)
+        // lets now try with no auto arg
+        agent
+        .put('/simulations/' + simId1)
+        .set('Acccept', 'application/json')
+        .set('authorization', adminToken)
+        .send({ 
+          cmd: 'ls -la'
+        })
+        .end(function(err,res){
+          res.status.should.be.equal(400)
+          res.redirect.should.equal(false)
+          const response = parseResponse(res.text)
+          response.success.should.equal(false)
+          done()
+        })
       })
     })
   })
@@ -198,6 +295,22 @@ describe('<Unit test Simulations>', function() {
 
   // Stop simulation
   describe('Stop simulation resource', function() {
+    it('there should be one sim', function(done) {
+      agent
+      .get('/simulations')
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .send({})
+      .end(function(err,res){
+        const response = parseResponse(res.text)
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+        response.success.should.equal(true)
+        response.requester.should.equal(admin)
+        response.result.length.should.equal(1)
+        done()
+      })
+    })    
     it('should be possible for admin to stop a simulation', function(done) {
       agent
       .post('/stopsimulation')
@@ -213,8 +326,30 @@ describe('<Unit test Simulations>', function() {
         done()
       })
     })
+    it('stopped sim should be marked as finished (after a little while)', function(done) {
+      setTimeout(() => {
+        agent
+        .get('/simulations/' + simId1)
+        .set('Acccept', 'application/json')
+        .set('authorization', adminToken)
+        .send({})
+        .end(function(err,res){
+          should.not.exist(err)
+          res.status.should.be.equal(200)
+          res.redirect.should.equal(false)
+          const response = parseResponse(res.text)
+          response.success.should.equal(true)
+          response.resource.should.equal(simId1)
+          response.result.data.stat.should.equal('FINISHED')
+          response.result.data.cmd.should.equal('ls -la')
+          response.result.data.stopCmd.should.equal('ls -la')
+          response.result.data.logCmd.should.equal('ls -lah')
+          response.result.data.auto.should.equal(false)
+          done()
+        })
+      }, 10)
+    })
   })
-
 
   // Delete simulation
   describe('Delete resource', function() {
@@ -239,10 +374,80 @@ describe('<Unit test Simulations>', function() {
     })
   })
 
-  after(function(done) {
-    csgrant.model.clearDb()
-    done()
+  // Start and stop simulation just passing the "start cmd" (ie. no stop nor log commands) 
+  let simId2
+  describe('Start / Stop a sim just with start cmd', function() {
+    it('should be possible for admin to create a simulation just with start cmd (ie, no stop nor log cmds)', function(done) {
+      agent
+      .post('/simulations')
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .send({
+        cmd: 'ls -l',        
+        auto: true,
+      })
+      .end(function(err,res){
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+        var response = parseResponse(res.text)
+        simId2 = response.id
+        response.success.should.equal(true)
+        response.requester.should.equal(admin)
+        response.result.data.cmd.should.equal('ls -l')
+        should.not.exist(response.result.data.stopCmd)
+        should.not.exist(response.result.data.logCmd)
+        response.result.data.auto.should.equal(true)
+        done()
+      })
+    })
+    it('should be possible for admin to stop a simulation', function(done) {
+      agent
+      .post('/stopsimulation')
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .end(function(err,res){
+        should.not.exist(err)
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+        const response = parseResponse(res.text)
+        should.exist(response.state)
+        should.exist(response.prior)
+        done()
+      })
+    })    
+    it('stopped sim should be marked as finished (after a little while)', function(done) {
+      setTimeout(() => {
+        agent
+        .get('/simulations/' + simId2)
+        .set('Acccept', 'application/json')
+        .set('authorization', adminToken)
+        .send({})
+        .end(function(err,res){
+          should.not.exist(err)
+          res.status.should.be.equal(200)
+          res.redirect.should.equal(false)
+          const response = parseResponse(res.text)
+          response.success.should.equal(true)
+          response.resource.should.equal(simId2)
+          response.result.data.stat.should.equal('FINISHED')
+          response.result.data.cmd.should.equal('ls -l')
+          should.not.exist(response.result.data.stopCmd)
+          should.not.exist(response.result.data.logCmd)
+          response.result.data.auto.should.equal(true)
+          done()
+        })
+      }, 10)
+    })
+    
   })
 
+  // after all tests have run, we need to clean up our mess
+  after(function(done) {
+    csgrant.model.clearDb()
+    app.close(function() {
+      clearRequire.all()
+      done()
+    })
+  })
 
 })

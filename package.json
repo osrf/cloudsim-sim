@@ -24,6 +24,7 @@
   "dependencies": {
     "ansi-to-html": "^0.4.2",
     "body-parser": "^1.15.2",
+    "clear-require": "^2.0.0",
     "cloudsim-grant": "0.4.5",
     "cors": "^2.8.0",
     "dotenv": "^2.0.0",
