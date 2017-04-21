@@ -124,17 +124,6 @@ proc.getReadyToRunSimulator = function() {
   log('before sim run')
 }
 
-proc.spawnProcess = function(command) {
-  // isolate the cmd
-  const cmdLine = command
-  // split the program name from its arguments
-  const items = cmdLine.split(' ')
-  const procName = items[0]
-  const args = items.slice(1)
-  log('spawning: ' + procName + ' ' + args)
-  return spawn(procName, args, {stdio:'pipe'})
-}
-
 // Called to start the simulator
 proc.startTheSimulator =  function() {
   // has a sim been selected?
@@ -195,6 +184,18 @@ proc.startTheSimulator =  function() {
     // turn the state machine into stopping action
     this.stop()
   })
+}
+
+// spawns a process from the given cmd arg. Returns the process handle
+proc.spawnProcess = function(command) {
+  // isolate the cmd
+  const cmdLine = command
+  // split the program name from its arguments
+  const items = cmdLine.split(' ')
+  const procName = items[0]
+  const args = items.slice(1)
+  log('spawning: ' + procName + ' ' + args)
+  return spawn(procName, args, {stdio:'pipe'})
 }
 
 // Simulation process is commanded to stop, or the process ended
