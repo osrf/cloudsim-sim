@@ -213,6 +213,32 @@ describe('<Unit test Simulations>', function() {
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
       .send({ 
+        cmd: 'differentCommand1',
+        stopCmd: 'my super stop script',
+        logCmd: 'logme',
+        auto: false,
+      })
+      .end(function(err,res){
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+
+        const response = parseResponse(res.text)
+        response.success.should.equal(true)
+        response.requester.should.equal(admin)
+        response.id.should.equal(simId1)
+        response.result.data.cmd.should.equal('differentCommand1')
+        response.result.data.stopCmd.should.equal('my super stop script')
+        response.result.data.logCmd.should.equal('logme')
+        response.result.data.auto.should.equal(false)
+        done()
+      })
+    })
+    it('lets go back to some real commands', function(done) {
+      agent
+      .put('/simulations/' + simId1)
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .send({ 
         cmd: 'ls -la',
         stopCmd: 'ls -la',
         logCmd: 'ls -lah',
@@ -227,6 +253,8 @@ describe('<Unit test Simulations>', function() {
         response.requester.should.equal(admin)
         response.id.should.equal(simId1)
         response.result.data.cmd.should.equal('ls -la')
+        response.result.data.stopCmd.should.equal('ls -la')
+        response.result.data.logCmd.should.equal('ls -lah')
         response.result.data.auto.should.equal(false)
         done()
       })
