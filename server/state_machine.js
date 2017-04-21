@@ -28,7 +28,7 @@ let config = {
   // called to set
   stop: function() {
     this.handle("stop")
-    this.handle("done")
+    // "done" will be handled as a callback from the stop state
   },
   initialState: "nothing",
   states: {
@@ -53,6 +53,13 @@ let config = {
       },
     },
     "postrun": {
+      "cleanup": function() {
+        // send the logs to the server
+        this.sendLogs(() => {
+          log('logs sent')
+          this.handle("done")
+        })
+      },
       "done": function () {
         this.transition("ready")
       },
@@ -88,14 +95,14 @@ exports.createMachine = function () {
 
     // action: "running.stop" state: "postrun" prior: "running"
     else if (data.action === "running.stop") {
-      this.stopTheSimulator()
-      log('Simulation stopped')
+      this.stopTheSimulator(() => {
+        log('Simulation stopped')
+        this.handle("cleanup")
+      })
     }
     // action: "postrun.done" state: "ready" prior: "postrun"
     else if (data.action === "postrun.done") {
-      // send the logs to the server
-      this.sendLogs()
-      log('logs sent')
+      log('about to execute postrun.done')
     }
     // oops ... this is not a state we expected
     else {

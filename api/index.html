@@ -334,6 +334,14 @@
                         "type": "string",
                         "default": "Command to be run",
                       },
+                      "stopCmd": {
+                        "type": "string",
+                        "default": "Command to be run when stopping the simulation",
+                      },
+                      "logCmd": {
+                        "type": "string",
+                        "default": "Command to be run when sending the simulation logs",
+                      },
                       "auto": {
                         "type": "boolean",
                       },
@@ -509,6 +517,14 @@
                         "type": "string",
                         "default": "Command to be run",
                       },
+                      "stopCmd": {
+                        "type": "string",
+                        "default": "Command to be run when stopping the simulation",
+                      },
+                      "logCmd": {
+                        "type": "string",
+                        "default": "Command to be run when sending the simulation logs",
+                      },
                       "auto": {
                         "type": "boolean",
                       },
@@ -527,6 +543,56 @@
                       },
                       "result TODO: standardize": {
                         "$ref": "#\/definitions\/Resource"
+                      },
+                    },
+                  },
+                },
+                "401": {
+                  "description": "Not authorized"
+                }
+              },
+              "security": [
+                {
+                  "token": [],
+                }
+              ]
+            },
+          },
+          // /simulations
+          "\/stopsimulation": {
+            // POST
+            "post": {
+              "tags": [
+                "stopsimulation"
+              ],
+              "summary": "Stop the current simulation",
+              "consumes": [
+                "application\/json",
+              ],
+              "produces": [
+                "application\/json"
+              ],
+              "parameters": [],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                      },
+                      "operation": {
+                        "$ref": "#\/definitions\/Operation"
+                      },
+                      "requester": {
+                        "$ref": "#\/definitions\/Requester"
+                      },
+                      "result": {
+                        "type" : "array",
+                        "items": {
+                          "$ref": "#\/definitions\/ResourceWithoutPerm"
+                        },
                       },
                     },
                   },

@@ -149,8 +149,8 @@ let resources = [
       {
         "username": adminUser,
         "permissions": {
-        "readOnly": false
-      }
+          "readOnly": false
+        }
       }
     ]
   }

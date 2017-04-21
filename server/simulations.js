@@ -145,7 +145,7 @@ proc.startTheSimulator =  function() {
   const items = cmdLine.split(' ')
   const procName = items[0]
   const args = items.slice(1)
-  log('spwaning: ' + procName + ' ' + args)
+  log('spawning: ' + procName + ' ' + args)
   this.schedulerData.proc = spawn(procName, args, {stdio:'pipe'})
 
   // set the state to "running"
@@ -195,32 +195,73 @@ proc.startTheSimulator =  function() {
 
 // Simulation process is commanded to stop, or the process ended
 // for another reason
-proc.stopTheSimulator = function() {
+// @param done A callback to let caller know the stop has been done
+proc.stopTheSimulator = function(done) {
   log("proc.stopTheSimulator")
-  // if necessary, stop the simulator
-  if(!this.schedulerData.proc.exitCode) {
+  // has a sim been selected?
+  if (!this.schedulerData.sim) {
+    console.warn('No simulation is running')
+    return done()
+  }
+
+  if (this.schedulerData.stopProc
+    && !this.schedulerData.proc.exitCode) {
+    console.warn('something went wrong stopping the process. Kill it')
     this.schedulerData.proc.kill()
   }
+
   const simId = this.schedulerData.sim.id
-  const simData = this.schedulerData.sim.sim.data
-  // set the state to "running"
-  simData.stat = 'FINISHED'
   const userName = this.schedulerData.userName
-  csgrant.updateResource(userName, simId, simData, function(){
-    log('sim "' + simId  + '" finished')
+  const simData = this.schedulerData.sim.sim.data
+  // isolate the cmd
+  const cmdLine = simData.stopCmd
+  // split the program name from its arguments
+  const items = cmdLine.split(' ')
+  const procName = items[0]
+  const args = items.slice(1)
+  log('spawning: ' + procName + ' ' + args)
+  this.schedulerData.stopProc = spawn(procName, args, {stdio:'pipe'})
+
+  this.schedulerData.stopProc.on('close', () => {
+    log('simulation process has terminated')
+    simData.stat = 'FINISHED'
+    csgrant.updateResource(userName, simId, simData, () => {
+      log('sim "' + simId  + '" finished')
+    })
+    log('About to invoke done() callback')
+    done()
   })
 }
 
 // After the simulation, send the logs
-proc.sendLogs = function() {
+// @param done A callback to let caller know the sendLogs has been done
+proc.sendLogs = function(done) {
   log('Todo: send logs after execution',
     'state', proc.state,
-    'priorState', proc.priorState)
+    'priorState', proc.priorState
+  )
 
-  log('clean up after run')
-  this.schedulerData.proc = null
-  this.schedulerData.simId = null
-  this.schedulerData.sim = null
+  // Get custom log command
+  const simData = this.schedulerData.sim.sim.data
+  // isolate the cmd
+  const cmdLine = simData.logCmd
+  // split the program name from its arguments
+  const items = cmdLine.split(' ')
+  const procName = items[0]
+  const args = items.slice(1)
+  log('spawning: ' + procName + ' ' + args)
+  this.schedulerData.logProc = spawn(procName, args, {stdio:'pipe'})
+
+  this.schedulerData.logProc.on('close', () => {
+    log('clean up after run')
+    this.schedulerData.proc = null
+    this.schedulerData.stopProc = null
+    this.schedulerData.logProc = null
+    this.schedulerData.simId = null
+    this.schedulerData.sim = null
+    done()
+  })
+
 }
 
 // starts the periodic scheduler update that launches simulations
@@ -307,6 +348,8 @@ function setRoutes(app) {
 
       const data = req.body
       const resourceData = { cmd: data.cmd,
+        stopCmd: data.stopCmd,
+        logCmd: data.logCmd,
         auto: data.auto,
         stat:'WAITING'
       }
@@ -352,12 +395,12 @@ function setRoutes(app) {
       const user = req.user
 
       const r = {success: false}
-      if (!newData.cmd) {
-        return res.jsonp({success: false,
-          error: 'Can\'t update simulation: missing cmd'})
+      if (!newData.cmd || !newData.stopCmd || !newData.logCmd) {
+        return res.status(400).jsonp({success: false,
+          error: 'Can\'t update simulation: missing [cmd||stopCmd||logCmd]'})
       }
       if (newData.auto === undefined) {
-        return res.jsonp({success: false,
+        return res.status(400).jsonp({success: false,
           error: 'Can\'t update simulation: missing auto'})
       }
 
@@ -406,7 +449,7 @@ function setRoutes(app) {
     })
 
   // This is the route to stop a simulation (before starting a new one)
-  app.get('/stopsimulation',
+  app.post('/stopsimulation',
     csgrant.authenticate,
     csgrant.ownsResource('simulations', false),
     function(req, res) {

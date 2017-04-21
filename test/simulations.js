@@ -107,7 +107,7 @@ describe('<Unit test Simulations>', function() {
         simId1 = response.id
         response.success.should.equal(true)
         if (!response.id.startsWith('simulation-')) {
-          should.fail(response.id + ' is not a simualtion name')
+          should.fail(response.id + ' is not a simulation name')
         }
         response.requester.should.equal(admin)
         response.result.data.cmd.should.equal('ls -l')
@@ -151,6 +151,8 @@ describe('<Unit test Simulations>', function() {
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
       .send({ cmd: 'ls -la',
+        stopCmd: 'ls -la',
+        logCmd: 'ls -la',
         auto: false,
       })
       .end(function(err,res){
@@ -193,6 +195,26 @@ describe('<Unit test Simulations>', function() {
       })
     })
   })
+
+  // Stop simulation
+  describe('Stop simulation resource', function() {
+    it('should be possible for admin to stop a simulation', function(done) {
+      agent
+      .post('/stopsimulation')
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .end(function(err,res){
+        should.not.exist(err)
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+        const response = parseResponse(res.text)
+        should.exist(response.state)
+        should.exist(response.prior)
+        done()
+      })
+    })
+  })
+
 
   // Delete simulation
   describe('Delete resource', function() {
