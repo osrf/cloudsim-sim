@@ -53,7 +53,10 @@ app.use(morgan('combined', {
 // the port of the server
 const port = process.env.PORT || 4000
 // the delay between simulator process state machine update in ms
-const simulationsSchedulerInterval = process.env.SCHEDULER_INTERVAL || 1000
+let simulationsSchedulerInterval = process.env.SCHEDULER_INTERVAL || 1000
+if (process.env.NODE_ENV === 'test') {
+  simulationsSchedulerInterval = 1
+}
 
 const adminUser = process.env.CLOUDSIM_ADMIN || 'admin'
 
@@ -122,6 +125,12 @@ app.csgrant = csgrant
 
 // Expose app
 exports = module.exports = app;
+app.close = function(cb) {
+  console.log('MANUAL SERVER SHUTDOWN')
+  const socketsDict = csgrant.sockets.getUserSockets()
+  socketsDict.io.close()
+  httpServer.close(cb)
+}
 
 // we create 2 initial resources,
 // load the database and start serving
