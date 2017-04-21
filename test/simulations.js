@@ -200,7 +200,7 @@ describe('<Unit test Simulations>', function() {
   describe('Stop simulation resource', function() {
     it('should be possible for admin to stop a simulation', function(done) {
       agent
-      .get('/stopsimulation')
+      .post('/stopsimulation')
       .set('Acccept', 'application/json')
       .set('authorization', adminToken)
       .end(function(err,res){

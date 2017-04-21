@@ -449,7 +449,7 @@ function setRoutes(app) {
     })
 
   // This is the route to stop a simulation (before starting a new one)
-  app.get('/stopsimulation',
+  app.post('/stopsimulation',
     csgrant.authenticate,
     csgrant.ownsResource('simulations', false),
     function(req, res) {
