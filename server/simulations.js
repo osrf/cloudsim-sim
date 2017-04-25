@@ -110,8 +110,12 @@ proc.bootStateMachine = function() {
     log('RUNNNNNING', userName, simId)
     // set the state to "FINISHED"
     simData.stat = 'FINISHED'
-    csgrant.updateResource(userName, simId, simData, function(){
-      log('sim "' + simId  + '" is FINISHED')
+    csgrant.updateResource(userName, simId, simData, (err) => {
+      if (err) {
+        log("error updating resource simId: " + simId)
+      } else {
+        log('sim "' + simId  + '" is FINISHED')
+      }
     })
   }
   // killall gz-server? roslaunch?
@@ -143,8 +147,12 @@ proc.startTheSimulator =  function() {
 
   // set the state to "running"
   simData.stat = 'RUNNING'
-  csgrant.updateResource(userName, simId, simData, function(){
-    log('sim "' + simId  + '" running')
+  csgrant.updateResource(userName, simId, simData, (err) => {
+    if (err) {
+      log("error updating resource simId: " + simId)
+    } else {
+      log('sim "' + simId  + '" running')
+    }
   })
   // transform ascii terminal output into colored html
   var colorize = function (buf) {
@@ -165,17 +173,24 @@ proc.startTheSimulator =  function() {
     const newData = colorize(data)
     // add text to the output
     simData.output += newData
-    csgrant.updateResource(userName, simId, simData, function(){
-      log('sim "' + simId  + 'data:' + newData )
+    csgrant.updateResource(userName, simId, simData, (err) => {
+      if (err) {
+        log("error updating resource simId: " + simId)
+      } else {
+        log('sim "' + simId  + 'data:' + newData )
+      }
     })
-
   })
   // when new text is sent to std err
   this.schedulerData.proc.stderr.on('data', (data)=> {
     const newData = colorize(data)
     simData.output += newData
-    csgrant.updateResource(userName, simId, simData, function(){
-      log('sim "' + simId  + 'data:' + newData )
+    csgrant.updateResource(userName, simId, simData, (err) => {
+      if (err) {
+        log("error updating resource simId: " + simId)
+      } else {
+        log('sim "' + simId  + 'data:' + newData )
+      }
     })
   })
   //
@@ -215,8 +230,12 @@ proc.stopTheSimulator = function(done) {
   const markSimAsFinished = () => {
     log('marking simulation as finished')
     simData.stat = 'FINISHED'
-    csgrant.updateResource(userName, simId, simData, () => {
-      log('sim "' + simId  + '" finished')
+    csgrant.updateResource(userName, simId, simData, (err) => {
+      if (err) {
+        log("error updating resource simId: " + simId)
+      } else {
+        log('sim "' + simId  + '" finished')
+      }
     })
     log('About to invoke done() callback')
     done()
