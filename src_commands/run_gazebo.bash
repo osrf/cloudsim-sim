@@ -17,7 +17,7 @@ cat <<DELIM > launch_server.bash
 # (example with log) roslaunch srcsim finals.launch final_number:=2 extra_gazebo_args:="-r --record_path ~/gazebo-logs/myworldlog"
 source /opt/nasa/indigo/setup.bash
 #exec roslaunch srcsim unique.launch init:="true"
-exec roslaunch srcsim unique.launch init:="true" extra_gazebo_args:="-r --record_path ~/gazebo-logs/$WORLD_NAME"
+exec roslaunch srcsim unique.launch init:="true" extra_gazebo_args:="-r --record_path /home/cloudsim/gazebo-logs/$WORLD_NAME"
 DELIM
 chmod a+x launch_server.bash
 
