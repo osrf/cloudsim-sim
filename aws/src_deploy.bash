@@ -85,6 +85,17 @@ elif [ $role == "fieldcomputer" ]; then
 cd $codedir/vpn && openvpn --config openvpn.conf --daemon
 exit 0
 EOF
+
+  # Download and build team's docker image
+  dockerurl=`get_option $optionsfile dockerurl`
+  github_deploy_key=`get_option $optionsfile github_deploy_key`
+
+  echo "dockerurl: $dockerurl"
+  echo "github_deploy_key: $github_deploy_key"
+  # TODO: Install deploy key
+
+  echo "downloading and building team's dockerfile"
+  docker build -t fcomputer:latest $dockerurl
 else
   echo "ERROR: Unknown role \"$role\"."
 fi
