@@ -101,6 +101,8 @@ EOF
   eval "$(ssh-agent -s)"
   # Add ssh key to agent
   ssh-add $key_path
+  # Add github to known hosts
+  ssh-keyscan github.com >> ~/.ssh/known_hosts
 
   echo "downloading and building team's dockerfile"
   docker build -t fcomputer:latest $dockerurl
