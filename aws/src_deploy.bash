@@ -57,6 +57,11 @@ if [ $role == "simulator" ]; then
   cd $codedir/simulator
   $codedir/simulator/start_vpn.bash simulator $subnet openvpn.conf $subnet
 
+  # allow only traffic from field computer to sim instance and block all others in the subnet
+  iptables -I INPUT --src 192.168.2.1 -j ACCEPT
+  iptables -I INPUT --src 192.168.2.10 -j ACCEPT
+  iptables -A INPUT --src 192.168.2.0/24 -j DROP
+
   # Make the servers come back up on reboot
   cat << EOF > /etc/rc.local
 #!/bin/bash
