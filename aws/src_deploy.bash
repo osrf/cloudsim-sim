@@ -93,22 +93,26 @@ EOF
   echo "dockerurl: $dockerurl"
   echo "github_deploy_key: $github_deploy_key"
 
-  # Read and configure team's Deploy SSH Key (for github)
-  key_path=~/.ssh/deploy_key_rsa
-  node $DIR/read_deploy_key.js > $key_path
-  chmod 400 $key_path
-  # Start the ssh-agent in the background.
-  eval "$(ssh-agent -s)"
-  # Add ssh key to agent
-  ssh-add $key_path
-  # Add github to known hosts
-  ssh-keyscan github.com >> ~/.ssh/known_hosts
+  if [ "$github_deploy_key" != "undefined" ]; then
+    # Read and configure team's Deploy SSH Key (for github)
+    key_path=~/.ssh/deploy_key_rsa
+    node $DIR/read_deploy_key.js > $key_path
+    chmod 400 $key_path
+    # Start the ssh-agent in the background.
+    eval "$(ssh-agent -s)"
+    # Add ssh key to agent
+    ssh-add $key_path
+    # Add github to known hosts
+    ssh-keyscan github.com >> ~/.ssh/known_hosts
+  fi
 
   echo "downloading and building team's dockerfile"
   docker build -t fcomputer:latest $dockerurl
 
-  # Kill ssh agent
-  trap "kill $SSH_AGENT_PID" exit
+  if [ "$github_deploy_key" != "undefined" ]; then  
+    # Kill ssh agent
+    trap "kill $SSH_AGENT_PID" exit
+  fi
 else
   echo "ERROR: Unknown role \"$role\"."
 fi
