@@ -304,6 +304,8 @@ proc.sendLogs = function(done) {
 
   // Get custom log command, if any
   const simData = this.schedulerData.sim.sim.data
+  const simId = this.schedulerData.sim.id
+  const userName = this.schedulerData.userName
   if (simData.logCmd) {
     log('Found logCmd. Spawn it')
     this.schedulerData.logProc = this.spawnProcess(simData.logCmd)
