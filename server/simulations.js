@@ -195,7 +195,6 @@ proc.startTheSimulator =  function() {
       }
     })
   })
-  //
   this.schedulerData.proc.on('close', ()=>{
     log('simulation process has terminated')
     // turn the state machine into stopping action
@@ -281,7 +280,9 @@ proc.stopTheSimulator = function(done) {
       }
     })
   })
-  this.schedulerData.stopProc.on('close', markSimAsFinished)
+  // in the case of stop cmd we don't case about stdio, so we just
+  // listen to exit event
+  this.schedulerData.stopProc.on('exit', markSimAsFinished)
 }
 
 // After the simulation, send the logs
