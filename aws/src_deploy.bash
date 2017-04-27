@@ -57,6 +57,9 @@ if [ $role == "simulator" ]; then
   cd $codedir/simulator
   $codedir/simulator/start_vpn.bash simulator $subnet openvpn.conf $subnet
 
+  # block OCU access to sim instance
+  iptables -I INPUT -m iprange --src-range 192.168.2.150-192.168.2.200 -j DROP
+
   # Make the servers come back up on reboot
   cat << EOF > /etc/rc.local
 #!/bin/bash
