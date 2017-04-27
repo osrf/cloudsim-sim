@@ -52,4 +52,4 @@ docker run --rm --name team_container \
   -v /dev/log:/dev/log \
   --ulimit rtprio=99 \
   ${DOCKER_GPU_PARAMS} \
-  fcomputer >> /home/ubuntu/code/cloudsim.log
+  fcomputer
