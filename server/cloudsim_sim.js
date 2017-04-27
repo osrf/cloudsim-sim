@@ -62,6 +62,7 @@ const adminUser = process.env.CLOUDSIM_ADMIN || 'admin'
 
 // setup
 // error if file is not there
+// TODO: it seems these keys.zip are not actually used afterwards. Can we delete them?
 const pathToKeysFile = __dirname + '/keys.zip'
 fs.statSync(pathToKeysFile)
 
