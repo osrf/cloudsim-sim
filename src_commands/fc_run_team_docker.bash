@@ -46,6 +46,8 @@ fi
 docker run --rm --name team_container \
   -e DISPLAY=unix$DISPLAY \
   -e XAUTHORITY=/tmp/.docker.xauth \
+  -e ROS_MASTER_URI=http://192.168.2.1:11311 \
+  -e ROS_IP=192.168.2.10 \
   -v "/etc/localtime:/etc/localtime:ro" \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
   -v "/tmp/.docker.xauth:/tmp/.docker.xauth" \
