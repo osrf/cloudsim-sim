@@ -90,6 +90,34 @@ elif [ $role == "fieldcomputer" ]; then
 cd $codedir/vpn && openvpn --config openvpn.conf --daemon
 exit 0
 EOF
+
+  # Download and build team's docker image
+  dockerurl=`get_option $optionsfile dockerurl`
+  github_deploy_key=`get_option $optionsfile github_deploy_key`
+
+  echo "dockerurl: $dockerurl"
+  echo "github_deploy_key: $github_deploy_key"
+
+  if [ "$github_deploy_key" != "undefined" ]; then
+    # Read and configure team's Deploy SSH Key (for github)
+    key_path=~/.ssh/deploy_key_rsa
+    node $DIR/read_deploy_key.js > $key_path
+    chmod 400 $key_path
+    # Start the ssh-agent in the background.
+    eval "$(ssh-agent -s)"
+    # Add ssh key to agent
+    ssh-add $key_path
+    # Add github to known hosts
+    ssh-keyscan github.com >> ~/.ssh/known_hosts
+  fi
+
+  echo "downloading and building team's dockerfile"
+  docker build -t fcomputer:latest $dockerurl
+
+  if [ "$github_deploy_key" != "undefined" ]; then  
+    # Kill ssh agent
+    trap "kill $SSH_AGENT_PID" exit
+  fi
 else
   echo "ERROR: Unknown role \"$role\"."
 fi

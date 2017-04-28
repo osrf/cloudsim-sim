@@ -128,6 +128,21 @@ proc.getReadyToRunSimulator = function() {
   log('before sim run')
 }
 
+// transform ascii terminal output into colored html
+function colorize(buf) {
+  const txt = buf.toString()
+  // replace new lines with html line breaks
+  if (txt.length == 0)
+    return ""
+  const html = txt.split('\n').join('<br>')
+  // convert the color codes to html
+  //   ex: "[0m[1;31m:[0m[1;31m96[0m[1;31m] [0m[1;31m"
+  const ansi = ansi2html.toHtml(html)
+  // hot fix!!! hack todo superbad
+  const x = ansi.replace('undefinedGazebo', 'Gazebo')
+  return x
+}
+
 // Called to start the simulator
 proc.startTheSimulator =  function() {
   // has a sim been selected?
@@ -154,20 +169,7 @@ proc.startTheSimulator =  function() {
       log('sim "' + simId  + '" running')
     }
   })
-  // transform ascii terminal output into colored html
-  var colorize = function (buf) {
-    const txt = buf.toString()
-    // replace new lines with html line breaks
-    if (txt.length == 0)
-      return ""
-    const html = txt.split('\n').join('<br>')
-    // convert the color codes to html
-    //   ex: "[0m[1;31m:[0m[1;31m96[0m[1;31m] [0m[1;31m"
-    const ansi = ansi2html.toHtml(html)
-    // hot fix!!! hack todo superbad
-    const x = ansi.replace('undefinedGazebo', 'Gazebo')
-    return x
-  }
+
   // when new text is sent to std out
   this.schedulerData.proc.stdout.on('data', (data)=> {
     const newData = colorize(data)
@@ -193,7 +195,6 @@ proc.startTheSimulator =  function() {
       }
     })
   })
-  //
   this.schedulerData.proc.on('close', ()=>{
     log('simulation process has terminated')
     // turn the state machine into stopping action
@@ -254,7 +255,34 @@ proc.stopTheSimulator = function(done) {
   // we do have a stopCmd. Let's use it
   log('Found stopCmd. Spawn it')
   this.schedulerData.stopProc = this.spawnProcess(simData.stopCmd)
-  this.schedulerData.stopProc.on('close', markSimAsFinished)
+  // when new text is sent to std out
+  this.schedulerData.stopProc.stdout.on('data', (data)=> {
+    const newData = colorize(data)
+    // add text to the output
+    simData.stopCmdOutput += newData
+    csgrant.updateResource(userName, simId, simData, (err) => {
+      if (err) {
+        log("error updating resource simId: " + simId)
+      } else {
+        log('sim "' + simId  + 'stop data:' + newData )
+      }
+    })
+  })
+  // when new text is sent to std err
+  this.schedulerData.stopProc.stderr.on('data', (data)=> {
+    const newData = colorize(data)
+    simData.stopCmdOutput += newData
+    csgrant.updateResource(userName, simId, simData, (err) => {
+      if (err) {
+        log("error updating resource simId: " + simId)
+      } else {
+        log('sim "' + simId  + 'stop data:' + newData )
+      }
+    })
+  })
+  // in the case of stop cmd we don't case about stdio, so we just
+  // listen to exit event
+  this.schedulerData.stopProc.on('exit', markSimAsFinished)
 }
 
 // After the simulation, send the logs
@@ -277,10 +305,37 @@ proc.sendLogs = function(done) {
 
   // Get custom log command, if any
   const simData = this.schedulerData.sim.sim.data
+  const simId = this.schedulerData.sim.id
+  const userName = this.schedulerData.userName
   if (simData.logCmd) {
     log('Found logCmd. Spawn it')
     this.schedulerData.logProc = this.spawnProcess(simData.logCmd)
     this.schedulerData.logProc.on('close', cleanUp)
+    // when new text is sent to std out
+    this.schedulerData.logProc.stdout.on('data', (data)=> {
+      const newData = colorize(data)
+      // add text to the output
+      simData.logCmdOutput += newData
+      csgrant.updateResource(userName, simId, simData, (err) => {
+        if (err) {
+          log("error updating resource simId: " + simId)
+        } else {
+          log('sim "' + simId  + 'log data:' + newData )
+        }
+      })
+    })
+    // when new text is sent to std err
+    this.schedulerData.logProc.stderr.on('data', (data)=> {
+      const newData = colorize(data)
+      simData.logCmdOutput += newData
+      csgrant.updateResource(userName, simId, simData, (err) => {
+        if (err) {
+          log("error updating resource simId: " + simId)
+        } else {
+          log('sim "' + simId  + 'log data:' + newData )
+        }
+      })
+    })
   } else {
     // we don't need to log. Just do the clean up
     log('No logCmd. Just cleaning up after run')

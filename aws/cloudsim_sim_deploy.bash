@@ -33,7 +33,8 @@ hg pull
 hg up
 # Potentially install new deps
 npm install
+# TODO: consider moving this run server line after src_deploy.bash was executed
+# Potential place for this line: in the code/cloudsim_deploy.bash, after running both cloudsim_sim_deploy and src_deploy scripts.
 node $simdir/server/cloudsim_sim.js &
-
 
 echo "cloudsim_sim_deploy.bash done"
