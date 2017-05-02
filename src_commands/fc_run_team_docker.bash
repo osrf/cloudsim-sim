@@ -53,5 +53,6 @@ docker run --rm --name team_container \
   -v "/tmp/.docker.xauth:/tmp/.docker.xauth" \
   -v /dev/log:/dev/log \
   --ulimit rtprio=99 \
+  --net=host \
   ${DOCKER_GPU_PARAMS} \
   fcomputer
