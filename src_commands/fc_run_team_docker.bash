@@ -43,6 +43,8 @@ else
   DOCKER_GPU_PARAMS=""
 fi
 
+DISPLAY="${DISPLAY:-:0}"
+
 docker run --rm --name team_container \
   -e DISPLAY=unix$DISPLAY \
   -e XAUTHORITY=/tmp/.docker.xauth \
