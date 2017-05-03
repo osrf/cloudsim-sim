@@ -68,6 +68,22 @@ if [ $role == "simulator" ]; then
 cd $codedir/simulator && $codedir/simulator/start_vpn.bash simulator $subnet openvpn.conf $subnet
 exit 0
 EOF
+
+  # Get S3 credentials, if any
+  # HOME/.passwd-s3fs: contains AWS keys in this format -> public:private
+  # HOME/.bucketname-s3fs: contains the bucket name to use in S3
+  s3bucket=`get_option $optionsfile s3bucket`
+  echo "s3bucket: $s3bucket"
+  if [ "$s3bucket" != "undefined" ]; then
+    s3accesskey=`get_option $optionsfile s3accesskey`
+    s3privatekey=`get_option $optionsfile s3privatekey`
+    echo "s3accesskey: $s3accesskey"
+    echo "s3privatekey: $s3privatekey"
+    echo $s3accesskey:$s3privatekey > $HOME/.passwd-s3fs
+    echo $s3bucket > $HOME/.bucketname-s3fs
+  fi
+
+
 elif [ $role == "fieldcomputer" ]; then
   # Fetch bundle
   mkdir -p $codedir/vpn

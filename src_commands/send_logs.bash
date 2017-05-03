@@ -1,3 +1,6 @@
 #!/usr/bin/env bash
-
-echo 'sending logs' > /home/ubuntu/code/gazebo-logs/sendLogs.txt
+WORLD_NAME=$1
+dockerdir="/home/ubuntu/code/srcsim_docker/docker"
+logsdir="/home/ubuntu/code/gazebo-logs/$WORLD_NAME"
+echo 'uploading logs'
+$dockerdir/run_s3bucket_container.bash s3bucket $logsdir
