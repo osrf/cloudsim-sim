@@ -75,12 +75,13 @@ EOF
   s3bucket=`get_option $optionsfile s3bucket`
   echo "s3bucket: $s3bucket"
   if [ "$s3bucket" != "undefined" ]; then
+    echo "Home is: $HOME"
     s3accesskey=`get_option $optionsfile s3accesskey`
     s3privatekey=`get_option $optionsfile s3privatekey`
     echo "s3accesskey: $s3accesskey"
     echo "s3privatekey: $s3privatekey"
-    echo $s3accesskey:$s3privatekey > $HOME/.passwd-s3fs
-    echo $s3bucket > $HOME/.bucketname-s3fs
+    echo $s3accesskey:$s3privatekey > $codedir/../.passwd-s3fs
+    echo $s3bucket > $codedir/../.bucketname-s3fs
   fi
 
 
