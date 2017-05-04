@@ -81,10 +81,14 @@ EOF
     s3privatekey=`get_option $optionsfile s3privatekey`
     echo "s3accesskey: $s3accesskey"
     echo "s3privatekey: $s3privatekey"
-    echo $s3accesskey:$s3privatekey > $s3dir/s3passwd-s3fs.txt
+    echo $s3bucket:$s3accesskey:$s3privatekey > /etc/passwd-s3fs
+    chmod 640 /etc/passwd-s3fs
     echo $s3bucket > $s3dir/bucketname-s3fs.txt
+    # Mount folder
+    mkdir -p /mnt/s3bucket
+    chmod a+rw /mnt/s3bucket
+    /usr/bin/s3fs -o use_cache=/tmp $s3bucket /mnt/s3bucket
   fi
-
 
 elif [ $role == "fieldcomputer" ]; then
   # Fetch bundle
