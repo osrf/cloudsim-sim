@@ -70,8 +70,8 @@ exit 0
 EOF
 
   # Get S3 credentials, if any
-  # HOME/.passwd-s3fs: contains AWS keys in this format -> public:private
-  # HOME/.bucketname-s3fs: contains the bucket name to use in S3
+  # /etc/passwd-s3fs: contains AWS keys in this format -> bucketname:public:private
+  # /home/ubuntu/s3/bucketname-s3fs.txt: contains the bucket name to use in S3
   s3bucket=`get_option $optionsfile s3bucket`
   echo "s3bucket: $s3bucket"
   if [ "$s3bucket" != "undefined" ]; then
