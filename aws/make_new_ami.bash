@@ -28,9 +28,10 @@ sudo rm -f ../cloudsim-options.json
 sudo rm -f /var/log/cloud-init-output.log
 sudo rm -f /var/log/cloud-init.log
 
-sudo rm -rf ~/.passwd-s3fs
-sudo rm -rf ~/.bucketname-s3fs
+# S3 related
 sudo rm -rf ~/s3
+sudo rm -rf /mnt/s3bucket
+sudo rm -rf /etc/passwd-s3fs
 
 # reinstall cloudsim-sim
 sudo rm -rf node_modules
