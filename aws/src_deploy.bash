@@ -86,7 +86,7 @@ EOF
     echo $s3bucket > $s3dir/bucketname-s3fs.txt
     # Mount folder
     mkdir -p /mnt/s3bucket
-    chmod a+rw /mnt/s3bucket
+    chmod 776 /mnt/s3bucket
     /usr/bin/s3fs -o use_cache=/tmp $s3bucket /mnt/s3bucket
   fi
 
