@@ -24,6 +24,8 @@ chmod a+x launch_server.bash
 # remove previous container run, if any
 docker rm gazebo_run
 
+# Note: look for docker logs in host machine at /var/lib/docker/
+
 $dockerdir/run_container.bash \
     gazebo_run \
     src-cloudsim \
