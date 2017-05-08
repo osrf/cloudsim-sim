@@ -21,9 +21,12 @@ GAZEBO_IP_WHITE_LIST=127.0.0.1 exec roslaunch srcsim unique.launch init:="true" 
 DELIM
 chmod a+x launch_server.bash
 
+# remove previous container run, if any
+docker rm gazebo_run
+
 $dockerdir/run_container.bash \
     gazebo_run \
     src-cloudsim \
     "-v $codedir/gazebo-logs:/home/cloudsim/gazebo-logs -v $current:/home/cloudsim/commands --net=host -e ROS_IP=192.168.2.1 -e ROS_MASTER_URI=http://192.168.2.1:11311" \
     "/home/cloudsim/commands/launch_server.bash" \
-    |& tee -a ~/code/cloudsim-docker.log
+    |& tee -a $codedir/cloudsim-docker.log
