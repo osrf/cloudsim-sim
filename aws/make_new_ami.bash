@@ -24,6 +24,7 @@ sudo rm -f .env
 sudo rm -f ../cloudsim-env.bash
 sudo rm -f ../cloudsim.log
 sudo rm -f ../cloudsim-options.json
+sudo rm -f ../cloudsim-docker.log
 
 sudo rm -f /var/log/cloud-init-output.log
 sudo rm -f /var/log/cloud-init.log
