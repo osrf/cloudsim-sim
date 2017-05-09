@@ -8,8 +8,7 @@ s3mountdir="/mnt/s3bucket"
 if [ -f $s3dir/bucketname-s3fs.txt ]
 then
     echo 'uploading logs'
-    mkdir -p $s3mountdir/$WORLD_NAME
-    cp -r $logsdir $s3mountdir/$WORLD_NAME
+    cp -r $logsdir $s3mountdir
     echo 'finished copying logs to s3 mnt folder'
 else
     echo 'S3 is not configured. Cancel log uploading'
