@@ -10,6 +10,18 @@ const request = require('request')
 // It will GET the latest status from remote server, extend it
 // with the current event, and finally PUT that updated status
 // to the remote route.
+
+// when false, log output is suppressed
+exports.showLog = true
+
+// log to console
+// @s string to log
+function log(s) {
+  if (exports.showLog) {
+    console.log('events> ', s)
+  }
+}
+
 let sendEventInterval = 500 
 if (process.env.NODE_ENV === 'test') {
   sendEventInterval = 1
@@ -29,13 +41,12 @@ function init(route, userToken) {
   }
   remoteRoute = route
   token = userToken
-  console.log("EVENTS INITIALIZED")
+  log("Received a valid remoteRoute. Events module initialized", remoteRoute)
   initialized = true
 }
 
 function emit(event) {
-  console.log("Event EMITTED", JSON.stringify(event))
-  console.log("Event EMITTED intialized?", initialized)
+  log("Emit event", JSON.stringify(event))
   if (!initialized) {
     return
   }
@@ -53,10 +64,9 @@ function sendEvents() {
   }
   running = true
   sendNextEvent((err, remaining) => {
-    console.log("YA SALI DEL SENDNEXTEVENT")
     running = false
     if (err || remaining) {
-      console.log("ABOUT TO CREATE TIMEOUT", sendEventInterval)
+      log("About to create new timeout with delay:", sendEventInterval)
       timeoutId = setTimeout(() => {
         timeoutId = undefined
         sendEvents()
@@ -66,14 +76,14 @@ function sendEvents() {
 }
 
 function sendNextEvent(cb) {
-  console.log("PEPPEEEEEEEE", eventsQueue.length)
+  log("Events queue. Current size", eventsQueue.length)
   if (!eventsQueue.length) {
     cb(null, 0)
     return
   }
   const ev = _.first(eventsQueue)
   // GET current server status
-  console.log("ABOUT TO SEND GET", remoteRoute)
+  log("About to GET", remoteRoute)
   request({
     url: remoteRoute,
     json: true,
@@ -81,12 +91,12 @@ function sendNextEvent(cb) {
     headers: { 'authorization': token }
   }, function (err, resp, body) {
     if (err) {
-     console.log("ERRORRRRRRRRRRRRRRRR", err) 
+      log("Error trying to GET: " + remoteRoute, err)
       cb(err)
       return
     }
-    const data = JSON.parse(body);
-    console.log("PATOOOOOO", body)
+    const data = body.result.data;
+    log("Got body", body)
     _.extend(data, ev)
     // PUT updated data
     request({
@@ -101,7 +111,7 @@ function sendNextEvent(cb) {
         return
       }
       // Success. Remove event from queue
-      console.log("PATOOOOOO PUTTTTT")
+      log("Event successfully sent")
       eventsQueue.shift()
       cb(null, eventsQueue.length)
     })
