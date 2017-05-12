@@ -86,7 +86,7 @@ describe('<Unit test Events>', function() {
       console.log("test port", port);
       eventsServer.listen(port)
 
-      const eventsRoute = 'http://localhost:' + port 
+      const eventsRoute = 'http://127.0.0.1:' + port
       // it is important to void these set ENV values to avoid impacting 
       // other tests 
       process.env.EVENTS_ROUTE = eventsRoute
