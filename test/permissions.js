@@ -5,6 +5,7 @@ console.log('test/permissions.js');
 const should = require('should');
 const supertest = require('supertest');
 const csgrant = require('cloudsim-grant')
+const clearRequire = require('clear-require');
 
 const app = require('../server/cloudsim_sim')
 const token = csgrant.token
@@ -330,7 +331,10 @@ describe('<Unit test Permissions>', function() {
 
   after(function(done) {
     csgrant.model.clearDb()
-    done()
+    app.close(function() {
+      clearRequire.all()
+      done()
+    })
   })
 
 })

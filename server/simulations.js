@@ -1,10 +1,11 @@
 'use strict'
 
 const csgrant = require('cloudsim-grant')
-const state_machine = require('./state_machine.js')
+const state_machine = require('./state_machine')
 const ansi_to_html = require('ansi-to-html')
 const ansi2html = new ansi_to_html()
 const spawn = require('child_process').spawn
+const events = require('./events')
 
 // when false, log output is suppressed
 exports.showLog = false
@@ -118,6 +119,7 @@ proc.bootStateMachine = function() {
       }
     })
   }
+  events.emit({ sim_status: 'READY' })
   // killall gz-server? roslaunch?
   log('state machine booted')
 }
@@ -162,6 +164,7 @@ proc.startTheSimulator =  function() {
 
   // set the state to "running"
   simData.stat = 'RUNNING'
+  events.emit({ sim_status: 'RUNNING' })
   csgrant.updateResource(userName, simId, simData, (err) => {
     if (err) {
       log("error updating resource simId: " + simId)
@@ -225,12 +228,14 @@ proc.stopTheSimulator = function(done) {
     return done()
   }
 
+  events.emit({ sim_status: 'FINISHING' })
   const simData = this.schedulerData.sim.sim.data
   const simId = this.schedulerData.sim.id
   const userName = this.schedulerData.userName
   const markSimAsFinished = () => {
     log('marking simulation as finished')
     simData.stat = 'FINISHED'
+    events.emit({ sim_status: 'FINISHED' })
     csgrant.updateResource(userName, simId, simData, (err) => {
       if (err) {
         log("error updating resource simId: " + simId)
@@ -300,6 +305,7 @@ proc.sendLogs = function(done) {
     this.schedulerData.logProc = null
     this.schedulerData.simId = null
     this.schedulerData.sim = null
+    events.emit({ sim_status: 'READY' })
     done()
   }
 
@@ -309,6 +315,7 @@ proc.sendLogs = function(done) {
   const userName = this.schedulerData.userName
   if (simData.logCmd) {
     log('Found logCmd. Spawn it')
+    events.emit({ sim_status: 'SENDING LOGS' })
     this.schedulerData.logProc = this.spawnProcess(simData.logCmd)
     this.schedulerData.logProc.on('close', cleanUp)
     // when new text is sent to std out

@@ -1,10 +1,11 @@
-'use strict';
+/*'use strict';
 
 console.log('test/mocha/simulations.js');
 
 const should = require('should');
 const supertest = require('supertest');
 const clearRequire = require('clear-require');
+var http = require('http');
 
 let csgrant
 let app
@@ -479,3 +480,4 @@ describe('<Unit test Simulations>', function() {
   })
 
 })
+*/
