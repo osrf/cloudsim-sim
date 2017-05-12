@@ -24,5 +24,5 @@ chmod a+x launch_server.bash
 $dockerdir/run_container.bash \
     gazebo_run \
     src-cloudsim \
-    "-v $codedir/gazebo-logs:/home/cloudsim/gazebo-logs -v $current:/home/cloudsim/commands --net=host -e ROS_IP=192.168.2.1 -e ROS_MASTER_URI=http://192.168.2.1:11311" \
+    "-v $codedir/gazebo-logs:/home/cloudsim/gazebo-logs -v $current:/home/cloudsim/commands --net=host -e ROS_IP=192.168.2.1 -e ROS_MASTER_URI=http://192.168.2.1:11311 --ulimit core=1000000000:1000000000" \
     "/home/cloudsim/commands/launch_server.bash"
