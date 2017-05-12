@@ -167,8 +167,6 @@ let resources = [
   }
 ]
 
-console.log("TOKEN", process.env.EVENTS_TOKEN)
-
 let eventsRoute = process.env.EVENTS_ROUTE
 let eventsToken = process.env.EVENTS_TOKEN
 console.log('loading options.json...')

@@ -39,7 +39,7 @@ let token
 
 
 function init(route, userToken) {
-  if (!route) {
+  if (!route || route == 'undefined') {
     return
   }
   remoteRoute = route
@@ -86,6 +86,8 @@ function sendNextEvent(cb) {
   }
   const ev = _.first(eventsQueue)
   // GET current server status
+  // We expect the actual data to be returned as:
+  // body.result.data
   log("About to GET", remoteRoute)
   request({
     url: remoteRoute,
@@ -101,6 +103,7 @@ function sendNextEvent(cb) {
     const data = body.result.data;
     log("Got body", body)
     _.extend(data, ev)
+    log("Extended data with event", data)
     // PUT updated data
     request({
       url: remoteRoute,
@@ -108,7 +111,7 @@ function sendNextEvent(cb) {
       body: data,
       method: 'PUT',
       headers: { 'authorization': token }
-    }, function (putErr, putRes) {
+    }, function (putErr) {
       if (putErr) {
         cb(putErr)
         return
