@@ -15,10 +15,9 @@ const request = require('request')
 exports.showLog = true
 
 // log to console
-// @s string to log
-function log(s) {
+function log(str, o) {
   if (exports.showLog) {
-    console.log('events> ', s)
+    console.log(str, o)
   }
 }
 
