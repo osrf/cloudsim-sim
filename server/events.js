@@ -12,7 +12,7 @@ const request = require('request')
 // to the remote route.
 
 // when false, log output is suppressed
-exports.showLog = false
+exports.showLog = true
 
 // log to console
 function log(str, o) {
