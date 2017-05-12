@@ -17,7 +17,11 @@ exports.showLog = true
 // log to console
 function log(str, o) {
   if (exports.showLog) {
-    console.log(str, o)
+    if (o) {
+      console.log('events> ' + str, o)
+    } else {
+      console.log('events> ', str)
+    }
   }
 }
 
