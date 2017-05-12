@@ -129,11 +129,12 @@ describe('<Unit test Events>', function() {
   describe('<Check initial events>', function() {
     it('after server starts it should be in READY status', function(done) {
       setTimeout(() => {
-        should.equal(_events.length, 1)
-        should.equal(_events[0].sim_status, 'READY') 
-        _events.shift()
+        const list = _events
+        _events = []
+        should.equal(list.length, 1)
+        should.equal(list[0].sim_status, 'READY')
         done()
-      }, 100)
+      }, 500)
     })
   })
 
