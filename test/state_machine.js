@@ -1,6 +1,7 @@
 'use strict'
 
 const state_machine = require('../server/state_machine')
+const clearRequire = require('clear-require');
 
 // we use this list to record the successive transitions, and
 // verify that they are correct in the tests
@@ -118,7 +119,7 @@ describe('<Unit test State machine>', function() {
   })
 
   after(function(done) {
+    clearRequire.all()
     done()
   })
-
 })

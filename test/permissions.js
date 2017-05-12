@@ -4,24 +4,15 @@ console.log('test/permissions.js');
 
 const should = require('should');
 const supertest = require('supertest');
-const csgrant = require('cloudsim-grant')
 const clearRequire = require('clear-require');
 
-const app = require('../server/cloudsim_sim')
-const token = csgrant.token
+let csgrant
+let app
+let agent
+let token
 
-const agent = supertest.agent(app)
-
-// we need fresh keys for this test
-const keys = csgrant.token.generateKeys()
-
-token.initKeys(keys.public, keys.private)
-
-const admin = process.env.CLOUDSIM_ADMIN || "admin"
-const adminTokenData = {
-  identities: [admin]
-}
-
+let admin
+let adminTokenData
 let adminToken
 
 const bobTokenData = {identities: ['bob']}
@@ -49,12 +40,35 @@ function parseResponse(text, log) {
 describe('<Unit test Permissions>', function() {
 
   before(function(done) {
-    token.initKeys(keys.public, keys.private)
+    // Important: the database has to be cleared early, before
+    // the server is launched (otherwise, root resources will be missing)
+    csgrant = require('cloudsim-grant')
+    csgrant.model.clearDb()
     done()
   })
 
   before(function(done) {
-    token.signToken(adminTokenData, (e, tok)=>{
+    app = require('../server/cloudsim_sim')
+    agent = supertest.agent(app)
+    done()
+  })
+
+  before(function(done) {
+    // we need fresh keys for this test
+    const keys = csgrant.token.generateKeys()
+    csgrant.token.initKeys(keys.public, keys.private)
+    token = csgrant.token
+    done()
+  })
+
+  before(function(done) {
+    admin = process.env.CLOUDSIM_ADMIN || "admin"
+    if (!admin || admin === "") {
+      should.fail('Admin user not specified')
+    }
+    adminTokenData = { identities: [admin] }
+
+    token.signToken(adminTokenData, (e, tok) => {
       console.log('token signed for "' + admin + '"')
       if(e) {
         should.fail('sign error: ' + e)
@@ -83,6 +97,7 @@ describe('<Unit test Permissions>', function() {
         auto: true,
       })
       .end(function(err,res){
+        console.log(err)
         var response = parseResponse(res.text, res.status != 200)
         res.status.should.be.equal(200)
         res.redirect.should.equal(false)
