@@ -43,6 +43,8 @@ else
   DOCKER_GPU_PARAMS=""
 fi
 
+DISPLAY="${DISPLAY:-:0}"
+
 docker run --rm --name team_container \
   -e DISPLAY=unix$DISPLAY \
   -e XAUTHORITY=/tmp/.docker.xauth \
@@ -53,5 +55,6 @@ docker run --rm --name team_container \
   -v "/tmp/.docker.xauth:/tmp/.docker.xauth" \
   -v /dev/log:/dev/log \
   --ulimit rtprio=99 \
+  --net=host \
   ${DOCKER_GPU_PARAMS} \
   fcomputer
