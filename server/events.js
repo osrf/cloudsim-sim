@@ -83,44 +83,22 @@ function sendNextEvent(cb) {
     return
   }
   const ev = _.first(eventsQueue)
-  // GET current server status
-  // We expect the actual data to be returned as:
-  // body.result.data
-  log("About to GET", remoteRoute)
   request({
     url: remoteRoute,
     json: true,
-    method: 'GET',
+    body: ev,
+    method: 'PUT',
     headers: { 'authorization': token }
-  }, function (err, resp, body) {
+  }, function (err) {
     if (err) {
-      log("Error trying to GET: " + remoteRoute, err)
       cb(err)
       return
     }
-    const data = body.result.data;
-    log("Got body", body)
-    _.extend(data, ev)
-    log("Extended data with event", data)
-    // PUT updated data
-    request({
-      url: remoteRoute,
-      json: true,
-      body: data,
-      method: 'PUT',
-      headers: { 'authorization': token }
-    }, function (putErr) {
-      if (putErr) {
-        cb(putErr)
-        return
-      }
-      // Success. Remove event from queue
-      log("Event successfully sent")
-      eventsQueue.shift()
-      cb(null, eventsQueue.length)
-    })
-  }
-  )
+    // Success. Remove event from queue
+    log("Event successfully sent")
+    eventsQueue.shift()
+    cb(null, eventsQueue.length)
+  })
 }
 
 exports.init = init

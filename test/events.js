@@ -37,20 +37,6 @@ function parseResponse(text, log) {
 let _events = [] 
 // mock events-receiver server 
 const eventsServer = http.createServer(function (req, res) {
-  
-  if (req.method == 'GET') {
-    let body = [];
-    req.on('data', function(chunk) {
-      body.push(chunk);
-    }).on('end', function() {
-      body = Buffer.concat(body).toString();
-      res.writeHead(200, { 'Content-Type': 'application/json' })
-
-      // "body.result.data"" is the expected structure of a 
-      // portal-like server
-      res.end(JSON.stringify({ result: { data: {} } }))
-    })
-  }
   if (req.method == 'PUT') {
     let body = [];
     req.on('data', function(chunk) {
