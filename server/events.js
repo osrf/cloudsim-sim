@@ -2,6 +2,7 @@
 
 const _ = require('underscore')
 const request = require('request')
+const csgrant = require('cloudsim-grant')
 
 // Basic version of an event queue that dispatches events
 // by doing PUT to a configured route.
@@ -101,5 +102,40 @@ function sendNextEvent(cb) {
   })
 }
 
+// set the event url for the server.
+// NOTE: We request same permission as for simulations resource.
+function setRoutes(app) {
+  log('EVENTS setRoutes')
+  // list all simulations for the user
+  app.get('/events',
+    csgrant.authenticate,
+    csgrant.ownsResource('simulations', false),
+    function(req, res) {
+      const r = {
+        success: true,
+        operation: "get pending events",
+        result: eventsQueue,
+        requester: req.user
+      }
+      res.jsonp(r)
+    }
+  )
+  // post a new event to be sent to portal
+  app.post('/events',
+    csgrant.authenticate,
+    csgrant.ownsResource('simulations', false),
+    function(req, res) {
+      emit(req.body)
+      const r = {
+        success: true,
+        operation: "posted event",
+        requester: req.user
+      }
+      res.jsonp(r)
+    }
+  )
+}
+
 exports.init = init
 exports.emit = emit
+exports.setRoutes = setRoutes

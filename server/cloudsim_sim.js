@@ -115,6 +115,7 @@ csgrant.setPermissionsRoutes(app)
 // local modules have routes too
 simulations.setRoutes(app)
 downloads.setRoutes(app)
+events.setRoutes(app)
 
 // shutdown nicely
 process.on('SIGTERM', ()=>{

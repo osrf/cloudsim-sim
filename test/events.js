@@ -13,6 +13,9 @@ let admin
 let adminTokenData
 let adminToken
 
+const bobTokenData = {identities: ['bob']}
+let bobToken
+
 // holds the simulation id
 let simId1
 
@@ -105,7 +108,14 @@ describe('<Unit test Events>', function() {
         console.log('sign error: ' + e)
       }
       adminToken = tok
-      done()
+      csgrant.token.signToken(bobTokenData, (e, tok)=>{
+        console.log('token signed for user "bob"')
+        if(e) {
+          should.fail('sign error: ' + e)
+        }
+        bobToken = tok
+        done()
+      })
     })
   })
 
@@ -270,6 +280,51 @@ describe('<Unit test Events>', function() {
       }, 100)
     })
 
+  })
+
+  describe('<Check events routes>', function() {
+    it('should be possible for admin to post to events', function(done) {
+      agent
+      .post('/events')
+      .set('Acccept', 'application/json')
+      .set('authorization', adminToken)
+      .send({
+        postedEvent: 'true'
+      })
+      .end(function(err,res) {
+        res.status.should.be.equal(200)
+        res.redirect.should.equal(false)
+        var response = parseResponse(res.text)
+        response.success.should.equal(true)
+        response.requester.should.equal(admin)
+
+        setTimeout(() => {
+          should.equal(_events.length, 1)
+          should.exist(_events[0].postedEvent)
+          should.equal(_events[0].postedEvent, 'true')
+          _events = []
+          done()
+        }, 100)
+      })
+    })
+    it('should not be possible for user Bob to post to events', function(done) {
+      agent
+      .post('/events')
+      .set('Acccept', 'application/json')
+      .set('authorization', bobToken)
+      .send({
+        bobPostedEvent: 2
+      })
+      .end(function(err,res) {
+        res.status.should.be.equal(401)
+        res.redirect.should.equal(false)
+        var response = JSON.parse(res.text)
+        response.success.should.equal(false)
+        should.exist(response.error)
+        should.equal(_events.length, 0)
+        done()
+      })
+    })
   })
 
   // after all tests have run, we need to clean up our mess
