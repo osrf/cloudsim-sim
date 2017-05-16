@@ -1,7 +1,5 @@
 'use strict';
 
-console.log('test/mocha/events.js');
-
 const should = require('should');
 const supertest = require('supertest');
 const clearRequire = require('clear-require');
@@ -83,7 +81,6 @@ describe('<Unit test Events>', function() {
     // (like 'portal'), and then pass the server url to cloudsim-sim. 
     const getPort = require('get-port');
     getPort().then(port => {
-      console.log("test port", port);
       eventsServer.listen(port)
 
       const eventsRoute = 'http://127.0.0.1:' + port

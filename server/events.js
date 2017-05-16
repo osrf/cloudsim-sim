@@ -3,8 +3,6 @@
 const _ = require('underscore')
 const request = require('request')
 
-// const simulationData = {srcround: resourceName}
-
 // Basic version of an event queue that dispatches events
 // by doing PUT to a configured route.
 // It will GET the latest status from remote server, extend it
