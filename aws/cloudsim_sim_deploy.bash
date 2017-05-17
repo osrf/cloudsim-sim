@@ -29,8 +29,13 @@ cp $codedir/cloudsim-options.json $simdir/options.json
 
 # Update cloudsim-sim
 cd $simdir
+# switch to user ubuntu before pulling changes
+echo "switching to user ubuntu before pulling changes"
+su ubuntu
 hg pull
 hg up
+echo "exiting ubuntu user -- returning back to root user"
+exit
 # Potentially install new deps
 npm install
 # TODO: consider moving this run server line after src_deploy.bash was executed
