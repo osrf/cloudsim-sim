@@ -18,8 +18,9 @@ sudo shred -u ~/.*history
 sudo shred -u /root/.ssh/authorized_keys
 sudo shred -u /home/ubuntu/.ssh/authorized_keys
 
-# remove ros logs 
+# remove ros logs
 sudo rm -fr /home/ubuntu/.ros
+sudo rm -fr /root/.ros
 
 # remove old env:
 cd $DIR/..
