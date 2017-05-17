@@ -13,6 +13,7 @@ const csgrant = require('cloudsim-grant')
 // local modules
 const simulations = require('./simulations')
 const downloads = require('./downloads')
+const events = require('./events')
 
 // the configuration values are set in the local .env file
 // this loads the .env content and puts it in the process environment.
@@ -114,6 +115,7 @@ csgrant.setPermissionsRoutes(app)
 // local modules have routes too
 simulations.setRoutes(app)
 downloads.setRoutes(app)
+events.setRoutes(app)
 
 // shutdown nicely
 process.on('SIGTERM', ()=>{
@@ -166,6 +168,8 @@ let resources = [
   }
 ]
 
+let eventsRoute = process.env.EVENTS_ROUTE
+let eventsToken = process.env.EVENTS_TOKEN
 console.log('loading options.json...')
 try {
   const options = require('../options.json')
@@ -173,11 +177,14 @@ try {
     console.log('replacing default options with:' + options.resources)
     resources = options.resources
   }
+  eventsRoute = options.simulation_data_route || eventsRoute
+  eventsToken = options.token || eventsToken
 }
 catch(e) {
   console.log('Can\'t load ./options.json: ' + e)
 }
 
+events.init(eventsRoute, eventsToken)
 csgrant.init(resources,
   dbName,
   dbUrl,
@@ -201,4 +208,3 @@ csgrant.init(resources,
     }
   }
 )
-

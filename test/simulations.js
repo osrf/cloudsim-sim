@@ -10,13 +10,8 @@ let csgrant
 let app
 let agent
 
-const admin = process.env.CLOUDSIM_ADMIN || 'admin'
-
-console.log('admin user:', admin)
-
-const adminTokenData = {
-  identities: [admin]
-}
+let admin
+let adminTokenData
 
 let adminToken
 
@@ -42,12 +37,6 @@ function parseResponse(text, log) {
 
 describe('<Unit test Simulations>', function() {
 
-  // before(function(done) {
-  //   setTimeout(function(){
-  //     done()
-  //   }, 1500);
-  // })
-
   before(function(done) {
     // Important: the database has to be cleared early, before
     // the server is launched (otherwise, root resources will be missing)
@@ -63,15 +52,21 @@ describe('<Unit test Simulations>', function() {
   })
 
   before(function(done) {
-    if (!admin || admin === "")
-      should.fail('Admin user not specified')
+    // we need fresh keys for this test
+    const keys = csgrant.token.generateKeys()
+    csgrant.token.initKeys(keys.public, keys.private)
     done()
   })
 
   before(function(done) {
-    // we need fresh keys for this test
-    const keys = csgrant.token.generateKeys()
-    csgrant.token.initKeys(keys.public, keys.private)
+    admin = process.env.CLOUDSIM_ADMIN || 'admin'
+    if (!admin || admin === "") {
+      should.fail('Admin user not specified')
+    }
+    console.log("admin user:", admin)
+
+    adminTokenData = { identities: [admin] }
+
     csgrant.token.signToken(adminTokenData, (e, tok)=>{
       console.log('token signed for "' + admin + '"')
       if(e) {
