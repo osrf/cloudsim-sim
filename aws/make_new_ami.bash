@@ -18,6 +18,9 @@ sudo shred -u ~/.*history
 sudo shred -u /root/.ssh/authorized_keys
 sudo shred -u /home/ubuntu/.ssh/authorized_keys
 
+# remove ros logs 
+sudo rm -fr /home/ubuntu/.ros
+
 # remove old env:
 cd $DIR/..
 sudo rm -f .env
@@ -25,6 +28,7 @@ sudo rm -f ../cloudsim-env.bash
 sudo rm -f ../cloudsim.log
 sudo rm -f ../cloudsim-options.json
 sudo rm -f ../cloudsim-docker.log
+sudo rm -f ../cloudsim-src-monitor.log
 
 sudo rm -f /var/log/cloud-init-output.log
 sudo rm -f /var/log/cloud-init.log
