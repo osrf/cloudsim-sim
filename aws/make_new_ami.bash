@@ -24,6 +24,7 @@ sudo rm -fr /home/ubuntu/.ros
 # remove old env:
 cd $DIR/..
 sudo rm -f .env
+sudo rm -f options.json
 sudo rm -f ../cloudsim-env.bash
 sudo rm -f ../cloudsim.log
 sudo rm -f ../cloudsim-options.json

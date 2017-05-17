@@ -58,7 +58,7 @@ def simTaskCallback(data):
   prevTaskId = taskId
   prevTasks = tasks.copy()
 
-  dataJon = json.dumps(tasks)
+  dataJon = json.dumps({"src_tasks": tasks})
   headers = {'Content-type': 'application/json', 'Authorization': token}
   url="http://localhost:4000/events"
   response = requests.post(url, data=dataJon, headers=headers)
