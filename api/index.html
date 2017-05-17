@@ -641,6 +641,105 @@
               ]
             },
           },
+          // /events
+          "\/events": {
+            // GET
+            "get": {
+              "tags": [
+                "events"
+              ],
+              "summary": "Get all pending events (not sent to portal yet)",
+              "consumes": [
+                "application\/json",
+              ],
+              "produces": [
+                "application\/json"
+              ],
+              "parameters": [],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                      },
+                      "operation": {
+                        "$ref": "#\/definitions\/Operation"
+                      },
+                      "requester": {
+                        "$ref": "#\/definitions\/Requester"
+                      },
+                      "result": {
+                        "type" : "array",
+                        "items": {
+                          "type": "object"
+                        },
+                      },
+                    },
+                  },
+                },
+                "401": {
+                  "description": "Not authorized"
+                }
+              },
+              "security": [
+                {
+                  "token": [],
+                }
+              ]
+            },
+            // POST
+            "post": {
+              "tags": [
+                "events"
+              ],
+              "summary": "Queues a new event",
+              "consumes": [
+                "application\/json",
+              ],
+              "produces": [
+                "application\/json"
+              ],
+              "parameters": [
+                {
+                  "in": "body",
+                  "name": "body",
+                  "description": "Object with event data",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Success",
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                      },
+                      "operation": {
+                        "$ref": "#\/definitions\/Operation"
+                      },
+                      "requester": {
+                        "$ref": "#\/definitions\/Requester"
+                      },
+                    }
+                  }
+                },
+                "401": {
+                  "description": "Not authorized"
+                }
+              },
+              "security": [
+                {
+                  "token": [],
+                }
+              ]
+            },
+          },
         },
         definitions: {
           "Operation": {

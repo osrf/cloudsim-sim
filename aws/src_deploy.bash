@@ -140,6 +140,10 @@ EOF
     # Kill ssh agent
     trap "kill $SSH_AGENT_PID" exit
   fi
+
+  #  Notify cloudsim-sim server that the team's image has been built
+  curl -X POST --header "Content-Type: application/json" --header 'Accept: application/json' --header "authorization: $token" --data '{"fc_docker_image":"fcomputer"}' "http://localhost:4000/events"
+
 else
   echo "ERROR: Unknown role \"$role\"."
 fi

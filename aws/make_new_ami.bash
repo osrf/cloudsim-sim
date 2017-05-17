@@ -24,6 +24,7 @@ sudo rm -fr /root/.ros
 
 # remove old env:
 cd $DIR/..
+# now located at cloudsim-sim folder
 sudo rm -f .env
 sudo rm -f options.json
 sudo rm -f ../cloudsim-env.bash

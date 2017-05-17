@@ -6,9 +6,6 @@ const csgrant = require('cloudsim-grant')
 
 // Basic version of an event queue that dispatches events
 // by doing PUT to a configured route.
-// It will GET the latest status from remote server, extend it
-// with the current event, and finally PUT that updated status
-// to the remote route.
 
 // when false, log output is suppressed
 exports.showLog = false
