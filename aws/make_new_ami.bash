@@ -20,7 +20,9 @@ sudo shred -u /home/ubuntu/.ssh/authorized_keys
 
 # remove old env:
 cd $DIR/..
+# now located at cloudsim-sim folder
 sudo rm -f .env
+sudo rm -f options.json
 sudo rm -f ../cloudsim-env.bash
 sudo rm -f ../cloudsim.log
 sudo rm -f ../cloudsim-options.json
