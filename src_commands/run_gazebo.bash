@@ -37,6 +37,10 @@ docker rm gazebo_run
 
 # Note: look for docker logs in host machine at /var/lib/docker/
 
+# launch script to monitor SRC tasks
+kill -9 `pgrep -f src_monitor`
+$DIR/src_monitor.bash |& tee -a $codedir/cloudsim-src-monitor.log &
+
 $dockerdir/run_container.bash \
     gazebo_run \
     src-cloudsim \
