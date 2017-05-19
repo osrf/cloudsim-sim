@@ -124,8 +124,9 @@ describe('<Unit test Events>', function() {
       setTimeout(() => {
         const list = _events
         _events = []
-        should.equal(list.length, 1)
+        should.equal(list.length, 2)
         should.equal(list[0].state_machine, 'READY')
+        should.equal(list[1].ready, true)
         done()
       }, 500)
     })
@@ -407,9 +408,9 @@ describe('<Unit test Events WITH PARENT PROPERTY>', function() {
       setTimeout(() => {
         const list = _events
         _events = []
-        should.equal(list.length, 1)
-        should.exist(list[0].testParentProp)
+        should.equal(list.length, 2)
         should.equal(list[0].testParentProp.state_machine, 'READY')
+        should.exist(list[1].testParentProp)
         done()
       }, 500)
     })

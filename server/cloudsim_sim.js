@@ -205,7 +205,7 @@ csgrant.init(resources,
       httpServer.listen(port, function(){
         console.log('ssl: ' + useHttps)
         console.log('listening on *:' + port);
-        emit({ 'ready': true })
+        events.emit({ 'ready': true })
       })
       csgrant.dump()
     }
