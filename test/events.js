@@ -125,7 +125,7 @@ describe('<Unit test Events>', function() {
         const list = _events
         _events = []
         should.equal(list.length, 1)
-        should.equal(list[0].sim_status, 'READY')
+        should.equal(list[0].state_machine, 'READY')
         done()
       }, 500)
     })
@@ -200,11 +200,11 @@ describe('<Unit test Events>', function() {
     it('Check published event/statuses of the launched (and stopped) simulation', function(done) {
       setTimeout(() => {
         should.equal(_events.length, 5)
-        should.equal(_events[0].sim_status, 'RUNNING')
-        should.equal(_events[1].sim_status, 'FINISHING')
-        should.equal(_events[2].sim_status, 'FINISHED')
-        should.equal(_events[3].sim_status, 'SENDING LOGS')
-        should.equal(_events[4].sim_status, 'READY')
+        should.equal(_events[0].state_machine, 'RUNNING')
+        should.equal(_events[1].state_machine, 'FINISHING')
+        should.equal(_events[2].state_machine, 'FINISHED')
+        should.equal(_events[3].state_machine, 'SENDING LOGS')
+        should.equal(_events[4].state_machine, 'READY')
         _events = []
         done()
       }, 100)
@@ -271,10 +271,10 @@ describe('<Unit test Events>', function() {
     it('Check published event/statuses of the simulation that just run', function(done) {
       setTimeout(() => {
         should.equal(_events.length, 4)
-        should.equal(_events[0].sim_status, 'RUNNING')
-        should.equal(_events[1].sim_status, 'FINISHING')
-        should.equal(_events[2].sim_status, 'FINISHED')
-        should.equal(_events[3].sim_status, 'READY')
+        should.equal(_events[0].state_machine, 'RUNNING')
+        should.equal(_events[1].state_machine, 'FINISHING')
+        should.equal(_events[2].state_machine, 'FINISHED')
+        should.equal(_events[3].state_machine, 'READY')
         _events = []
         done()
       }, 100)
@@ -342,4 +342,92 @@ describe('<Unit test Events>', function() {
     })
   })
 
+})
+
+describe('<Unit test Events WITH PARENT PROPERTY>', function() {
+
+  before(function(done) {
+    // Important: the database has to be cleared early, before
+    // the server is launched (otherwise, root resources will be missing)
+    csgrant = require('cloudsim-grant')
+    csgrant.model.clearDb()
+    done()
+  })
+
+  before(function(done) {
+    // To test events we need to first launch an events-receiver server
+    // (like 'portal'), and then pass the server url to cloudsim-sim.
+    const getPort = require('get-port');
+    getPort().then(port => {
+      eventsServer.listen(port)
+
+      const eventsRoute = 'http://127.0.0.1:' + port
+      // it is important to void these set ENV values to avoid impacting
+      // other tests
+      process.env.EVENTS_ROUTE = eventsRoute
+      const eventsToken = undefined
+      process.env.EVENTS_TOKEN = eventsToken
+      process.env.EVENTS_PARENT_PROP = "testParentProp"
+
+      // Now we can launch cloudsim-sim server
+      app = require('../server/cloudsim_sim')
+      agent = supertest.agent(app)
+      done()
+    })
+  })
+
+  before(function(done) {
+    // we need fresh keys for this test
+    const keys = csgrant.token.generateKeys()
+    csgrant.token.initKeys(keys.public, keys.private)
+    done()
+  })
+
+  before(function(done) {
+    admin = process.env.CLOUDSIM_ADMIN || 'admin'
+    if (!admin || admin === "") {
+      should.fail('Admin user not specified')
+    }
+    console.log("admin user:", admin)
+
+    adminTokenData = { identities: [admin] }
+
+    csgrant.token.signToken(adminTokenData, (e, tok)=>{
+      console.log('token signed for "' + admin + '"')
+      if(e) {
+        console.log('sign error: ' + e)
+      }
+      adminToken = tok
+      done()
+    })
+  })
+
+  describe('<Check initial events with parent prop set>', function() {
+    it('after server starts it should be in READY status', function(done) {
+      setTimeout(() => {
+        const list = _events
+        _events = []
+        should.equal(list.length, 1)
+        should.exist(list[0].testParentProp)
+        should.equal(list[0].testParentProp.state_machine, 'READY')
+        done()
+      }, 500)
+    })
+  })
+
+  // after all tests have run, we need to clean up our mess
+  after(function(done) {
+    process.env.EVENTS_ROUTE = undefined
+    process.env.EVENTS_TOKEN = undefined
+    process.env.EVENTS_PARENT_PROP = undefined
+
+    csgrant.model.clearDb()
+    eventsServer.close(() => {
+      console.log("Local events server closed")
+    })
+    app.close(function() {
+      clearRequire.all()
+      done()
+    })
+  })
 })

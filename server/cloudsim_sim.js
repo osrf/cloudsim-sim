@@ -170,6 +170,7 @@ let resources = [
 
 let eventsRoute = process.env.EVENTS_ROUTE
 let eventsToken = process.env.EVENTS_TOKEN
+let eventsParentProperty = process.env.EVENTS_PARENT_PROP
 console.log('loading options.json...')
 try {
   const options = require('../options.json')
@@ -179,12 +180,13 @@ try {
   }
   eventsRoute = options.simulation_data_route || eventsRoute
   eventsToken = options.token || eventsToken
+  eventsParentProperty = options.role || eventsParentProperty
 }
 catch(e) {
   console.log('Can\'t load ./options.json: ' + e)
 }
 
-events.init(eventsRoute, eventsToken)
+events.init(eventsRoute, eventsToken, eventsParentProperty)
 csgrant.init(resources,
   dbName,
   dbUrl,
@@ -203,6 +205,7 @@ csgrant.init(resources,
       httpServer.listen(port, function(){
         console.log('ssl: ' + useHttps)
         console.log('listening on *:' + port);
+        emit({ 'ready': true })
       })
       csgrant.dump()
     }
