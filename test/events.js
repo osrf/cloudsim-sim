@@ -127,6 +127,7 @@ describe('<Unit test Events>', function() {
         should.equal(list.length, 2)
         should.equal(list[0].state_machine, 'READY')
         should.equal(list[1].ready, true)
+        should.not.exist(list[1].state_machine)
         done()
       }, 500)
     })
@@ -345,7 +346,7 @@ describe('<Unit test Events>', function() {
 
 })
 
-describe('<Unit test Events WITH PARENT PROPERTY>', function() {
+describe('<Unit test Events WITH PARENT PROPERTY which enables local extension too>', function() {
 
   before(function(done) {
     // Important: the database has to be cleared early, before
@@ -409,8 +410,12 @@ describe('<Unit test Events WITH PARENT PROPERTY>', function() {
         const list = _events
         _events = []
         should.equal(list.length, 2)
+        should.exist(list[0].testParentProp)
         should.equal(list[0].testParentProp.state_machine, 'READY')
-        should.exist(list[1].testParentProp)
+        // when parentProperty mode is used events are extended (underscore.org) before sending
+        // so the status is cumulative
+        should.equal(list[1].testParentProp.state_machine, 'READY')
+        should.equal(list[1].testParentProp.ready, true)
         done()
       }, 500)
     })
