@@ -4,6 +4,11 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 codedir="/home/ubuntu/code"
 current="$(pwd)"
+
+# launch script to monitor SRC tasks
+kill -9 `pgrep -f src_monitor`
+$DIR/src_monitor.bash |& tee -a $codedir/cloudsim-src-monitor.log &
+
 echo "running team's docker container"
 echo $current
 

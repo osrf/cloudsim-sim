@@ -18,4 +18,8 @@ echo "team_container stopped"
 # The container stopped after sigint, cancel the timeout fork
 kill -SIGKILL $timer_pid
 echo "exiting fc_stop_team_docker"
+
+echo "stopping src monitor script"
+kill -9 `pgrep -f src_monitor`
+
 exit 0
