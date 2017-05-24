@@ -3,7 +3,7 @@
 # Fork command for timeout handling
 {
     # Stop the container after 2 minutes
-    sleep 120
+    sleep 60
     echo "TIMEOUT TIMEOUT TIMEOUT"
     docker stop team_container
 } &
@@ -24,7 +24,7 @@ kill -9 `pgrep -f src_monitor`
 
 echo "removing traffic shaper rules"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-sudo $DIR/src_tc_stop.rb -i tap0 > /home/ubuntu/code/out 2>&1
+sudo $DIR/src_tc_stop.rb -i tap0
 
 
 exit 0
