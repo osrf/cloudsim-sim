@@ -3,6 +3,7 @@
   "version": "0.1.8",
   "devDependencies": {
     "eslint": "^3.8.1",
+    "get-port": "^3.1.0",
     "gulp-coveralls": "^0.1.4",
     "gulp-istanbul": "^1.1.1",
     "gulp-mocha": "^3.0.1",
@@ -34,8 +35,5 @@
     "morgan": "^1.7.0",
     "request": "^2.81.0",
     "underscore": "^1.8.3"
-  },
-  "devDependencies": {
-    "get-port": "^3.1.0"
   }
 }
