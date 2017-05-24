@@ -22,4 +22,9 @@ echo "exiting fc_stop_team_docker"
 echo "stopping src monitor script"
 kill -9 `pgrep -f src_monitor`
 
+echo "removing traffic shaper rules"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+sudo $DIR/src_tc_stop.rb -i tap0 > /home/ubuntu/code/out 2>&1
+
+
 exit 0

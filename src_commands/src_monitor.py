@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import os
+import subprocess
 import sys
 import requests
 import json
@@ -12,6 +14,7 @@ token = None
 prevTaskId = -1
 tasks = {}
 prevTasks = None
+scriptDir = os.path.dirname(os.path.realpath(__file__))
 
 def simTaskCallback(data):
 
@@ -69,7 +72,7 @@ def simTaskCallback(data):
 
 def fcTaskCallback(data):
 
-  global prevTaskId
+  global prevTaskId, scriptDir
 
   taskId = data.task
   if taskId == prevTaskId:
@@ -77,8 +80,26 @@ def fcTaskCallback(data):
 
   prevTaskId = taskId 
 
-  rospy.loginfo("task: %u", taskId)
   # call traffic shaper script to update bandwidth limitation
+  uplink = ""
+  donwlink = ""
+
+  if taskId == 1:
+    uplink = "380kbit"
+    downlink = "4kbit"
+  elif taskId == 2:
+    uplink = "2mbit"
+    downlink = "30kbit"
+  elif taskId == 3:
+    uplink = "2mbit"
+    downlink = "30kbit"
+
+  cmd = scriptDir + "/src_tc.rb"
+
+  rospy.loginfo("task: %u", taskId)
+  rospy.loginfo("uplink/donwlink: %s/%s", uplink, downlink)
+
+  out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink])
 
 def main():
   global token
