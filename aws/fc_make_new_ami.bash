@@ -14,7 +14,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 $DIR/make_new_ami.bash
 
 # Remove ssh deploy key
-rm -f ~/.ssh/deploy_key_rsa
+rm -f /home/ubuntu/.ssh/deploy_key_rsa
+sudo rm -f /root/.ssh/deploy_key_rsa
 
 # stop and remove docker containers
 docker stop $(docker ps -a -q)

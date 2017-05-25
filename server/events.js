@@ -32,9 +32,15 @@ let initialized = false
 
 let remoteRoute
 let token
+let parentPropertyName
+let parentWrapper
 
-
-function init(route, userToken) {
+// route: remote server that will accept our events
+// userToken: needed authorization header
+// parentProp: (optional). If we want to wrap events in the
+// form: { <parentProp>: <event object> }. If parentProp is not
+// set, then the event will be sent as is.
+function init(route, userToken, parentProp) {
   if (!route || route == 'undefined') {
     return
   }
@@ -42,12 +48,21 @@ function init(route, userToken) {
   token = userToken
   log("Received a valid remoteRoute. Events module initialized", remoteRoute)
   initialized = true
+  parentPropertyName = parentProp
+  if (parentPropertyName) {
+    parentWrapper = {}
+    parentWrapper[parentPropertyName] = {}
+  }
 }
 
 function emit(event) {
   log("Emit event", JSON.stringify(event))
   if (!initialized) {
     return
+  }
+  if (parentPropertyName) {
+    _.extend(parentWrapper[parentPropertyName], event)
+    event = parentWrapper
   }
   eventsQueue.push(event)
   sendEvents()

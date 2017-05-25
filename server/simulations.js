@@ -119,7 +119,7 @@ proc.bootStateMachine = function() {
       }
     })
   }
-  events.emit({ sim_status: 'READY' })
+  events.emit({ state_machine: 'READY' })
   // killall gz-server? roslaunch?
   log('state machine booted')
 }
@@ -164,7 +164,7 @@ proc.startTheSimulator =  function() {
 
   // set the state to "running"
   simData.stat = 'RUNNING'
-  events.emit({ sim_status: 'RUNNING' })
+  events.emit({ state_machine: 'RUNNING' })
   csgrant.updateResource(userName, simId, simData, (err) => {
     if (err) {
       log("error updating resource simId: " + simId)
@@ -228,14 +228,14 @@ proc.stopTheSimulator = function(done) {
     return done()
   }
 
-  events.emit({ sim_status: 'FINISHING' })
+  events.emit({ state_machine: 'FINISHING' })
   const simData = this.schedulerData.sim.sim.data
   const simId = this.schedulerData.sim.id
   const userName = this.schedulerData.userName
   const markSimAsFinished = () => {
     log('marking simulation as finished')
     simData.stat = 'FINISHED'
-    events.emit({ sim_status: 'FINISHED' })
+    events.emit({ state_machine: 'FINISHED' })
     csgrant.updateResource(userName, simId, simData, (err) => {
       if (err) {
         log("error updating resource simId: " + simId)
@@ -305,7 +305,7 @@ proc.sendLogs = function(done) {
     this.schedulerData.logProc = null
     this.schedulerData.simId = null
     this.schedulerData.sim = null
-    events.emit({ sim_status: 'READY' })
+    events.emit({ state_machine: 'READY' })
     done()
   }
 
@@ -315,7 +315,7 @@ proc.sendLogs = function(done) {
   const userName = this.schedulerData.userName
   if (simData.logCmd) {
     log('Found logCmd. Spawn it')
-    events.emit({ sim_status: 'SENDING LOGS' })
+    events.emit({ state_machine: 'SENDING LOGS' })
     this.schedulerData.logProc = this.spawnProcess(simData.logCmd)
     this.schedulerData.logProc.on('close', cleanUp)
     // when new text is sent to std out
