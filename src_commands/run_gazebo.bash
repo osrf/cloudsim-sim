@@ -1,20 +1,25 @@
 #!/usr/bin/env bash
-# example run: ./run_gazebo.bash true
-# WORLD_NAME=$1
+# example run: ./run_gazebo.bash world_1_2015-05-05 1 true
+# Parameters:
+# world_name: a temporal world name used to identify this run. Tipically used as the name of the log folder.
+# final_number: the SRC world number used in the finals (ie. a value 1..5).
+# logging: a boolean flag to indicate whether or not to record the gazebo state.log.
+
+WORLD_NAME=$1
+FINAL_NUMBER=$2
+LOGGING=${3:-false}
+if [ $LOGGING = true ]
+then
+    LOG_PATH=/home/cloudsim/gazebo-logs/$WORLD_NAME
+    ARGS="extra_gazebo_args:=\"-r --record_path $LOG_PATH\""
+fi
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 dockerdir="/home/ubuntu/code/srcsim_docker/docker"
 codedir="/home/ubuntu/code"
 current="$(pwd)"
 echo "running gazebo docker container"
 echo $current
-
-LOGGING=${1:-true}
-if [ $LOGGING = true ]
-then
-LOG_PATH=/home/cloudsim/gazebo-logs/
-ARGS="extra_gazebo_args:=\"-r --record_path $LOG_PATH\""
-fi
-
 
 cat <<DELIM > launch_server.bash
 #!/usr/bin/env bash
