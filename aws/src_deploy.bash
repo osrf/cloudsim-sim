@@ -93,13 +93,13 @@ EOF
 
 elif [ $role == "fieldcomputer" ]; then
 
-  # Create bridge
+  # Create bridge for vpn
   brctl addbr br0
   brctl addif br0 tap0
   brctl setfd br0 0
   ifconfig br0 192.168.2.10 netmask 255.255.255.0
-  #create docker network
-  docker network create --driver=bridge --ip-range=192.168.2.10/24 --subnet=192.168.2.0/24 -o "com.docker.network.bridge.name=br0" br0
+  # Create docker network
+  docker network create --driver=bridge --ip-range=192.168.2.10/24 --subnet=192.168.2.0/24 -o "com.docker.network.bridge.name=br0" vpn-br0
 
   # Fetch bundle
   mkdir -p $codedir/vpn
