@@ -3,7 +3,7 @@
 # Fork command for timeout handling
 {
     # Stop the container after 2 minutes
-    sleep 120
+    sleep 60
     echo "TIMEOUT TIMEOUT TIMEOUT"
     docker stop team_container
 } &
@@ -18,4 +18,13 @@ echo "team_container stopped"
 # The container stopped after sigint, cancel the timeout fork
 kill -SIGKILL $timer_pid
 echo "exiting fc_stop_team_docker"
+
+echo "stopping src monitor script"
+kill -9 `pgrep -f src_monitor`
+
+echo "removing traffic shaper rules"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+sudo $DIR/src_tc_stop.rb -i tap0
+
+
 exit 0
