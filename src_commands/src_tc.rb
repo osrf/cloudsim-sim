@@ -12,7 +12,7 @@ downlinkBandwidth = "1mbit"
 uplinkBandwidth = "100mbit"
 
 # Default options
-options = {:iface => "eth0", :downlink => "100mb", :uplink => "10mb"}
+options = {:iface => "eth0", :downlink => "100mb", :uplink => "10mb", :filter => "127.0.0.1"}
 
 OptionParser.new do |opts|
   opts.banner = "Usage: sudo ./src_tc.rb [options]\n\n" +
@@ -24,7 +24,7 @@ OptionParser.new do |opts|
     "  m, or mb\tMegabits\n" +
     "  gbit\t\tGigabits" +
     "  g, or gb\t Gigabytes\n\n" +
-    "Example:\n  sudo ./src_tc.rb -i eth0 -d 100mbit -u 10kb\n\n" +
+    "Example:\n  sudo ./src_tc.rb -i eth0 -d 100mbit -u 10kb -f 192.168.2.150\n\n" +
     "Options:"
 
   opts.on('-i', '--iface INTERFACE', "Ethernet interface name. Default=#{options[:iface]}") { |v|
@@ -37,6 +37,10 @@ OptionParser.new do |opts|
 
   opts.on('-u', '--uplink BANDWIDTH', "Uplink bandwidth. Default=#{options[:uplink]}") { |v|
     options[:uplink] = v
+  }
+
+  opts.on('-f', '--filter IP', "IP filter. Default=#{options[:filter]}") { |v|
+    options[:filter] = v
   }
 
 end.parse!
@@ -61,12 +65,12 @@ end.parse!
 `tc filter add dev #{options[:iface]} parent ffff: protocol ip u32 match u32 0 0 action mirred egress redirect dev ifb0`
 
 # Apply egress (uplink) rules for the physical interface
-`tc qdisc add dev #{options[:iface]} root handle 1: htb default 10`
-`tc class add dev #{options[:iface]} parent 1: classid 1:1 htb rate #{options[:uplink]}`
-`tc class add dev #{options[:iface]} parent 1:1 classid 1:10 htb rate #{options[:uplink]}`
+`tc qdisc add dev #{options[:iface]} root handle 1: htb`
+`tc class add dev #{options[:iface]} parent 1: classid 1:10 htb rate #{options[:uplink]}`
+`tc filter add dev #{options[:iface]} protocol ip parent 1: prio 1 u32 match ip dst #{options[:filter]} flowid 1:10`
 
 # Apply ingress (downlink) rules for the physical interface
 # via egress rules for the virtual interface.
-`tc qdisc add dev ifb0 root handle 1: htb default 10`
-`tc class add dev ifb0 parent 1: classid 1:1 htb rate #{options[:downlink]}`
-`tc class add dev ifb0 parent 1:1 classid 1:10 htb rate #{options[:downlink]}`
+`tc qdisc add dev ifb0 root handle 1: htb`
+`tc class add dev ifb0 parent 1: classid 1:10 htb rate #{options[:downlink]}`
+`tc filter add dev ifb0 protocol ip parent 1: prio 1 u32 match ip src #{options[:filter]} flowid 1:10`
