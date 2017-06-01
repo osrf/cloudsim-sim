@@ -110,9 +110,7 @@ elif [ $role == "fieldcomputer" ]; then
   sleep 5
 
   echo "about to setup bridge for vpn"
-  # Create bridge for vpn
-  #brctl addbr br0
-  # Create docker network
+  # Create docker network (vpn-br0) and corresponding OS bridge (br0)
   docker network create --driver=bridge --gateway=192.168.2.9 --ip-range=192.168.2.10/32 --subnet=192.168.2.0/24 -o "com.docker.network.bridge.name=br0" vpn-br0
 
   # Make the client come back up on reboot
@@ -154,9 +152,8 @@ EOF
   # We assume by this time, docker and vpn are already "up"
   echo "about to finish setting up bridge for vpn"
   brctl addif br0 tap0
-#  brctl setfd br0 0
-#  ifconfig tap0 0.0.0.0 up
-#  ifconfig br0 192.168.2.9 netmask 255.255.255.0 broadcast 192.168.2.255
+  brctl setfd br0 0
+  ifconfig tap0 0.0.0.0 up
 
   #  Notify cloudsim-sim server that the team's image has been built
   curl -X POST --header "Content-Type: application/json" --header 'Accept: application/json' --header "authorization: $token" --data '{"fc_docker_image":"fcomputer"}' "http://localhost:4000/events"
