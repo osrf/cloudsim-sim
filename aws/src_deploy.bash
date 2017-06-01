@@ -111,7 +111,7 @@ elif [ $role == "fieldcomputer" ]; then
 
   echo "about to setup bridge for vpn"
   # Create docker network (vpn-br0) and corresponding OS bridge (br0)
-  docker network create --driver=bridge --ip-range=192.168.2.10/32 --subnet=192.168.2.0/24 -o "com.docker.network.bridge.name=br0" vpn-br0
+  docker network create --driver=bridge --ip-range=192.168.2.9/31 --subnet=192.168.2.0/24 -o "com.docker.network.bridge.name=br0" vpn-br0
 
   # Make the client come back up on reboot
   cat << EOF > /etc/rc.local
