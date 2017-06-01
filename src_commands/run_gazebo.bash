@@ -28,10 +28,13 @@ cat <<DELIM > launch_server.bash
 
 # (example with log) roslaunch srcsim finals.launch final_number:=2 extra_gazebo_args:="-r --record_path ~/gazebo-logs/myworldlog"
 source /opt/nasa/indigo/setup.bash
-#GAZEBO_IP_WHITE_LIST=127.0.0.1 exec roslaunch srcsim unique.launch init:="true" $ARGS
-GAZEBO_IP_WHITE_LIST=127.0.0.1 exec roslaunch srcsim finals.launch final_number:=$FINAL_NUMBER init:=true gui:=false $ARGS
+source /home/cloudsim/ws/install/setup.bash
 
-# roslaunch srcsim finals.launch final_number:=5 gui:=true extra_gazebo_args:="-r --record_path /home/cloudsim/gazebo-logs/"
+echo `which gzserver`
+
+sleep 1
+
+GAZEBO_IP_WHITE_LIST=127.0.0.1 exec roslaunch srcsim finals.launch final_number:=5 init:=true gui:=false extra_gazebo_args:="-r --record_path /home/cloudsim/gazebo-logs/"
 
 DELIM
 chmod a+x launch_server.bash
@@ -43,12 +46,12 @@ docker rm gazebo_run
 
 # launch script to monitor SRC tasks
 kill -9 `pgrep -f src_monitor`
-$DIR/src_monitor.bash |& tee -a $codedir/cloudsim-src-monitor.log &
+#$DIR/src_monitor.bash |& tee -a $codedir/cloudsim-src-monitor.log &
 
 $dockerdir/run_container.bash \
     gazebo_run \
     src-cloudsim \
-    "-v $codedir/gazebo-logs:/home/cloudsim/gazebo-logs -v $current:/home/cloudsim/commands --net=host -it" \
+    "-v $codedir/gazebo-logs:/home/cloudsim/gazebo-logs -v $current:/home/cloudsim/commands --net=host -it " \
     "bash" \
     |& tee -a $codedir/cloudsim-docker.log
 
