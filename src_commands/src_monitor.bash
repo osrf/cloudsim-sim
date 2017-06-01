@@ -5,6 +5,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 source $codedir/srcsim_ws/devel/setup.bash
 
+export ROS_MASTER_URI=http://192.168.2.1:11311
+
 # Helper to parse options from cloudsim-options.json
 get_option(){
   echo `node -pe "var f = \"$1\"; var query = \"$2\"; var j=require(f); j[query] "`
