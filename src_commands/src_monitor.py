@@ -99,7 +99,7 @@ def fcTaskCallback(data):
   rospy.loginfo("task: %u", taskId)
   rospy.loginfo("uplink/donwlink: %s/%s", uplink, downlink)
 
-  out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink])
+  out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26", "-l", "20000ms"])
 
 def main():
   global token
