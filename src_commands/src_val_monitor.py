@@ -1,44 +1,61 @@
 #!/usr/bin/env python
 
-import os
-import subprocess
-import sys
-import requests
-import json
-
 import rospy
 import time
+import threading
 
-topics = ["/ihmc_ros/valkyrie/output/robot_pose", "/joint_states"]
-topicsValid = [False, False]
+from sensor_msgs.msg import JointState
+from nav_msgs.msg import Odometry
 
-def callback0(data):
-  rospy.loginfo("Received callback on topic %s", topics[0])
-  topic[0] = True
+sleepTime = 5
+sleepTimeForMessageCheck = 30
 
-def callback1(data):
-  rospy.loginfo("Received callback on topic %s", topics[1])
-  topic[1] = True
+# The topics to check
+topics = ["/joint_states", "/ihmc_ros/valkyrie/output/robot_pose"]
+
+# Message count for each topic
+topicsMsgCount = [0, 0]
+
+# A condition variable for each topic
+cvs = [threading.Condition(), threading.Condition()]
+
+# Callback for the topics
+def callback(data, i):
+  cvs[i].acquire()
+  topicsMsgCount[i] = topicsMsgCount[i] + 1
+  cvs[i].notify()
+  cvs[i].release()
 
 def main():
+
   rospy.init_node('val_monitor', anonymous=True)
 
   # Subscribe to the necessary topics
-  rospy.Subscriber(topics[0], int, callback0)
-  rospy.Subscriber(topics[1], int, callback1)
+  rospy.Subscriber(topics[0], JointState, callback, 0)
+  rospy.Subscriber(topics[1], Odometry, callback, 1)
 
-  sleepTime = 1
-  maxIters = 120
+  # Wait for a bit
+  time.sleep(sleepTime)
 
-  for i in range(maxIters):
-    # Check all topics to see if they have received a message
-    complete = True
-    for t in topicsValid: 
-      complete = complete && t
+  good = True
+  for i, cv in enumerate(cvs):
+    # Acquire the lock
+    cv.acquire()
 
-    # Wait for a bit
-    time.sleep(sleepTime)
+    # Store the current message count
+    count = topicsMsgCount[i]
 
+    # Wait for a bit for more messages to arrive
+    cv.wait(sleepTimeForMessageCheck)
+
+    # Check that messages have arrived
+    good = good and topicsMsgCount[i] > count
+    cv.release()
+
+  if good:
+    print("Valid simulation")
+  else:
+    print("Invalid simulation")
 
 if __name__ == '__main__':
   main()
