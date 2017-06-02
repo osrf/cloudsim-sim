@@ -6,7 +6,7 @@ set -e
 
 WORLD_NAME=$1
 s3dir="/home/ubuntu/s3"
-logsdir="/home/ubuntu/code/gazebo-logs/$WORLD_NAME"
+logsdir="/home/ubuntu/code/simulator-logs/$WORLD_NAME/"
 s3mountdir="/mnt/s3bucket"
 if [ -f $s3dir/bucketname-s3fs.txt ]
 then
