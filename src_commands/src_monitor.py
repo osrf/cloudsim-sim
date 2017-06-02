@@ -104,7 +104,7 @@ def simTaskCallback(data):
   mutex.release()
 
   # post to cloudsim-sim
-  rospy.loginfo("== posting from TASK callback ==")
+  rospy.loginfo("== Posting TASK data ==")
   postToSim()
 
 
@@ -125,7 +125,7 @@ def simScoreCallback(data):
   mutex.release()
 
   # post to cloudsim-sim
-  rospy.loginfo("== posting from SCORE callback ==")
+  rospy.loginfo("== Posting SCORE data ==")
   postToSim()
 
 
