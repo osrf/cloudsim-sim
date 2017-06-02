@@ -6,21 +6,54 @@ import sys
 import requests
 import json
 import copy
+import threading
 
 import rospy
 from srcsim.msg import Task
+from srcsim.msg import Score
 
 role = None
 token = None
-roundNumber = None
+roundName = None
 prevTaskId = -1
 tasks = [None] * 3
 prevTasks = None
+score = 0
+prevScore = 0
+totalCompletionTime = 0
+
 scriptDir = os.path.dirname(os.path.realpath(__file__))
+
+
+def postToSim():
+
+  global token, tasks, score, totalCompletionTime, roundName, mutex
+
+  mutex.acquire()
+  dataJson = json.dumps({
+    roundName: {
+      "tasks": tasks,
+      "score": score,
+      "total_completion_time": totalCompletionTime
+    }
+  })
+  mutex.release()
+  rospy.loginfo("dataJson: %s", dataJson)
+
+  try:
+    headers = {'Content-type': 'application/json', 'Authorization': token}
+    url="http://localhost:4000/events"
+    response = requests.post(url, data=dataJson, headers=headers)
+    if response.status_code != 200:
+      rospy.loginfo('Unexpected response: %i ', response.status_code)
+    rospy.loginfo('Response: %s ', response.text)
+  except:
+    rospy.loginfo('Unable to post to cloudsim-sim. Is server running?')
+
 
 def simTaskCallback(data):
 
-  global token, tasks, prevTaskId, prevTasks, roundNumber
+  global token, tasks, prevTaskId, prevTasks, mutex
 
   taskId = data.task
   currentCheckPoint = data.current_checkpoint
@@ -55,7 +88,8 @@ def simTaskCallback(data):
   for i in range(len(checkpoint_penalties)):
     rospy.loginfo("checkpoint_penalties %i: %f", i, checkpoint_penalties[i])
 
-  # post to cloudsim-sim
+  mutex.acquire()
+  # update tasks
   tasks[taskId-1] = {}
   tasks[taskId-1]["current_checkpoint"] = currentCheckPoint
   tasks[taskId-1]["start_time"] = startTime
@@ -67,18 +101,33 @@ def simTaskCallback(data):
 
   prevTaskId = taskId
   prevTasks = copy.deepcopy(tasks)
+  mutex.release()
 
-  roundName = "round_" + str(roundNumber)
-  dataJson = json.dumps({roundName: tasks})
+  # post to cloudsim-sim
+  rospy.loginfo("== posting from TASK callback ==")
+  postToSim()
 
-  rospy.loginfo("dataJson: %s", dataJson)
 
-  headers = {'Content-type': 'application/json', 'Authorization': token}
-  url="http://localhost:4000/events"
-  response = requests.post(url, data=dataJson, headers=headers)
-  if response.status_code != 200:
-    rospy.loginfo('Unexpected response: %i ', response.status_code)
-  rospy.loginfo('Response: %s ', response.text)
+def simScoreCallback(data):
+
+  global score, prevScore, totalCompletionTime, mutex
+
+  mutex.acquire()
+  totalCompletionTime = data.total_completion_time.to_sec()
+  mutex.release()
+
+  if data.score == prevScore:
+    return
+
+  mutex.acquire()
+  score = data.score
+  prevScore = score
+  mutex.release()
+
+  # post to cloudsim-sim
+  rospy.loginfo("== posting from SCORE callback ==")
+  postToSim()
+
 
 def fcTaskCallback(data):
 
@@ -112,7 +161,7 @@ def fcTaskCallback(data):
   out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26"])
 
 def main():
-  global token, roundNumber
+  global token, roundName, mutex
 
   if len(sys.argv) < 2:
     print "Role missing!"
@@ -131,10 +180,14 @@ def main():
     roundNumber = sys.argv[3]
     rospy.loginfo("token: %s", token)
     rospy.loginfo("round number: %s", roundNumber)
+    roundName = "round_" + str(roundNumber)
 
-    rospy.Subscriber("/srcsim/finals/task", Task , simTaskCallback)
+    mutex = threading.Lock()
+
+    rospy.Subscriber("/srcsim/finals/task", Task, simTaskCallback)
+    rospy.Subscriber("/srcsim/finals/score", Score, simScoreCallback)
   elif role == "fieldcomputer":
-    rospy.Subscriber("/srcsim/finals/task", Task , fcTaskCallback)
+    rospy.Subscriber("/srcsim/finals/task", Task, fcTaskCallback)
   else:
     print "Invalid role!"
     sys.exit()
