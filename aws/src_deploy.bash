@@ -49,7 +49,7 @@ if [ $role == "simulator" ]; then
   mkdir -p $codedir/simulator/staticclients
 
   echo "One field computer per team."
-  echo "ifconfig-push ${subnet}.9 255.255.255.0" > $codedir/simulator/staticclients/fieldcomputer
+  echo "ifconfig-push ${subnet}.8 255.255.255.0" > $codedir/simulator/staticclients/fieldcomputer
 
   # Start servers
   # the last arg used to be the other_subnet but since there is only one subnet
@@ -59,7 +59,7 @@ if [ $role == "simulator" ]; then
 
   # allow only traffic from field computer to sim instance and block all others in the subnet
   iptables -I INPUT --src 192.168.2.1 -j ACCEPT
-  iptables -I INPUT --src 192.168.2.9 -j ACCEPT # field computer host ip
+  iptables -I INPUT --src 192.168.2.8 -j ACCEPT # field computer host ip
   iptables -I INPUT --src 192.168.2.10 -j ACCEPT # field computer docker container ip
   iptables -A INPUT --src 192.168.2.0/24 -j DROP
 
@@ -111,7 +111,7 @@ elif [ $role == "fieldcomputer" ]; then
 
   echo "about to setup bridge for vpn"
   # Create docker network (vpn-br0) and corresponding OS bridge (br0)
-  docker network create --driver=bridge --ip-range=192.168.2.9/31 --subnet=192.168.2.0/24 -o "com.docker.network.bridge.name=br0" vpn-br0
+  docker network create --driver=bridge --ip-range=192.168.2.8/31 --subnet=192.168.2.0/24 -o "com.docker.network.bridge.name=br0" vpn-br0
 
   # Make the client come back up on reboot
   cat << EOF > /etc/rc.local
@@ -154,7 +154,7 @@ EOF
   brctl addif br0 tap0
   brctl setfd br0 0
   ifconfig tap0 0.0.0.0 up
-  ifconfig br0 192.168.2.9 netmask 255.255.255.0 broadcast 192.168.2.255
+  ifconfig br0 192.168.2.8 netmask 255.255.255.0 broadcast 192.168.2.255
 
   #  Notify cloudsim-sim server that the team's image has been built
   curl -X POST --header "Content-Type: application/json" --header 'Accept: application/json' --header "authorization: $token" --data '{"fc_docker_image":"fcomputer"}' "http://localhost:4000/events"
