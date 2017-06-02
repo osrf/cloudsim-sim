@@ -24,6 +24,7 @@ echo $current
 mkdir -p $codedir/simulator-logs/$WORLD_NAME/gazebo-logs
 mkdir -p $codedir/simulator-logs/$WORLD_NAME/gazebo-server
 mkdir -p $codedir/simulator-logs/$WORLD_NAME/ros
+chown -R ubuntu:ubuntu $codedir/simulator-logs
 
 cat <<DELIM > launch_server.bash
 #!/usr/bin/env bash
