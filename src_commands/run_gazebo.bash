@@ -39,7 +39,7 @@ docker rm gazebo_run
 
 # launch script to monitor SRC tasks
 kill -9 `pgrep -f src_monitor`
-$DIR/src_monitor.bash |& tee -a $codedir/cloudsim-src-monitor.log &
+$DIR/src_monitor.bash $FINAL_NUMBER |& tee -a $codedir/cloudsim-src-monitor.log &
 
 $dockerdir/run_container.bash \
     gazebo_run \
