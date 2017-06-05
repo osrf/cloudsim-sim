@@ -24,6 +24,10 @@ then
     # ros logs
     cp -r $logsdir/ros $s3mountdir/$WORLD_NAME
 
+    # src-monitor and docker logs
+    cp /home/ubuntu/code/cloudsim-src-monitor.log $s3mountdir/$WORLD_NAME
+    cp /home/ubuntu/code/cloudsim-docker.log $s3mountdir/$WORLD_NAME
+
     echo 'finished copying logs to s3 mnt folder'
 else
     echo 'S3 is not configured. Cancel logs upload'
