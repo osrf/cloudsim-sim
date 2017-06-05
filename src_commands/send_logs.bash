@@ -4,6 +4,12 @@
 # world_name: a temporal world name used to identify the run. Tipically used as the name of the log folder.
 set -e
 
+if [ ! -f $codedir/record_gazebo_log.cfg ]
+then
+    echo 'Logging to S3 disabled. Exiting...'
+    exit
+fi
+
 WORLD_NAME=$1
 s3dir="/home/ubuntu/s3"
 logsdir="/home/ubuntu/code/gazebo-logs/$WORLD_NAME"
