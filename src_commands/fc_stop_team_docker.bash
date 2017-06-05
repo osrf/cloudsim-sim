@@ -2,7 +2,7 @@
 
 # Fork command for timeout handling
 {
-    # Stop the container after 2 minutes
+    # Stop the container after xx seconds
     sleep 60
     echo "TIMEOUT TIMEOUT TIMEOUT"
     docker stop team_container
