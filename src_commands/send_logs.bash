@@ -2,7 +2,6 @@
 # example run: ./send_logs.bash world_1_2015-05-05
 # Parameters:
 # world_name: a temporal world name used to identify the run. Tipically used as the name of the log folder.
-set -e
 
 WORLD_NAME=$1
 s3dir="/home/ubuntu/s3"
