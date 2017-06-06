@@ -3,7 +3,7 @@
 require 'optparse'
 
 # The physical interface
-iface = ARGV[0] 
+iface = ARGV[0]
 
 # Downlink bandwidth limit
 downlinkBandwidth = "1mbit"
@@ -70,15 +70,16 @@ end.parse!
 `tc filter add dev #{options[:iface]} parent ffff: protocol ip u32 match u32 0 0 action mirred egress redirect dev ifb0`
 
 # Apply egress (uplink) rules for the physical interface
-`tc qdisc add dev #{options[:iface]} root handle 1: htb`
-`tc class add dev #{options[:iface]} parent 1: classid 1:10 htb rate #{options[:uplink]}`
+`tc qdisc add dev #{options[:iface]} root handle 1: htb default 10`
+`tc class add dev #{options[:iface]} parent 1: classid 1:1 htb rate #{options[:uplink]}`
+`tc class add dev #{options[:iface]} parent 1:1 classid 1:10 htb rate #{options[:uplink]}`
 `tc filter add dev #{options[:iface]} protocol ip parent 1: prio 1 u32 match ip dst #{options[:filter]} flowid 1:10`
 `tc qdisc add dev #{options[:iface]} parent 1:10 netem delay #{options[:latency]}`
 
 # Apply ingress (downlink) rules for the physical interface
 # via egress rules for the virtual interface.
-`tc qdisc add dev ifb0 root handle 1: htb`
-`tc class add dev ifb0 parent 1: classid 1:10 htb rate #{options[:downlink]}`
+`tc qdisc add dev ifb0 root handle 1: htb default 10`
+`tc class add dev ifb0 parent 1: classid 1:1 htb rate #{options[:downlink]}`
+`tc class add dev ifb0 parent 1:1 classid 1:10 htb rate #{options[:downlink]}`
 `tc filter add dev ifb0 protocol ip parent 1: prio 1 u32 match ip src #{options[:filter]} flowid 1:10`
 `tc qdisc add dev ifb0 parent 1:10 netem delay #{options[:latency]}`
-
