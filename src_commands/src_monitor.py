@@ -89,7 +89,7 @@ def checkControllerStatus():
   try:
     rospy.wait_for_message("/joint_states", JointState, timeout)
   except(rospy.ROSException), e:
-    rospy.logwarn("Failed to receive koint states message, aborting...")
+    rospy.logwarn("Failed to receive joint states message, aborting...")
     postSimStatus(-1)
     return
 
