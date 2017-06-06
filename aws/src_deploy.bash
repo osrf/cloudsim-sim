@@ -162,7 +162,9 @@ EOF
   if ! docker images | grep fcomputer
   then
     echo "Image not found!"
-    # TODO Notify someone that the team's image failed to build?
+    # Notify cloudsim-sim that image failed to build
+    curl -X POST --header "Content-Type: application/json" --header 'Accept: application/json' --header "authorization: $token" --data '{"fc_docker_image":""}' "http://localhost:4000/events"
+    exit 5
   fi
 
   if [ "$github_deploy_key" != "undefined" ]; then  
