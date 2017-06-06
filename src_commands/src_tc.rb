@@ -60,7 +60,10 @@ end.parse!
 # This is why we must redirect incoming traffic to a virtual interface, and
 # then limit the virtual interface's outbound queue.
 `modprobe ifb numifbs=1`
-# Create the virtual interface `ip link set dev ifb0 up` 
+
+# Create the virtual interface
+`ip link set dev ifb0 up`
+
 # Redirect ingress traffic from the physical interface to the virtual
 # interface.
 `tc qdisc add dev #{options[:iface]} handle ffff: ingress`
