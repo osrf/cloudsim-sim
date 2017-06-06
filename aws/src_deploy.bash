@@ -36,6 +36,11 @@ echo "server_ip: $server_ip"
 echo "client_id: $client_id"
 
 if [ $role == "simulator" ]; then
+  record_gazebo_log=`get_option $optionsfile record_gazebo_log`
+  echo "record_gazebo_log: $record_gazebo_log"
+  if [ "$record_gazebo_log" == "true" ]; then
+    echo "true" > $codedir/record_gazebo_log.cfg
+  fi
 
   # Fetch bundles
   mkdir -p $codedir/simulator
