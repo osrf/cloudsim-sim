@@ -159,13 +159,6 @@ EOF
     echo "Image failed to build on try $i"
   done
 
-  if ! docker images | grep fcomputer
-  then
-    echo "Image not found!"
-    # Notify cloudsim-sim that image failed to build
-    curl -X POST --header "Content-Type: application/json" --header 'Accept: application/json' --header "authorization: $token" --data '{"fc_docker_image":""}' "http://localhost:4000/events"
-    exit 5
-  fi
 
   if [ "$github_deploy_key" != "undefined" ]; then  
     # Kill ssh agent
@@ -179,6 +172,14 @@ EOF
   brctl setfd br0 0
   ifconfig tap0 0.0.0.0 up
   ifconfig br0 192.168.2.8 netmask 255.255.255.0 broadcast 192.168.2.255
+
+  if ! docker images | grep fcomputer
+  then
+    echo "Image not found!"
+    # Notify cloudsim-sim that image failed to build
+    curl -X POST --header "Content-Type: application/json" --header 'Accept: application/json' --header "authorization: $token" --data '{"fc_docker_image":""}' "http://localhost:4000/events"
+    exit 5
+  fi
 
   #  Notify cloudsim-sim server that the team's image has been built
   curl -X POST --header "Content-Type: application/json" --header 'Accept: application/json' --header "authorization: $token" --data '{"fc_docker_image":"fcomputer"}' "http://localhost:4000/events"
