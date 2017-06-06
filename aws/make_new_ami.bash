@@ -37,7 +37,7 @@ sudo rm -f /var/log/cloud-init-output.log
 sudo rm -f /var/log/cloud-init.log
 
 # S3 related
-sudo rm -rf ~/s3
+sudo rm -rf /home/ubuntu/s3
 sudo rm -rf /mnt/s3bucket
 sudo rm -rf /etc/passwd-s3fs
 sudo rm -rf /home/ubuntu/.passwd-s3fs
