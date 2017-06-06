@@ -19,6 +19,28 @@ topicsMsgCount = [0, 0]
 # A condition variable for each topic
 cvs = [threading.Condition(), threading.Condition()]
 
+
+def postToSim():
+
+  global token, mutex
+
+  mutex.acquire()
+  dataJson = json.dumps({"simulator_ready": true})
+
+  mutex.release()
+  rospy.loginfo("dataJson: %s", dataJson)
+
+  try:
+    headers = {'Content-type': 'application/json', 'Authorization': token}
+    url="http://localhost:4000/events"
+    response = requests.post(url, data=dataJson, headers=headers)
+    if response.status_code != 200:
+      rospy.loginfo('Unexpected response: %i ', response.status_code)
+    rospy.loginfo('Response: %s ', response.text)
+  except:
+    rospy.loginfo('Unable to post to cloudsim-sim. Is server running?')
+
+
 # Callback for the topics
 def callback(data, i):
   cvs[i].acquire()
@@ -27,6 +49,15 @@ def callback(data, i):
   cvs[i].release()
 
 def main():
+
+  global token, mutex
+
+  if len(sys.argv) < 1:
+    print "Token missing!"
+    sys.exit()
+
+
+  token = sys.argv[1]
 
   rospy.init_node('val_monitor', anonymous=True)
 

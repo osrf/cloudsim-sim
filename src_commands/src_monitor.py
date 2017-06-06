@@ -8,9 +8,13 @@ import json
 import copy
 import threading
 
+import time
+
 import rospy
 from srcsim.msg import Task
 from srcsim.msg import Score
+from sensor_msgs.msg import JointState
+from nav_msgs.msg import Odometry
 
 role = None
 token = None
@@ -23,6 +27,13 @@ prevScore = 0
 totalCompletionTime = 0
 
 scriptDir = os.path.dirname(os.path.realpath(__file__))
+
+# A condition variable for each sim topic to monitor
+cvs = [threading.Condition(), threading.Condition()]
+# Message count for each topic
+topicsMsgCount = [0, 0]
+topicsWaitSleepTime = 5
+sleepTimeForMessageCheck = 30
 
 
 def postToSim():
@@ -38,8 +49,11 @@ def postToSim():
     }
   })
   mutex.release()
-  rospy.loginfo("dataJson: %s", dataJson)
+  postData(dataJson)
 
+def postData(dataJson):
+
+  rospy.loginfo("dataJson: %s", dataJson)
   try:
     headers = {'Content-type': 'application/json', 'Authorization': token}
     url="http://localhost:4000/events"
@@ -50,6 +64,52 @@ def postToSim():
   except:
     rospy.loginfo('Unable to post to cloudsim-sim. Is server running?')
 
+
+def postSimStatus(data):
+  dataJson = json.dumps({"simulator_ready": data})
+  postData(dataJson)
+
+def checkSimStatus():
+
+  global topicsMsgCount, sleepTimeForMessageCheck, topicsWaitSleepTime, cvs
+
+  # Wait for a bit
+  time.sleep(topicsWaitSleepTime)
+  rospy.loginfo('Started monitoring controller topics')
+
+  timeout = 120
+  try:
+    rospy.wait_for_message("/ihmc_ros/valkyrie/output/robot_pose", Odometry, timeout)
+  except(rospy.ROSException), e:
+    rospy.loginfo("ihmc robot_pose topic not available, aborting...")
+    postSimStatus(-1)
+    return
+
+  rospy.loginfo('Received ihmc robot_pose message')
+
+  try:
+    rospy.wait_for_message("/joint_states", JointState, 10)
+  except(rospy.ROSException), e:
+    rospy.loginfo("Joint states topic not available, aborting...")
+    postSimStatus(-1)
+    return
+
+  rospy.loginfo('Received joint states message')
+  rospy.loginfo('Sleeping for more checks')
+
+  time.sleep(sleepTimeForMessageCheck)
+
+  # We should still be able to receive more messages
+  try:
+    rospy.wait_for_message("/joint_states", JointState, 10)
+    rospy.wait_for_message("/ihmc_ros/valkyrie/output/robot_pose", Odometry, 10)
+  except(rospy.ROSException), e:
+    rospy.loginfo("Failed to receive more messages, aborting...")
+    postSimStatus(-1)
+    return
+
+  rospy.loginfo("Valid simulation")
+  postSimStatus(1)
 
 def simTaskCallback(data):
 
@@ -184,8 +244,15 @@ def main():
 
     mutex = threading.Lock()
 
+    # Subscribe to topics for task and score data
     rospy.Subscriber("/srcsim/finals/task", Task, simTaskCallback)
     rospy.Subscriber("/srcsim/finals/score", Score, simScoreCallback)
+
+    # Subscribe to topics for checking sim launch process
+    postSimStatus(0)
+    t = thread.Thread(target=checkSimStatus)
+    t.start()
+
   elif role == "fieldcomputer":
     rospy.Subscriber("/srcsim/finals/task", Task, fcTaskCallback)
   else:
