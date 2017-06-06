@@ -146,7 +146,24 @@ EOF
   fi
 
   echo "downloading and building team's dockerfile"
-  docker build -t fcomputer:latest $dockerurl
+  for ((i = 0; i < 5; ++i))
+  do
+    # Sleep on failure in case it is a temporary network issue
+    sleep $(expr 5 \* $i)
+
+    if docker build -t fcomputer:latest $dockerurl
+    then
+      echo "Image built successfully on try $i"
+      break
+    fi
+    echo "Image failed to build on try $i"
+  done
+
+  if ! docker images | grep fcomputer
+  then
+    echo "Image not found!"
+    # TODO Notify someone that the team's image failed to build?
+  fi
 
   if [ "$github_deploy_key" != "undefined" ]; then  
     # Kill ssh agent
