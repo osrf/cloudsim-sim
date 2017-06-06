@@ -13,6 +13,10 @@ sudo rm -rf $DIR/../../simulator
 # Clean logs folder but do not remove it
 cd /home/ubuntu/code/gazebo-logs
 sudo rm -rf *
+
+# Remove other files used by scripts
+sudo rm -rf /home/ubuntu/code/enable_traffic_shaper.cfg
+
 cd $DIR
 # Clean docker images
 $DIR/../../srcsim_docker/docker/remove-unused-images.sh

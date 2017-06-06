@@ -93,6 +93,11 @@ EOF
 
 elif [ $role == "fieldcomputer" ]; then
 
+  enable_traffic_shaper=`get_option $optionsfile enable_traffic_shaper`
+  echo "enable_traffic_shaper: $enable_traffic_shaper"
+  if [ "$enable_traffic_shaper" == "true" ]; then
+    echo "true" > $codedir/enable_traffic_shaper.cfg
+
   # Fetch bundle
   mkdir -p $codedir/vpn
   echo curl -X GET --header 'Accept: application/json' --header "authorization: $token" "${client_route}?serverIp=${server_ip}&id=${client_id}"
@@ -143,7 +148,7 @@ EOF
   echo "downloading and building team's dockerfile"
   docker build -t fcomputer:latest $dockerurl
 
-  if [ "$github_deploy_key" != "undefined" ]; then  
+  if [ "$github_deploy_key" != "undefined" ]; then
     # Kill ssh agent
     trap "kill $SSH_AGENT_PID" exit
   fi
