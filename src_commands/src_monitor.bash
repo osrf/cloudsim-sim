@@ -1,5 +1,7 @@
 #!/bin/bash
 
+final=$1
+
 codedir="/home/ubuntu/code"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -19,8 +21,9 @@ token=`get_option $optionsfile token`
 
 echo "role $role"
 echo "token $token"
+echo "final $final"
 
 until rostopic list ; do sleep 1; done
 
 echo "Starting SRC monitor"
-python $DIR/src_monitor.py $role $token 
+python $DIR/src_monitor.py $role $token $final
