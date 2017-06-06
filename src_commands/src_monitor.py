@@ -5,70 +5,129 @@ import subprocess
 import sys
 import requests
 import json
+import copy
+import threading
 
 import rospy
 from srcsim.msg import Task
+from srcsim.msg import Score
 
 role = None
 token = None
+roundName = None
 prevTaskId = -1
-tasks = {}
+tasks = [None] * 3
 prevTasks = None
+score = 0
+prevScore = 0
+totalCompletionTime = 0
+
 scriptDir = os.path.dirname(os.path.realpath(__file__))
+
+
+def postToSim():
+
+  global token, tasks, score, totalCompletionTime, roundName, mutex
+
+  mutex.acquire()
+  dataJson = json.dumps({
+    roundName: {
+      "tasks": tasks,
+      "score": score,
+      "total_completion_time": totalCompletionTime
+    }
+  })
+  mutex.release()
+  rospy.loginfo("dataJson: %s", dataJson)
+
+  try:
+    headers = {'Content-type': 'application/json', 'Authorization': token}
+    url="http://localhost:4000/events"
+    response = requests.post(url, data=dataJson, headers=headers)
+    if response.status_code != 200:
+      rospy.loginfo('Unexpected response: %i ', response.status_code)
+    rospy.loginfo('Response: %s ', response.text)
+  except:
+    rospy.loginfo('Unable to post to cloudsim-sim. Is server running?')
+
 
 def simTaskCallback(data):
 
-  global token, tasks, prevTaskId, prevTasks
+  global token, tasks, prevTaskId, prevTasks, mutex
 
   taskId = data.task
   currentCheckPoint = data.current_checkpoint
-  startTime = data.start_time.secs + data.start_time.nsecs / 1e9
-  elapsedTime = data.elapsed_time.secs + data.elapsed_time.nsecs / 1e9
+  startTime = data.start_time.to_sec()
+  elapsedTime = data.elapsed_time.to_sec()
   timedOut = data.timed_out
   finished = data.finished
-  checkpoints_completion = []
-  for i in range(len(data.checkpoints_completion)):
-    checkpoints_completion.append(data.checkpoints_completion[i].secs +
-        data.checkpoints_completion[i].nsecs / 1e9)
+  checkpoint_durations = []
+  for i in range(len(data.checkpoint_durations)):
+    checkpoint_durations.append(data.checkpoint_durations[i].to_sec())
+  checkpoint_penalties = []
+  for i in range(len(data.checkpoint_penalties)):
+    checkpoint_penalties.append(data.checkpoint_penalties[i].to_sec())
 
   # throttle update rate and publish only when data changes
   if prevTasks != None and taskId == prevTaskId and \
-      prevTasks[taskId]["current_checkpoint"] == currentCheckPoint and \
-      prevTasks[taskId]["timed_out"] == timedOut and \
-      prevTasks[taskId]["finished"] == finished and \
-      (elapsedTime - prevTasks[taskId]["elapsed_time"] < 5):
+      prevTasks[taskId-1]["current_checkpoint"] == currentCheckPoint and \
+      prevTasks[taskId-1]["timed_out"] == timedOut and \
+      prevTasks[taskId-1]["finished"] == finished and \
+      (elapsedTime - prevTasks[taskId-1]["elapsed_time"] < 5):
     return
 
+  # log output
   rospy.loginfo("task: %u", taskId)
   rospy.loginfo("current_checkpoint: %u", currentCheckPoint)
   rospy.loginfo("start_time: %f", startTime)
   rospy.loginfo("elapsed_time: %f", elapsedTime)
   rospy.loginfo("timed_out: %s", timedOut)
   rospy.loginfo("finished: %s", finished)
+  for i in range(len(checkpoint_durations)):
+    rospy.loginfo("checkpoint_durations %i: %f", i, checkpoint_durations[i])
+  for i in range(len(checkpoint_penalties)):
+    rospy.loginfo("checkpoint_penalties %i: %f", i, checkpoint_penalties[i])
 
-  for i in range(len(checkpoints_completion)):
-    rospy.loginfo("checkpoints_completion %i: %f", i, checkpoints_completion[i])
-
-  # post to cloudsim-sim
-  tasks[taskId] = {}
-  tasks[taskId]["current_checkpoint"] = currentCheckPoint
-  tasks[taskId]["start_time"] = startTime
-  tasks[taskId]["elapsed_time"] = elapsedTime
-  tasks[taskId]["timed_out"] = timedOut
-  tasks[taskId]["finished"] = finished
-  tasks[taskId]["checkpoints_completion"] = checkpoints_completion
+  mutex.acquire()
+  # update tasks
+  tasks[taskId-1] = {}
+  tasks[taskId-1]["current_checkpoint"] = currentCheckPoint
+  tasks[taskId-1]["start_time"] = startTime
+  tasks[taskId-1]["elapsed_time"] = elapsedTime
+  tasks[taskId-1]["timed_out"] = timedOut
+  tasks[taskId-1]["finished"] = finished
+  tasks[taskId-1]["checkpoint_durations"] = checkpoint_durations
+  tasks[taskId-1]["checkpoint_penalties"] = checkpoint_penalties
 
   prevTaskId = taskId
-  prevTasks = tasks.copy()
+  prevTasks = copy.deepcopy(tasks)
+  mutex.release()
 
-  # TODO get round name
-  dataJson = json.dumps({"round": tasks})
-  headers = {'Content-type': 'application/json', 'Authorization': token}
-  url="http://localhost:4000/events"
-  response = requests.post(url, data=dataJson, headers=headers)
-  if response.status_code != 200:
-    rospy.loginfo('Unexpected response: %i ', response.status_code)
-  rospy.loginfo('Response: %s ', response.text)
+  # post to cloudsim-sim
+  rospy.loginfo("== Posting TASK data ==")
+  postToSim()
+
+
+def simScoreCallback(data):
+
+  global score, prevScore, totalCompletionTime, mutex
+
+  mutex.acquire()
+  totalCompletionTime = data.total_completion_time.to_sec()
+  mutex.release()
+
+  if data.score == prevScore:
+    return
+
+  mutex.acquire()
+  score = data.score
+  prevScore = score
+  mutex.release()
+
+  # post to cloudsim-sim
+  rospy.loginfo("== Posting SCORE data ==")
+  postToSim()
+
 
 def fcTaskCallback(data):
 
@@ -78,7 +137,7 @@ def fcTaskCallback(data):
   if taskId == prevTaskId:
     return
 
-  prevTaskId = taskId 
+  prevTaskId = taskId
 
   # call traffic shaper script to update bandwidth limitation
   uplink = ""
@@ -99,10 +158,10 @@ def fcTaskCallback(data):
   rospy.loginfo("task: %u", taskId)
   rospy.loginfo("uplink/donwlink: %s/%s", uplink, downlink)
 
-  out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink])
+  out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26"])
 
 def main():
-  global token
+  global token, roundName, mutex
 
   if len(sys.argv) < 2:
     print "Role missing!"
@@ -114,15 +173,21 @@ def main():
   rospy.init_node('task_monitor', anonymous=True)
 
   if role == "simulator":
-    if len(sys.argv) < 3:
-      print "token missing!"
+    if len(sys.argv) < 4:
+      print "token or round number missing!"
       sys.exit()
     token = sys.argv[2]
+    roundNumber = sys.argv[3]
     rospy.loginfo("token: %s", token)
+    rospy.loginfo("round number: %s", roundNumber)
+    roundName = "round_" + str(roundNumber)
 
-    rospy.Subscriber("/srcsim/finals/task", Task , simTaskCallback)
+    mutex = threading.Lock()
+
+    rospy.Subscriber("/srcsim/finals/task", Task, simTaskCallback)
+    rospy.Subscriber("/srcsim/finals/score", Score, simScoreCallback)
   elif role == "fieldcomputer":
-    rospy.Subscriber("/srcsim/finals/task", Task , fcTaskCallback)
+    rospy.Subscriber("/srcsim/finals/task", Task, fcTaskCallback)
   else:
     print "Invalid role!"
     sys.exit()

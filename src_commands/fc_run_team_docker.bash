@@ -64,6 +64,7 @@ docker run --rm --name team_container \
   -v "/tmp/.docker.xauth:/tmp/.docker.xauth" \
   -v /dev/log:/dev/log \
   --ulimit rtprio=99 \
-  --net=host \
+  --net=vpn-br0 \
+  --ip=192.168.2.10 \
   ${DOCKER_GPU_PARAMS} \
   fcomputer
