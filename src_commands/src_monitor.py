@@ -282,7 +282,6 @@ def main():
     controllerThread = threading.Thread(target=checkControllerStatus)
     controllerThread.start()
     # Subscribe to topic for monitoring harness status
-    harnessMutex = threading.Lock()
     postHarnessStatus(-1)
     harnessThread = threading.Thread(target=checkHarnessStatus)
     harnessThread.start()
