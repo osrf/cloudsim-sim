@@ -257,7 +257,6 @@ def main():
     sys.exit()
 
   role = sys.argv[1]
-  rospy.logwarn("role: %s", role)
 
   rospy.init_node('task_monitor', anonymous=True)
 
@@ -265,8 +264,13 @@ def main():
     if len(sys.argv) < 4:
       print "token or round number missing!"
       sys.exit()
+
+    time.sleep(5)
+
     token = sys.argv[2]
     roundNumber = sys.argv[3]
+
+    rospy.logwarn("role: %s", role)
     rospy.logwarn("token: %s", token)
     rospy.logwarn("round number: %s", roundNumber)
     roundName = "round_" + str(roundNumber)
