@@ -102,6 +102,7 @@ elif [ $role == "fieldcomputer" ]; then
   echo "enable_traffic_shaper: $enable_traffic_shaper"
   if [ "$enable_traffic_shaper" == "true" ]; then
     echo "true" > $codedir/enable_traffic_shaper.cfg
+  fi
 
   # Fetch bundle
   mkdir -p $codedir/vpn
