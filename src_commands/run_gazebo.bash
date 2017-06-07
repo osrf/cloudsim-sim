@@ -31,7 +31,8 @@ cat <<DELIM > launch_server.bash
 
 # (example with log) roslaunch srcsim finals.launch final_number:=2 extra_gazebo_args:="-r --record_path ~/gazebo-logs/myworldlog"
 source /opt/nasa/indigo/setup.bash
-GAZEBO_IP_WHITE_LIST=127.0.0.1 exec roslaunch srcsim finals.launch final_number:=$FINAL_NUMBER init:=true gui:=false grasping_init_wait_time:=70 $ARGS
+roscore &
+GAZEBO_IP_WHITE_LIST=127.0.0.1 exec roslaunch --wait srcsim finals.launch final_number:=$FINAL_NUMBER init:=true gui:=false grasping_init_wait_time:=70 $ARGS
 DELIM
 chmod a+x launch_server.bash
 
