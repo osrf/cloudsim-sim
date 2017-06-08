@@ -21,12 +21,6 @@ then
     # gazebo state.log
     cp -r $logsdir/gazebo-logs $s3mountdir/$WORLD_NAME
 
-    # gazebo server logs
-    mkdir -p $s3mountdir/$WORLD_NAME/gazebo-server
-    cp -r $logsdir/gazebo-server/diagnostics $s3mountdir/$WORLD_NAME/gazebo-server
-    cp -r $logsdir/gazebo-server/server-11345 $s3mountdir/$WORLD_NAME/gazebo-server
-    cp $logsdir/gazebo-server/ogre.log $s3mountdir/$WORLD_NAME/gazebo-server
-
     # ros logs
     cp -r $logsdir/ros $s3mountdir/$WORLD_NAME
 
