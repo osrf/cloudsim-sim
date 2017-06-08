@@ -257,16 +257,18 @@ def main():
     sys.exit()
 
   role = sys.argv[1]
-  rospy.logwarn("role: %s", role)
-
-  rospy.init_node('task_monitor', anonymous=True)
 
   if role == "simulator":
     if len(sys.argv) < 4:
       print "token or round number missing!"
       sys.exit()
+
+    time.sleep(20)
+    rospy.init_node('task_monitor_sim', anonymous=True)
+
     token = sys.argv[2]
     roundNumber = sys.argv[3]
+    rospy.logwarn("role: %s", role)
     rospy.logwarn("token: %s", token)
     rospy.logwarn("round number: %s", roundNumber)
     roundName = "round_" + str(roundNumber)
@@ -287,6 +289,7 @@ def main():
     harnessThread.start()
 
   elif role == "fieldcomputer":
+    rospy.init_node('task_monitor_fc', anonymous=True)
     rospy.Subscriber("/srcsim/finals/task", Task, fcTaskCallback)
   else:
     print "Invalid role!"
