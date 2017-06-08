@@ -47,6 +47,6 @@ $DIR/src_monitor.bash $FINAL_NUMBER |& tee -a $codedir/cloudsim-src-monitor.log 
 $dockerdir/run_container.bash \
     gazebo_run \
     src-cloudsim \
-    "-v $codedir/simulator-logs/$WORLD_NAME/gazebo-logs:/home/cloudsim/gazebo-logs -v $codedir/simulator-logs/$WORLD_NAME/gazebo-server:/home/cloudsim/.gazebo -v $codedir/simulator-logs/$WORLD_NAME/ros:/home/cloudsim/.ros -v $current:/home/cloudsim/commands --net=host -e ROS_IP=192.168.2.1 -e ROS_MASTER_URI=http://192.168.2.1:11311 --ulimit core=1000000000:1000000000" \
+    "-v $codedir/simulator-logs/$WORLD_NAME/gazebo-logs:/home/cloudsim/gazebo-logs -v $codedir/simulator-logs/$WORLD_NAME/ros:/home/cloudsim/.ros -v $current:/home/cloudsim/commands --net=host -e ROS_IP=192.168.2.1 -e ROS_MASTER_URI=http://192.168.2.1:11311 --ulimit core=1000000000:1000000000" \
     "/home/cloudsim/commands/launch_server.bash" \
     |& tee -a $codedir/cloudsim-docker.log
