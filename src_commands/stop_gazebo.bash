@@ -23,4 +23,8 @@ echo "gazebo_run container stopped"
 echo "stopping src monitor script"
 kill -9 `pgrep -f src_monitor`
 
+# We need to send an event notifying the simulation is in Pending status again
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+$DIR/../aws/post_event.bash '{"simulator_ready": 0, "harness_status": -1}'
+
 exit 0
