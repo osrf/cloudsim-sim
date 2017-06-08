@@ -3,6 +3,7 @@
 # Parameters:
 # world_name: a temporal world name used to identify the run. Tipically used as the name of the log folder.
 
+codedir="/home/ubuntu/code"
 if [ ! -f $codedir/record_gazebo_log.cfg ]
 then
     echo 'Logging to S3 disabled. Exiting...'
