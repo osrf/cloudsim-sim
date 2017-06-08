@@ -263,7 +263,7 @@ def main():
       print "token or round number missing!"
       sys.exit()
 
-    time.sleep(30)
+    time.sleep(20)
     rospy.init_node('task_monitor_sim', anonymous=True)
 
     token = sys.argv[2]
