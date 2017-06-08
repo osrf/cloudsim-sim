@@ -6,11 +6,6 @@
 
 WORLD_NAME=$1
 FINAL_NUMBER=$2
-if [ -f $codedir/record_gazebo_log.cfg ]
-then
-    LOG_PATH=/home/cloudsim/gazebo-logs/$WORLD_NAME
-    ARGS="extra_gazebo_args:=\"-r --record_path $LOG_PATH\""
-fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 dockerdir="/home/ubuntu/code/srcsim_docker/docker"
@@ -19,8 +14,13 @@ current="$(pwd)"
 echo "running gazebo docker container"
 echo $current
 
+if [ -f $codedir/record_gazebo_log.cfg ]
+then
+    LOG_PATH=/home/cloudsim/gazebo-logs/$WORLD_NAME
+    ARGS="extra_gazebo_args:=\"-r --record_path $LOG_PATH\""
+fi
+
 mkdir -p $codedir/simulator-logs/$WORLD_NAME/gazebo-logs
-mkdir -p $codedir/simulator-logs/$WORLD_NAME/gazebo-server
 mkdir -p $codedir/simulator-logs/$WORLD_NAME/ros
 chown -R ubuntu:ubuntu $codedir/simulator-logs
 
