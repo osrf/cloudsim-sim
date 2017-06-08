@@ -127,7 +127,7 @@ def simHarnessCallback(data):
 
 def checkHarnessStatus():
 
-  topicWaitSleepTime = 100
+  topicWaitSleepTime = 30
 
   # Wait for a bit
   time.sleep(topicWaitSleepTime)
@@ -263,7 +263,7 @@ def main():
       print "token or round number missing!"
       sys.exit()
 
-    time.sleep(60)
+    time.sleep(20)
     rospy.init_node('task_monitor_sim', anonymous=True)
     token = sys.argv[2]
     roundNumber = sys.argv[3]
