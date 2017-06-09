@@ -67,6 +67,11 @@ def postControllerStatus(data):
   dataJson = json.dumps({"simulator_ready": data})
   postData(dataJson)
 
+def postRoundStarted():
+  global roundName
+  dataJson = json.dumps({"started_" + roundName: "true"})
+  postData(dataJson)
+
 def checkControllerStatus():
 
   topicsWaitSleepTime = 20
@@ -109,6 +114,9 @@ def checkControllerStatus():
 
   rospy.logwarn("Valid simulation")
   postControllerStatus(1)
+  # also post to Sim so the round is considered "started"
+  rospy.logwarn("== posting ROUND SUCCESSFULLY STARTED ==")
+  postRoundStarted()
 
 def postHarnessStatus(data):
   dataJson = json.dumps({"harness_status": data})
@@ -278,6 +286,11 @@ def main():
     # Subscribe to topics for task and score data
     rospy.Subscriber("/srcsim/finals/task", Task, simTaskCallback)
     rospy.Subscriber("/srcsim/finals/score", Score, simScoreCallback)
+
+    # Reset round scores (ie. send empty round data)
+    # This is independent of wheter later round launch process fails or succeeds
+    rospy.logwarn("== posting EMPTY ROUND data ==")
+    postToSim()
 
     # Subscribe to topics for checking sim launch process
     postControllerStatus(0)
