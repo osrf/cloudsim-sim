@@ -247,7 +247,7 @@ def fcTaskCallback(data):
   rospy.logwarn("task: %u", taskId)
   rospy.logwarn("uplink/donwlink: %s/%s", uplink, downlink)
 
-  out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26"])
+  out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26", "-l", "250ms"])
 
 def main():
   global token, roundName, mutex
