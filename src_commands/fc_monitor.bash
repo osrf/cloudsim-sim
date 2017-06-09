@@ -11,12 +11,13 @@ while true ; do
   monitor_id=`pgrep -f src_monitor`
 
   # check if ros master is available
-  rostopic list > /dev/null 
+  rostopic list > /dev/null 2>&1
   ros_master=`echo $?`
-  # echo "$ros_master"
 
+  # if src monitor script is running
   if [[ ! -z $monitor_id ]]
   then
+    # and if we cannot find a ros master
     if [ $ros_master == 1 ]
     then
       echo "killing src monitor due to missing ROS master"
@@ -26,6 +27,7 @@ while true ; do
       sudo $DIR/src_tc_stop.rb -i tap0
     fi
   else
+    # if there is no src script running but a ros master exists
     if [ $ros_master == 0 ]
     then
       echo "Starting src monitor"
