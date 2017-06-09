@@ -6,11 +6,6 @@
 
 WORLD_NAME=$1
 FINAL_NUMBER=$2
-if [ -f $codedir/record_gazebo_log.cfg ]
-then
-    LOG_PATH=/home/cloudsim/gazebo-logs/$WORLD_NAME
-    ARGS="extra_gazebo_args:=\"-r --record_path $LOG_PATH\""
-fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 dockerdir="/home/ubuntu/code/srcsim_docker/docker"
@@ -19,11 +14,21 @@ current="$(pwd)"
 echo "running gazebo docker container"
 echo $current
 
+if [ -f $codedir/record_gazebo_log.cfg ]
+then
+    LOG_PATH=/home/cloudsim/gazebo-logs/$WORLD_NAME
+    ARGS="extra_gazebo_args:=\"-r --record_path $LOG_PATH\""
+fi
+
 mkdir -p $codedir/simulator-logs/$WORLD_NAME/gazebo-logs
-mkdir -p $codedir/simulator-logs/$WORLD_NAME/gazebo-server
 mkdir -p $codedir/simulator-logs/$WORLD_NAME/ros
 chown -R ubuntu:ubuntu $codedir/simulator-logs
 
+# Note: When changing the launch script keep the `roslaunch` as the target main process in the docker
+# container (that's why I used `exec``).
+# The main process in the container will end up having `PID 1` in the docker container.
+# When the `stop_gazebo.bash` script issues a `docker kill -SIGINT gazebo_run` it will redirect that SIGINT to
+# the process with PID 1, allowing it to start a graceful shutdown.
 cat <<DELIM > launch_server.bash
 #!/usr/bin/env bash
 # Note: we use the 'exec' to allow gzserver be the PID 1 in the docker container,
@@ -47,6 +52,6 @@ $DIR/src_monitor.bash $FINAL_NUMBER |& tee -a $codedir/cloudsim-src-monitor.log 
 $dockerdir/run_container.bash \
     gazebo_run \
     src-cloudsim \
-    "-v $codedir/simulator-logs/$WORLD_NAME/gazebo-logs:/home/cloudsim/gazebo-logs -v $codedir/simulator-logs/$WORLD_NAME/gazebo-server:/home/cloudsim/.gazebo -v $codedir/simulator-logs/$WORLD_NAME/ros:/home/cloudsim/.ros -v $current:/home/cloudsim/commands --net=host -e ROS_IP=192.168.2.1 -e ROS_MASTER_URI=http://192.168.2.1:11311 --ulimit core=1000000000:1000000000" \
+    "-v $codedir/simulator-logs/$WORLD_NAME/gazebo-logs:/home/cloudsim/gazebo-logs -v $codedir/simulator-logs/$WORLD_NAME/ros:/home/cloudsim/.ros -v $current:/home/cloudsim/commands --net=host -e ROS_IP=192.168.2.1 -e ROS_MASTER_URI=http://192.168.2.1:11311 --ulimit core=1000000000:1000000000" \
     "/home/cloudsim/commands/launch_server.bash" \
     |& tee -a $codedir/cloudsim-docker.log

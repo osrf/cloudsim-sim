@@ -4,7 +4,10 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 codedir="/home/ubuntu/code"
 current="$(pwd)"
-TC=${1:-false}
+TC=false
+if [ -f $codedir/enable_traffic_shaper.cfg ] ; then
+  TC=true
+fi
 
 # launch script to monitor SRC tasks
 kill -9 `pgrep -f src_monitor`
