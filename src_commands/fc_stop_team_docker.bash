@@ -20,7 +20,9 @@ kill -SIGKILL $timer_pid
 echo "exiting fc_stop_team_docker"
 
 echo "stopping src monitor script"
+kill -9 `pgrep -f fc_monitor`
 kill -9 `pgrep -f src_monitor`
+kill -9 `pgrep src_monitor`
 
 echo "removing traffic shaper rules"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

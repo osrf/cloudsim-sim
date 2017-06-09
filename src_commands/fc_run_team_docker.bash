@@ -10,10 +10,12 @@ if [ -f $codedir/enable_traffic_shaper.cfg ] ; then
 fi
 
 # launch script to monitor SRC tasks
+kill -9 `pgrep -f fc_monitor`
 kill -9 `pgrep -f src_monitor`
+kill -9 `pgrep src_monitor`
 if [ "$TC" = true ] ; then
  echo "starting src monitor"
- $DIR/src_monitor.bash |& tee -a $codedir/cloudsim-src-monitor.log &
+ $DIR/fc_monitor.bash |& tee -a $codedir/cloudsim-src-monitor.log &
 fi
 
 echo "running team's docker container"
