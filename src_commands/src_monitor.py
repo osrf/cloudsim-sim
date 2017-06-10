@@ -39,6 +39,9 @@ scriptDir = os.path.dirname(os.path.realpath(__file__))
 # Set global variables holding traffic parameters, this is done
 # for both FC and Sim
 def setTrafficParams(_taskId):
+
+  global uplink, downlink, latency
+
   if _taskId == 1:
     uplink = "380kbit"
     downlink = "4kbit"
@@ -55,7 +58,7 @@ def setTrafficParams(_taskId):
 
 def postToSim():
 
-  global token, tasks, score, totalCompletionTime, roundName, mutex
+  global token, tasks, score, totalCompletionTime, roundName, mutex, uplink, downlink, latency
 
   mutex.acquire()
   dataJson = json.dumps({
@@ -245,7 +248,7 @@ def simScoreCallback(data):
 
 def fcTaskCallback(data):
 
-  global prevTaskId, scriptDir
+  global prevTaskId, scriptDir, uplink, downlink, latency
 
   taskId = data.task
   if taskId == prevTaskId:
