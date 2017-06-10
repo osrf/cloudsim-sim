@@ -167,7 +167,7 @@ def checkHarnessStatus():
 
 def simTaskCallback(data):
 
-  global token, tasks, prevTaskId, prevTasks, mutex
+  global token, tasks, prevTaskId, prevTasks, mutex, uplink, downlink, latency
 
   taskId = data.task
   currentCheckPoint = data.current_checkpoint
