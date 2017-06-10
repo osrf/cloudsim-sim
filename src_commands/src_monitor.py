@@ -64,7 +64,7 @@ def postToSim():
   dataJson = json.dumps({
     "current_uplink": uplink,
     "current_downlink": downlink,
-    "current_latency": latency
+    "current_latency": latency,
     roundName: {
       "tasks": tasks,
       "score": score,
