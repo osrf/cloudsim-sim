@@ -42,15 +42,15 @@ def setTrafficParams(_taskId):
   if _taskId == 1:
     uplink = "380kbit"
     downlink = "4kbit"
-    latency = "TODO"
+    latency = "250ms"
   elif _taskId == 2:
     uplink = "2mbit"
     downlink = "30kbit"
-    latency = "TODO"
+    latency = "250ms"
   elif _taskId == 3:
     uplink = "2mbit"
     downlink = "30kbit"
-    latency = "TODO"
+    latency = "250ms"
 
 
 def postToSim():
@@ -149,7 +149,7 @@ def simHarnessCallback(data):
 
 def checkHarnessStatus():
 
-  topicWaitSleepTime = 100
+  topicWaitSleepTime = 30
 
   # Wait for a bit
   time.sleep(topicWaitSleepTime)
@@ -261,8 +261,7 @@ def fcTaskCallback(data):
   rospy.logwarn("task: %u", taskId)
   rospy.logwarn("uplink/downlink/latency: %s/%s/", uplink, downlink, latency)
 
-  # TODO: Use latency
-  out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26"])
+  out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26", "-l", latency])
 
 def main():
   global token, roundName, mutex
@@ -280,9 +279,9 @@ def main():
 
     time.sleep(20)
     rospy.init_node('task_monitor_sim', anonymous=True)
-
     token = sys.argv[2]
     roundNumber = sys.argv[3]
+
     rospy.logwarn("role: %s", role)
     rospy.logwarn("token: %s", token)
     rospy.logwarn("round number: %s", roundNumber)
