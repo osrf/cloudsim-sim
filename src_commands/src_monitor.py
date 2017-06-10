@@ -27,14 +27,30 @@ prevTasks = None
 score = 0
 prevScore = 0
 totalCompletionTime = 0
-uplink = ""
-downlink = ""
-latency = ""
+uplink = "N/A"
+downlink = "N/A"
+latency = "N/A"
 
 # harness monitor variable
 prevHarnessStatus = -1
 
 scriptDir = os.path.dirname(os.path.realpath(__file__))
+
+# Set global variables holding traffic parameters, this is done
+# for both FC and Sim
+def setTrafficParams(_taskId):
+  if _taskId == 1:
+    uplink = "380kbit"
+    downlink = "4kbit"
+    latency = "TODO"
+  elif _taskId == 2:
+    uplink = "2mbit"
+    downlink = "30kbit"
+    latency = "TODO"
+  elif _taskId == 3:
+    uplink = "2mbit"
+    downlink = "30kbit"
+    latency = "TODO"
 
 
 def postToSim():
@@ -163,6 +179,9 @@ def simTaskCallback(data):
   for i in range(len(data.checkpoint_penalties)):
     checkpoint_penalties.append(data.checkpoint_penalties[i].to_sec())
 
+  # Update traffic params to notify CloudSim, this doesn't call TC
+  setTrafficParams(taskId)
+
   # throttle update rate and publish only when data changes
   if prevTasks != None and taskId == prevTaskId and \
       prevTasks[taskId-1]["current_checkpoint"] == currentCheckPoint and \
@@ -235,21 +254,14 @@ def fcTaskCallback(data):
   prevTaskId = taskId
 
   # call traffic shaper script to update bandwidth limitation
-  if taskId == 1:
-    uplink = "380kbit"
-    downlink = "4kbit"
-  elif taskId == 2:
-    uplink = "2mbit"
-    downlink = "30kbit"
-  elif taskId == 3:
-    uplink = "2mbit"
-    downlink = "30kbit"
+  setTrafficParams(taskId)
 
   cmd = scriptDir + "/src_tc.rb"
 
   rospy.logwarn("task: %u", taskId)
-  rospy.logwarn("uplink/downlink: %s/%s", uplink, downlink)
+  rospy.logwarn("uplink/downlink/latency: %s/%s/", uplink, downlink, latency)
 
+  # TODO: Use latency
   out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26"])
 
 def main():
