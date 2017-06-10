@@ -62,13 +62,13 @@ def postToSim():
 
   mutex.acquire()
   dataJson = json.dumps({
+    "current_uplink": uplink,
+    "current_downlink": downlink,
+    "current_latency": latency
     roundName: {
       "tasks": tasks,
       "score": score,
       "total_completion_time": totalCompletionTime,
-      "uplink": uplink,
-      "downlink": downlink,
-      "latency": latency
     }
   })
   mutex.release()
@@ -170,6 +170,10 @@ def simTaskCallback(data):
   global token, tasks, prevTaskId, prevTasks, mutex, uplink, downlink, latency
 
   taskId = data.task
+
+  # Update traffic params to notify CloudSim, this doesn't call TC
+  setTrafficParams(taskId)
+
   currentCheckPoint = data.current_checkpoint
   startTime = data.start_time.to_sec()
   elapsedTime = data.elapsed_time.to_sec()
@@ -181,9 +185,6 @@ def simTaskCallback(data):
   checkpoint_penalties = []
   for i in range(len(data.checkpoint_penalties)):
     checkpoint_penalties.append(data.checkpoint_penalties[i].to_sec())
-
-  # Update traffic params to notify CloudSim, this doesn't call TC
-  setTrafficParams(taskId)
 
   # throttle update rate and publish only when data changes
   if prevTasks != None and taskId == prevTaskId and \
@@ -215,6 +216,9 @@ def simTaskCallback(data):
   tasks[taskId-1]["finished"] = finished
   tasks[taskId-1]["checkpoint_durations"] = checkpoint_durations
   tasks[taskId-1]["checkpoint_penalties"] = checkpoint_penalties
+  tasks[taskId-1]["uplink"] = uplink
+  tasks[taskId-1]["downlink"] = downlink
+  tasks[taskId-1]["latency"] = latency
 
   prevTaskId = taskId
   prevTasks = copy.deepcopy(tasks)
