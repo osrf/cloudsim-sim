@@ -27,6 +27,9 @@ prevTasks = None
 score = 0
 prevScore = 0
 totalCompletionTime = 0
+uplink = ""
+downlink = ""
+latency = ""
 
 # harness monitor variable
 prevHarnessStatus = -1
@@ -43,7 +46,10 @@ def postToSim():
     roundName: {
       "tasks": tasks,
       "score": score,
-      "total_completion_time": totalCompletionTime
+      "total_completion_time": totalCompletionTime,
+      "uplink": uplink,
+      "downlink": downlink,
+      "latency": latency
     }
   })
   mutex.release()
@@ -229,9 +235,6 @@ def fcTaskCallback(data):
   prevTaskId = taskId
 
   # call traffic shaper script to update bandwidth limitation
-  uplink = ""
-  donwlink = ""
-
   if taskId == 1:
     uplink = "380kbit"
     downlink = "4kbit"
@@ -245,7 +248,7 @@ def fcTaskCallback(data):
   cmd = scriptDir + "/src_tc.rb"
 
   rospy.logwarn("task: %u", taskId)
-  rospy.logwarn("uplink/donwlink: %s/%s", uplink, downlink)
+  rospy.logwarn("uplink/downlink: %s/%s", uplink, downlink)
 
   out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26"])
 

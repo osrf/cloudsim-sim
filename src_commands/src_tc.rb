@@ -3,7 +3,7 @@
 require 'optparse'
 
 # The physical interface
-iface = ARGV[0] 
+iface = ARGV[0]
 
 # Downlink bandwidth limit
 downlinkBandwidth = "1mbit"
