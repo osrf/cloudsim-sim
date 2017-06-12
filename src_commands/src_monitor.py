@@ -135,7 +135,7 @@ def simHarnessCallback(data):
 
 def checkHarnessStatus():
 
-  topicWaitSleepTime = 100
+  topicWaitSleepTime = 30
 
   # Wait for a bit
   time.sleep(topicWaitSleepTime)
@@ -276,6 +276,7 @@ def main():
 
     token = sys.argv[2]
     roundNumber = sys.argv[3]
+
     rospy.logwarn("role: %s", role)
     rospy.logwarn("token: %s", token)
     rospy.logwarn("round number: %s", roundNumber)

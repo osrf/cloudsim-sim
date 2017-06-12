@@ -6,7 +6,6 @@
 
 WORLD_NAME=$1
 FINAL_NUMBER=$2
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 dockerdir="/home/ubuntu/code/srcsim_docker/docker"
 codedir="/home/ubuntu/code"
@@ -16,8 +15,9 @@ echo $current
 
 if [ -f $codedir/record_gazebo_log.cfg ]
 then
-    LOG_PATH=/home/cloudsim/gazebo-logs/$WORLD_NAME
-    ARGS="extra_gazebo_args:=\"-r --record_path $LOG_PATH\""
+  LOG_PATH=/home/cloudsim/gazebo-logs/$WORLD_NAME
+  ARGS="extra_gazebo_args:=\"-r --record_path $LOG_PATH\""
+  echo "gazebo logging enabled"
 fi
 
 mkdir -p $codedir/simulator-logs/$WORLD_NAME/gazebo-logs
