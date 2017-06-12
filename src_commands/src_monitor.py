@@ -27,12 +27,40 @@ prevTasks = None
 score = 0
 prevScore = 0
 totalCompletionTime = 0
+uplink = "N/A"
+downlink = "N/A"
+latency = "N/A"
 
 # harness monitor variable
 prevHarnessStatus = -1
 
 scriptDir = os.path.dirname(os.path.realpath(__file__))
 
+# Set global variables holding traffic parameters, this is done
+# for both FC and Sim
+def setTrafficParams(_taskId):
+
+  global uplink, downlink, latency
+
+  if _taskId == 1:
+    uplink = "380kbit"
+    downlink = "4kbit"
+    latency = "250ms"
+  elif _taskId == 2:
+    uplink = "2mbit"
+    downlink = "30kbit"
+    latency = "250ms"
+  elif _taskId == 3:
+    uplink = "2mbit"
+    downlink = "30kbit"
+    latency = "250ms"
+
+  dataJson = json.dumps({
+    "current_uplink": uplink,
+    "current_downlink": downlink,
+    "current_latency": latency
+  })
+  postData(dataJson)
 
 def postToSim():
 
@@ -43,7 +71,7 @@ def postToSim():
     roundName: {
       "tasks": tasks,
       "score": score,
-      "total_completion_time": totalCompletionTime
+      "total_completion_time": totalCompletionTime,
     }
   })
   mutex.release()
@@ -135,7 +163,7 @@ def simHarnessCallback(data):
 
 def checkHarnessStatus():
 
-  topicWaitSleepTime = 100
+  topicWaitSleepTime = 30
 
   # Wait for a bit
   time.sleep(topicWaitSleepTime)
@@ -150,9 +178,10 @@ def checkHarnessStatus():
 
 def simTaskCallback(data):
 
-  global token, tasks, prevTaskId, prevTasks, mutex
+  global token, tasks, prevTaskId, prevTasks, mutex, uplink, downlink, latency
 
   taskId = data.task
+
   currentCheckPoint = data.current_checkpoint
   startTime = data.start_time.to_sec()
   elapsedTime = data.elapsed_time.to_sec()
@@ -195,6 +224,9 @@ def simTaskCallback(data):
   tasks[taskId-1]["finished"] = finished
   tasks[taskId-1]["checkpoint_durations"] = checkpoint_durations
   tasks[taskId-1]["checkpoint_penalties"] = checkpoint_penalties
+  tasks[taskId-1]["uplink"] = uplink
+  tasks[taskId-1]["downlink"] = downlink
+  tasks[taskId-1]["latency"] = latency
 
   prevTaskId = taskId
   prevTasks = copy.deepcopy(tasks)
@@ -228,7 +260,7 @@ def simScoreCallback(data):
 
 def fcTaskCallback(data):
 
-  global prevTaskId, scriptDir
+  global prevTaskId, scriptDir, uplink, downlink, latency
 
   taskId = data.task
   if taskId == prevTaskId:
@@ -237,34 +269,24 @@ def fcTaskCallback(data):
   prevTaskId = taskId
 
   # call traffic shaper script to update bandwidth limitation
-  uplink = ""
-  donwlink = ""
-
-  if taskId == 1:
-    uplink = "380kbit"
-    downlink = "4kbit"
-  elif taskId == 2:
-    uplink = "2mbit"
-    downlink = "30kbit"
-  elif taskId == 3:
-    uplink = "2mbit"
-    downlink = "30kbit"
+  setTrafficParams(taskId)
 
   cmd = scriptDir + "/src_tc.rb"
 
   rospy.logwarn("task: %u", taskId)
-  rospy.logwarn("uplink/donwlink: %s/%s", uplink, downlink)
+  rospy.logwarn("uplink/downlink/latency: %s/%s/%s", uplink, downlink, latency)
 
-  out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26", "-l", "250ms"])
+  out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26", "-l", latency])
 
 def main():
   global token, roundName, mutex
 
-  if len(sys.argv) < 2:
-    print "Role missing!"
+  if len(sys.argv) < 3:
+    print "Role or token missing!"
     sys.exit()
 
   role = sys.argv[1]
+  token = sys.argv[2]
 
   if role == "simulator":
     if len(sys.argv) < 4:
@@ -273,9 +295,8 @@ def main():
 
     time.sleep(20)
     rospy.init_node('task_monitor_sim', anonymous=True)
-
-    token = sys.argv[2]
     roundNumber = sys.argv[3]
+
     rospy.logwarn("role: %s", role)
     rospy.logwarn("token: %s", token)
     rospy.logwarn("round number: %s", roundNumber)

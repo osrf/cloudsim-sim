@@ -16,19 +16,15 @@ echo $current
 
 if [ -f $codedir/record_gazebo_log.cfg ]
 then
-    LOG_PATH=/home/cloudsim/gazebo-logs/$WORLD_NAME
-    ARGS="extra_gazebo_args:=\"-r --record_path $LOG_PATH\""
+  LOG_PATH=/home/cloudsim/gazebo-logs/$WORLD_NAME
+  ARGS="extra_gazebo_args:=\"-r --record_path $LOG_PATH\""
+  echo "gazebo logging enabled"
 fi
 
 mkdir -p $codedir/simulator-logs/$WORLD_NAME/gazebo-logs
 mkdir -p $codedir/simulator-logs/$WORLD_NAME/ros
 chown -R ubuntu:ubuntu $codedir/simulator-logs
 
-# Note: When changing the launch script keep the `roslaunch` as the target main process in the docker
-# container (that's why I used `exec``).
-# The main process in the container will end up having `PID 1` in the docker container.
-# When the `stop_gazebo.bash` script issues a `docker kill -SIGINT gazebo_run` it will redirect that SIGINT to
-# the process with PID 1, allowing it to start a graceful shutdown.
 cat <<DELIM > launch_server.bash
 #!/usr/bin/env bash
 # Note: we use the 'exec' to allow gzserver be the PID 1 in the docker container,
