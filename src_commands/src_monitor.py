@@ -55,16 +55,19 @@ def setTrafficParams(_taskId):
     downlink = "30kbit"
     latency = "250ms"
 
-
-def postToSim():
-
-  global token, tasks, score, totalCompletionTime, roundName, mutex, uplink, downlink, latency
-
-  mutex.acquire()
   dataJson = json.dumps({
     "current_uplink": uplink,
     "current_downlink": downlink,
-    "current_latency": latency,
+    "current_latency": latency
+  })
+  postData(dataJson)
+
+def postToSim():
+
+  global token, tasks, score, totalCompletionTime, roundName, mutex
+
+  mutex.acquire()
+  dataJson = json.dumps({
     roundName: {
       "tasks": tasks,
       "score": score,
@@ -179,9 +182,6 @@ def simTaskCallback(data):
 
   taskId = data.task
 
-  # Update traffic params to notify CloudSim, this doesn't call TC
-  setTrafficParams(taskId)
-
   currentCheckPoint = data.current_checkpoint
   startTime = data.start_time.to_sec()
   elapsedTime = data.elapsed_time.to_sec()
@@ -281,11 +281,12 @@ def fcTaskCallback(data):
 def main():
   global token, roundName, mutex
 
-  if len(sys.argv) < 2:
-    print "Role missing!"
+  if len(sys.argv) < 3:
+    print "Role or token missing!"
     sys.exit()
 
   role = sys.argv[1]
+  token = sys.argv[2]
 
   if role == "simulator":
     if len(sys.argv) < 4:
@@ -294,7 +295,6 @@ def main():
 
     time.sleep(20)
     rospy.init_node('task_monitor_sim', anonymous=True)
-    token = sys.argv[2]
     roundNumber = sys.argv[3]
 
     rospy.logwarn("role: %s", role)

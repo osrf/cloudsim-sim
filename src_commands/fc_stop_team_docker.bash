@@ -26,5 +26,8 @@ echo "removing traffic shaper rules"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 sudo $DIR/src_tc_stop.rb -i tap0
 
+# We need to send an event to reset the fc network display
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+$DIR/../aws/post_event.bash '{"current_uplink": "N/A", "current_downlink": "N/A", "current_latency": "N/A"}'
 
 exit 0
