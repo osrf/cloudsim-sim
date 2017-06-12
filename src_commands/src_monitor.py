@@ -266,7 +266,7 @@ def fcTaskCallback(data):
   cmd = scriptDir + "/src_tc.rb"
 
   rospy.logwarn("task: %u", taskId)
-  rospy.logwarn("uplink/downlink/latency: %s/%s/", uplink, downlink, latency)
+  rospy.logwarn("uplink/downlink/latency: %s/%s/%s", uplink, downlink, latency)
 
   out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26", "-l", latency])
 
