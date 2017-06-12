@@ -3,7 +3,7 @@
 require 'optparse'
 
 # The physical interface
-iface = ARGV[0] 
+iface = ARGV[0]
 
 # Downlink bandwidth limit
 downlinkBandwidth = "1mbit"
@@ -12,7 +12,7 @@ downlinkBandwidth = "1mbit"
 uplinkBandwidth = "100mbit"
 
 # Default options
-options = {:iface => "eth0", :downlink => "100mb", :uplink => "10mb", :filter => "127.0.0.1"}
+options = {:iface => "eth0", :downlink => "100mb", :uplink => "10mb", :filter => "127.0.0.1", :latency => "0ms"}
 
 OptionParser.new do |opts|
   opts.banner = "Usage: sudo ./src_tc.rb [options]\n\n" +
@@ -43,6 +43,11 @@ OptionParser.new do |opts|
     options[:filter] = v
   }
 
+  opts.on('-l', '--latency DELAY', "Latency delay applied to uplink and downlink. Default=#{options[:latency]}") { |v|
+    options[:latency] = v
+  }
+
+
 end.parse!
 
 # Clear tc
@@ -66,11 +71,15 @@ end.parse!
 
 # Apply egress (uplink) rules for the physical interface
 `tc qdisc add dev #{options[:iface]} root handle 1: htb`
-`tc class add dev #{options[:iface]} parent 1: classid 1:10 htb rate #{options[:uplink]}`
-`tc filter add dev #{options[:iface]} protocol ip parent 1: prio 1 u32 match ip dst #{options[:filter]} flowid 1:10`
+`tc class add dev #{options[:iface]} parent 1: classid 1:1 htb rate #{options[:uplink]}`
+#`tc class add dev #{options[:iface]} parent 1: classid 1:10 htb rate #{options[:uplink]}`
+`tc filter add dev #{options[:iface]} protocol ip parent 1: prio 1 u32 match ip dst #{options[:filter]} flowid 1:1`
+`tc qdisc add dev #{options[:iface]} parent 1:1 handle 10: netem delay #{options[:latency]}`
 
 # Apply ingress (downlink) rules for the physical interface
 # via egress rules for the virtual interface.
 `tc qdisc add dev ifb0 root handle 1: htb`
-`tc class add dev ifb0 parent 1: classid 1:10 htb rate #{options[:downlink]}`
-`tc filter add dev ifb0 protocol ip parent 1: prio 1 u32 match ip src #{options[:filter]} flowid 1:10`
+`tc class add dev ifb0 parent 1: classid 1:1 htb rate #{options[:downlink]}`
+#`tc class add dev ifb0 parent 1:1 classid 1:10 htb rate #{options[:downlink]}`
+`tc filter add dev ifb0 protocol ip parent 1: prio 1 u32 match ip src #{options[:filter]} flowid 1:1`
+`tc qdisc add dev ifb0 parent 1:1 handle 10: netem delay #{options[:latency]}`
