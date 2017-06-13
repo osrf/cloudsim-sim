@@ -56,7 +56,7 @@ def setTrafficParams(_taskId):
       uplink = tcData["T2_3 downlink"]
       downlink = tcData["T2_3 uplink"]
       latency = tcData["T2_3 latency"]
-  else
+  else:
     rospy.logwarn("Using default TC values")
     # otherwise use these defaults
     if _taskId == 1:
