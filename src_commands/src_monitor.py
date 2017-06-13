@@ -30,6 +30,7 @@ totalCompletionTime = 0
 uplink = "N/A"
 downlink = "N/A"
 latency = "N/A"
+tcData = None
 
 # harness monitor variable
 prevHarnessStatus = -1
@@ -40,20 +41,36 @@ scriptDir = os.path.dirname(os.path.realpath(__file__))
 # for both FC and Sim
 def setTrafficParams(_taskId):
 
-  global uplink, downlink, latency
+  global uplink, downlink, latency, tcData
 
-  if _taskId == 1:
-    uplink = "380kbit"
-    downlink = "4kbit"
-    latency = "250ms"
-  elif _taskId == 2:
-    uplink = "2mbit"
-    downlink = "30kbit"
-    latency = "250ms"
-  elif _taskId == 3:
-    uplink = "2mbit"
-    downlink = "30kbit"
-    latency = "250ms"
+  # read from TC config file if available
+  if tcData != None:
+    rospy.logwarn("Reading TC values from config")
+    # config file specifies uplink/downlink for OCU so we need to reverse
+    # them for the FC, e.g. FC's uplink = OCU's downlink
+    if _taskId == 1:
+      uplink = tcData["T1 downlink"]
+      downlink = tcData["T1 uplink"]
+      latency = tcData["T1 latency"]
+    elif _taskId == 2 or _taskId == 3:
+      uplink = tcData["T2_3 downlink"]
+      downlink = tcData["T2_3 uplink"]
+      latency = tcData["T2_3 latency"]
+  else
+    rospy.logwarn("Using default TC values")
+    # otherwise use these defaults
+    if _taskId == 1:
+      uplink = "380kbit"
+      downlink = "4kbit"
+      latency = "250ms"
+    elif _taskId == 2:
+      uplink = "2mbit"
+      downlink = "30kbit"
+      latency = "250ms"
+    elif _taskId == 3:
+      uplink = "2mbit"
+      downlink = "30kbit"
+      latency = "250ms"
 
   dataJson = json.dumps({
     "current_uplink": uplink,
@@ -279,7 +296,7 @@ def fcTaskCallback(data):
   out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26", "-l", latency])
 
 def main():
-  global token, roundName, mutex
+  global token, roundName, mutex, tcData, scriptDir
 
   if len(sys.argv) < 3:
     print "Role or token missing!"
@@ -323,6 +340,12 @@ def main():
     harnessThread.start()
 
   elif role == "fieldcomputer":
+
+    tcPath = scriptDir + 'tc.cfg'
+    if os.path.exists(tcPath):
+      with open(tcPath) as tcFile:
+        tcData = json.load(tcFile)
+
     rospy.init_node('task_monitor_fc', anonymous=True)
     rospy.Subscriber("/srcsim/finals/task", Task, fcTaskCallback)
   else:
