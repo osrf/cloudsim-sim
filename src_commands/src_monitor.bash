@@ -39,6 +39,9 @@ elif [ $role == "fieldcomputer" ]; then
   round=`get_option $DIR/sim_data.json round`
   team=`get_option $DIR/sim_data.json team`
   echo "team: $team, round: $round"
+
+  # workout team<->round<->world TC mapping
+  $DIR/fc_tc_parse.py $DIR/tcFile $DIR/teamRoundMappingFile $team $round
 fi
 
 echo "Starting SRC monitor"

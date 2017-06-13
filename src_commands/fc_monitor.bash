@@ -45,9 +45,6 @@ while true ; do
       sudo kill -9 `pgrep -f src_monitor`
       sudo kill -9 `pgrep src_monitor`
 
-      # workout team<->round<->world TC mapping
-      $DIR/fc_tc_parse.py $DIR/tcFile $DIR/teamRoundMappingFile
-
       $DIR/src_monitor.bash &
     fi
   fi

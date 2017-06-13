@@ -7,7 +7,7 @@ import os
 
 def main():
   if len(sys.argv) < 5:
-    print "Usage: fc_tc_finals.py tcFile teamRoundMappingFile teamName roundNumber"
+    print "Usage: fc_tc_parse.py tcFile teamRoundMappingFile teamName roundNumber"
     sys.exit()
 
   tcFile = sys.argv[1]
