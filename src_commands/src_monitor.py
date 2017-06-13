@@ -178,7 +178,7 @@ def checkHarnessStatus():
 
 def simTaskCallback(data):
 
-  global token, tasks, prevTaskId, prevTasks, mutex, uplink, downlink, latency
+  global token, tasks, prevTaskId, prevTasks, mutex
 
   taskId = data.task
 
@@ -224,9 +224,6 @@ def simTaskCallback(data):
   tasks[taskId-1]["finished"] = finished
   tasks[taskId-1]["checkpoint_durations"] = checkpoint_durations
   tasks[taskId-1]["checkpoint_penalties"] = checkpoint_penalties
-  tasks[taskId-1]["uplink"] = uplink
-  tasks[taskId-1]["downlink"] = downlink
-  tasks[taskId-1]["latency"] = latency
 
   prevTaskId = taskId
   prevTasks = copy.deepcopy(tasks)
