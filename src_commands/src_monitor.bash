@@ -1,6 +1,7 @@
 #!/bin/bash
 
 final=$1
+world=$2
 
 codedir="/home/ubuntu/code"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -27,10 +28,17 @@ until rostopic list ; do sleep 1; done
 
 echo "Updating sim data"
 if [ $role == "simulator" ]; then
-  data="{\"data\": \"$final\"}"
+  # get team name from world name
+  team=`echo "$world" | grep -o 'SRC-.*-' | sed 's/.$//'`
+  data="{\"data\": {\"round\": \"$final\", \"team\":\"$team\"}}"
   curl -X POST --header "Content-Type: application/json" --header 'Accept: application/json' --header "authorization: $token" --data "$data" "http://localhost:4000/sim"
 elif [ $role == "fieldcomputer" ]; then
-  curl --header "Content-Type: application/json" --header 'Accept: application/json' --header "authorization: $token" "http://192.168.2.1:4000/sim" > sim_data
+  curl --header "Content-Type: application/json" --header 'Accept: application/json' --header "authorization: $token" "http://192.168.2.1:4000/sim" > $DIR/sim_data.json
+  sed -i 's/\\//g' $DIR/sim_data.json
+  sed -i 's/^.\(.*\).$/\1/' $DIR/sim_data.json
+  round=`get_option $DIR/sim_data.json round`
+  team=`get_option $DIR/sim_data.json team`
+  echo "team: $team, round: $round"
 fi
 
 echo "Starting SRC monitor"

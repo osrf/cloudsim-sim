@@ -560,7 +560,8 @@ function setRoutes(app) {
     csgrant.ownsResource('simulations', false),
     function(req, res) {
       let r = {success: false}
-      fs.writeFile("/tmp/sim_data", req.body.data, function(err) {
+      let data = JSON.stringify(req.body.data)
+      fs.writeFile("/tmp/sim_data", data, function(err) {
         if(err) {
           return res.jsonp(r);
         }
@@ -574,16 +575,13 @@ function setRoutes(app) {
     csgrant.authenticate,
     csgrant.ownsResource('simulations', false),
     function(req, res) {
-      let r = {success: false}
-      fs.readFile("/tmp/sim_data", function(err, data) {
+      fs.readFile("/tmp/sim_data", "utf8", function(err, data) {
         if(err) {
           return res.jsonp(r);
         }
 
-        r.data = data.toString()
-        r.success = true
-        console.log('Data: ' + r.data)
-        res.jsonp(r)
+        console.log('Data: ' + data)
+        res.jsonp(data)
       })
     })
 
