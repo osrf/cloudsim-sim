@@ -6,6 +6,7 @@ const ansi_to_html = require('ansi-to-html')
 const ansi2html = new ansi_to_html()
 const spawn = require('child_process').spawn
 const events = require('./events')
+const fs = require('fs')
 
 // when false, log output is suppressed
 exports.showLog = false
@@ -553,6 +554,39 @@ function setRoutes(app) {
     req.simId = id
     next()
   })
+
+  app.post('/sim',
+    csgrant.authenticate,
+    csgrant.ownsResource('simulations', false),
+    function(req, res) {
+      let r = {success: false}
+      fs.writeFile("/tmp/sim_data", req.body.data, function(err) {
+        if(err) {
+          return res.jsonp(r);
+        }
+        console.log("The file was saved!");
+        r.success = true
+        res.jsonp(r)
+      })
+    })
+
+  app.get('/sim',
+    csgrant.authenticate,
+    csgrant.ownsResource('simulations', false),
+    function(req, res) {
+      let r = {success: false}
+      fs.readFile("/tmp/sim_data", function(err, data) {
+        if(err) {
+          return res.jsonp(r);
+        }
+
+        r.data = data.toString()
+        r.success = true
+        console.log('Data: ' + r.data)
+        res.jsonp(r)
+      })
+    })
+
 }
 
 // list of exported functions in this module

@@ -25,5 +25,13 @@ echo "final $final"
 
 until rostopic list ; do sleep 1; done
 
+echo "Updating sim data"
+if [ $role == "simulator" ]; then
+  data="{\"data\": \"$final\"}"
+  curl -X POST --header "Content-Type: application/json" --header 'Accept: application/json' --header "authorization: $token" --data "$data" "http://localhost:4000/sim"
+elif [ $role == "fieldcomputer" ]; then
+  curl --header "Content-Type: application/json" --header 'Accept: application/json' --header "authorization: $token" "http://192.168.2.1:4000/sim" > sim_data
+fi
+
 echo "Starting SRC monitor"
 python $DIR/src_monitor.py $role $token $final
