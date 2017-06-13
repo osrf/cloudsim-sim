@@ -22,6 +22,11 @@ def main():
   print "teamName: %s" % teamName
   print "roundNumber: %s" % roundNumber
 
+
+  if not os.path.exists(teamRoundMappingFile) or not os.path.exists(tcFile):
+    print "TC files not found"
+    sys.exit()
+
   teamRoundMapping = None
   # get team to round mapping
   with open(teamRoundMappingFile) as teamCSVFile:

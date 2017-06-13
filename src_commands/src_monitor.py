@@ -73,8 +73,8 @@ def setTrafficParams(_taskId):
       latency = "250ms"
 
   dataJson = json.dumps({
-    "current_uplink": uplink,
-    "current_downlink": downlink,
+    "current_uplink": downlink,
+    "current_downlink": uplink,
     "current_latency": latency
   })
   postData(dataJson)
@@ -341,7 +341,7 @@ def main():
 
   elif role == "fieldcomputer":
 
-    tcPath = scriptDir + 'tc.cfg'
+    tcPath = scriptDir + '/tc.cfg'
     if os.path.exists(tcPath):
       with open(tcPath) as tcFile:
         tcData = json.load(tcFile)
