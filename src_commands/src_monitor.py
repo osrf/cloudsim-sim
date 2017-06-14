@@ -27,12 +27,57 @@ prevTasks = None
 score = 0
 prevScore = 0
 totalCompletionTime = 0
+uplink = "N/A"
+downlink = "N/A"
+latency = "N/A"
+tcData = None
 
 # harness monitor variable
 prevHarnessStatus = -1
 
 scriptDir = os.path.dirname(os.path.realpath(__file__))
 
+# Set global variables holding traffic parameters, this is done
+# for both FC and Sim
+def setTrafficParams(_taskId):
+
+  global uplink, downlink, latency, tcData
+
+  # read from TC config file if available
+  if tcData != None:
+    rospy.logwarn("Reading TC values from config")
+    # config file specifies uplink/downlink for OCU so we need to reverse
+    # them for the FC, e.g. FC's uplink = OCU's downlink
+    if _taskId == 1:
+      uplink = tcData["T1 downlink"]
+      downlink = tcData["T1 uplink"]
+      latency = tcData["T1 latency"]
+    elif _taskId == 2 or _taskId == 3:
+      uplink = tcData["T2_3 downlink"]
+      downlink = tcData["T2_3 uplink"]
+      latency = tcData["T2_3 latency"]
+  else:
+    rospy.logwarn("Using default TC values")
+    # otherwise use these defaults
+    if _taskId == 1:
+      uplink = "380kbit"
+      downlink = "4kbit"
+      latency = "250ms"
+    elif _taskId == 2:
+      uplink = "2mbit"
+      downlink = "30kbit"
+      latency = "250ms"
+    elif _taskId == 3:
+      uplink = "2mbit"
+      downlink = "30kbit"
+      latency = "250ms"
+
+  dataJson = json.dumps({
+    "current_uplink": downlink,
+    "current_downlink": uplink,
+    "current_latency": latency
+  })
+  postData(dataJson)
 
 def postToSim():
 
@@ -43,7 +88,7 @@ def postToSim():
     roundName: {
       "tasks": tasks,
       "score": score,
-      "total_completion_time": totalCompletionTime
+      "total_completion_time": totalCompletionTime,
     }
   })
   mutex.release()
@@ -65,6 +110,11 @@ def postData(dataJson):
 
 def postControllerStatus(data):
   dataJson = json.dumps({"simulator_ready": data})
+  postData(dataJson)
+
+def postRoundStarted():
+  global roundName
+  dataJson = json.dumps({"started_" + roundName: "true"})
   postData(dataJson)
 
 def checkControllerStatus():
@@ -109,6 +159,9 @@ def checkControllerStatus():
 
   rospy.logwarn("Valid simulation")
   postControllerStatus(1)
+  # also post to Sim so the round is considered "started"
+  rospy.logwarn("== posting ROUND SUCCESSFULLY STARTED ==")
+  postRoundStarted()
 
 def postHarnessStatus(data):
   dataJson = json.dumps({"harness_status": data})
@@ -127,7 +180,7 @@ def simHarnessCallback(data):
 
 def checkHarnessStatus():
 
-  topicWaitSleepTime = 100
+  topicWaitSleepTime = 30
 
   # Wait for a bit
   time.sleep(topicWaitSleepTime)
@@ -145,6 +198,7 @@ def simTaskCallback(data):
   global token, tasks, prevTaskId, prevTasks, mutex
 
   taskId = data.task
+
   currentCheckPoint = data.current_checkpoint
   startTime = data.start_time.to_sec()
   elapsedTime = data.elapsed_time.to_sec()
@@ -220,7 +274,7 @@ def simScoreCallback(data):
 
 def fcTaskCallback(data):
 
-  global prevTaskId, scriptDir
+  global prevTaskId, scriptDir, uplink, downlink, latency
 
   taskId = data.task
   if taskId == prevTaskId:
@@ -229,44 +283,35 @@ def fcTaskCallback(data):
   prevTaskId = taskId
 
   # call traffic shaper script to update bandwidth limitation
-  uplink = ""
-  donwlink = ""
-
-  if taskId == 1:
-    uplink = "380kbit"
-    downlink = "4kbit"
-  elif taskId == 2:
-    uplink = "2mbit"
-    downlink = "30kbit"
-  elif taskId == 3:
-    uplink = "2mbit"
-    downlink = "30kbit"
+  setTrafficParams(taskId)
 
   cmd = scriptDir + "/src_tc.rb"
 
   rospy.logwarn("task: %u", taskId)
-  rospy.logwarn("uplink/donwlink: %s/%s", uplink, downlink)
+  rospy.logwarn("uplink/downlink/latency: %s/%s/%s", uplink, downlink, latency)
 
-  out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26"])
+  out = subprocess.Popen(["sudo", cmd, "-i", "tap0", "-u", uplink, "-d", downlink, "-f", "192.168.2.150/26", "-l", latency])
 
 def main():
-  global token, roundName, mutex
+  global token, roundName, mutex, tcData, scriptDir
 
-  if len(sys.argv) < 2:
-    print "Role missing!"
+  if len(sys.argv) < 3:
+    print "Role or token missing!"
     sys.exit()
 
   role = sys.argv[1]
-  rospy.logwarn("role: %s", role)
-
-  rospy.init_node('task_monitor', anonymous=True)
+  token = sys.argv[2]
 
   if role == "simulator":
     if len(sys.argv) < 4:
       print "token or round number missing!"
       sys.exit()
-    token = sys.argv[2]
+
+    time.sleep(20)
+    rospy.init_node('task_monitor_sim', anonymous=True)
     roundNumber = sys.argv[3]
+
+    rospy.logwarn("role: %s", role)
     rospy.logwarn("token: %s", token)
     rospy.logwarn("round number: %s", roundNumber)
     roundName = "round_" + str(roundNumber)
@@ -276,6 +321,11 @@ def main():
     # Subscribe to topics for task and score data
     rospy.Subscriber("/srcsim/finals/task", Task, simTaskCallback)
     rospy.Subscriber("/srcsim/finals/score", Score, simScoreCallback)
+
+    # Reset round scores (ie. send empty round data)
+    # This is independent of wheter later round launch process fails or succeeds
+    rospy.logwarn("== posting EMPTY ROUND data ==")
+    postToSim()
 
     # Subscribe to topics for checking sim launch process
     postControllerStatus(0)
@@ -287,6 +337,13 @@ def main():
     harnessThread.start()
 
   elif role == "fieldcomputer":
+
+    tcPath = scriptDir + '/tc.cfg'
+    if os.path.exists(tcPath):
+      with open(tcPath) as tcFile:
+        tcData = json.load(tcFile)
+
+    rospy.init_node('task_monitor_fc', anonymous=True)
     rospy.Subscriber("/srcsim/finals/task", Task, fcTaskCallback)
   else:
     print "Invalid role!"

@@ -6,6 +6,7 @@ const ansi_to_html = require('ansi-to-html')
 const ansi2html = new ansi_to_html()
 const spawn = require('child_process').spawn
 const events = require('./events')
+const fs = require('fs')
 
 // when false, log output is suppressed
 exports.showLog = false
@@ -177,7 +178,7 @@ proc.startTheSimulator =  function() {
   this.schedulerData.proc.stdout.on('data', (data)=> {
     const newData = colorize(data)
     // add text to the output
-    simData.output += newData
+    // simData.output += newData
     csgrant.updateResource(userName, simId, simData, (err) => {
       if (err) {
         log("error updating resource simId: " + simId)
@@ -189,7 +190,7 @@ proc.startTheSimulator =  function() {
   // when new text is sent to std err
   this.schedulerData.proc.stderr.on('data', (data)=> {
     const newData = colorize(data)
-    simData.output += newData
+    // simData.output += newData
     csgrant.updateResource(userName, simId, simData, (err) => {
       if (err) {
         log("error updating resource simId: " + simId)
@@ -264,7 +265,7 @@ proc.stopTheSimulator = function(done) {
   this.schedulerData.stopProc.stdout.on('data', (data)=> {
     const newData = colorize(data)
     // add text to the output
-    simData.stopCmdOutput += newData
+    // simData.stopCmdOutput += newData
     csgrant.updateResource(userName, simId, simData, (err) => {
       if (err) {
         log("error updating resource simId: " + simId)
@@ -276,7 +277,7 @@ proc.stopTheSimulator = function(done) {
   // when new text is sent to std err
   this.schedulerData.stopProc.stderr.on('data', (data)=> {
     const newData = colorize(data)
-    simData.stopCmdOutput += newData
+    // simData.stopCmdOutput += newData
     csgrant.updateResource(userName, simId, simData, (err) => {
       if (err) {
         log("error updating resource simId: " + simId)
@@ -322,7 +323,7 @@ proc.sendLogs = function(done) {
     this.schedulerData.logProc.stdout.on('data', (data)=> {
       const newData = colorize(data)
       // add text to the output
-      simData.logCmdOutput += newData
+      // simData.logCmdOutput += newData
       csgrant.updateResource(userName, simId, simData, (err) => {
         if (err) {
           log("error updating resource simId: " + simId)
@@ -334,7 +335,7 @@ proc.sendLogs = function(done) {
     // when new text is sent to std err
     this.schedulerData.logProc.stderr.on('data', (data)=> {
       const newData = colorize(data)
-      simData.logCmdOutput += newData
+      // simData.logCmdOutput += newData
       csgrant.updateResource(userName, simId, simData, (err) => {
         if (err) {
           log("error updating resource simId: " + simId)
@@ -553,6 +554,37 @@ function setRoutes(app) {
     req.simId = id
     next()
   })
+
+  app.post('/sim',
+    csgrant.authenticate,
+    csgrant.ownsResource('simulations', false),
+    function(req, res) {
+      let r = {success: false}
+      let data = JSON.stringify(req.body.data)
+      fs.writeFile("/tmp/sim_data", data, function(err) {
+        if(err) {
+          return res.jsonp(r);
+        }
+        console.log("The file was saved!");
+        r.success = true
+        res.jsonp(r)
+      })
+    })
+
+  app.get('/sim',
+    csgrant.authenticate,
+    csgrant.ownsResource('simulations', false),
+    function(req, res) {
+      fs.readFile("/tmp/sim_data", "utf8", function(err, data) {
+        if(err) {
+          return res.jsonp(r);
+        }
+
+        console.log('Data: ' + data)
+        res.jsonp(data)
+      })
+    })
+
 }
 
 // list of exported functions in this module
