@@ -342,6 +342,7 @@ def main():
     if os.path.exists(tcPath):
       with open(tcPath) as tcFile:
         tcData = json.load(tcFile)
+        print "Found TC file"
 
     rospy.init_node('task_monitor_fc', anonymous=True)
     rospy.Subscriber("/srcsim/finals/task", Task, fcTaskCallback)
