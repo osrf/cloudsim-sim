@@ -24,6 +24,8 @@ while true ; do
   rostopic list > /dev/null 2>&1
   ros_master=`echo $?`
 
+  topic=`rostopic list 2> /dev/null | grep "/srcsim/finals/task" `
+
   # if src monitor script is running
   if [[ ! -z $monitor_id ]]
   then
@@ -37,9 +39,10 @@ while true ; do
       sudo $DIR/src_tc_stop.rb -i tap0
     fi
   else
-    # if there is no src script running but a ros master exists
-    if [ $ros_master == 0 ]
+    # if there is no src script running but a ros master and task topic exists
+    if [ $ros_master == 0 ] && [[ ! -z $topic ]]
     then
+      echo "Found topic: $topic"
       echo "Starting src monitor"
       # launch script to monitor SRC tasks
       sudo kill -9 `pgrep -f src_monitor`
