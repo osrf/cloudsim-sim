@@ -75,9 +75,6 @@ cd $codedir/simulator && $codedir/simulator/start_vpn.bash simulator $subnet ope
 exit 0
 EOF
 
-  srcsimulationid=`get_option $optionsfile srcsimulation_id`
-  echo "srcsimulationid: $srcsimulationid"
-
   # Get S3 credentials, if any
   # /etc/passwd-s3fs: contains AWS keys in this format -> bucketname:public:private
   # /home/ubuntu/s3/bucketname-s3fs.txt: contains the bucket name to use in S3
@@ -96,7 +93,6 @@ EOF
     # Mount folder
     mkdir -p /mnt/s3bucket
     chmod 776 /mnt/s3bucket
-    /usr/bin/s3fs -o createbucket -o use_cache=/tmp $s3bucket:/$srcsimulationid /mnt/s3bucket
   fi
 
 elif [ $role == "fieldcomputer" ]; then
