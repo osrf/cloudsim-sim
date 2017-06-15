@@ -17,16 +17,21 @@ s3mountdir="/mnt/s3bucket"
 if [ -f $s3dir/bucketname-s3fs.txt ]
 then
     echo 'uploading logs'
-    mkdir -p $s3mountdir/$WORLD_NAME
+
+    s3bucket=`cat $s3dir/bucketname-s3fs.txt`
+    echo "s3bucket $s3bucket"
+
+    /usr/bin/s3fs -o createbucket -o use_cache=/tmp $s3bucket:/$WORLD_NAME /mnt/s3bucket 
+
     # gazebo state.log
-    cp -r $logsdir/gazebo-logs $s3mountdir/$WORLD_NAME
+    cp -r $logsdir/gazebo-logs $s3mountdir/
 
     # ros logs
-    cp -r $logsdir/ros $s3mountdir/$WORLD_NAME
+    cp -r $logsdir/ros $s3mountdir/
 
     # src-monitor and docker logs
-    cp /home/ubuntu/code/cloudsim-src-monitor.log $s3mountdir/$WORLD_NAME
-    cp /home/ubuntu/code/cloudsim-docker.log $s3mountdir/$WORLD_NAME
+    cp /home/ubuntu/code/cloudsim-src-monitor.log $s3mountdir
+    cp /home/ubuntu/code/cloudsim-docker.log $s3mountdir
 
     echo 'finished copying logs to s3 mnt folder'
 else
