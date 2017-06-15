@@ -21,17 +21,19 @@ then
     s3bucket=`cat $s3dir/bucketname-s3fs.txt`
     echo "s3bucket $s3bucket"
 
-    /usr/bin/s3fs -o createbucket -o use_cache=/tmp $s3bucket:/$WORLD_NAME /mnt/s3bucket 
+    mkdir -p $s3mountdir/$WORLD_NAME
+
+    /usr/bin/s3fs -o createbucket -o use_cache=/tmp $s3bucket:/$WORLD_NAME $s3mountdir/$WORLD_NAME 
 
     # gazebo state.log
-    cp -r $logsdir/gazebo-logs $s3mountdir/
+    cp -r $logsdir/gazebo-logs $s3mountdir/$WORLD_NAME
 
     # ros logs
-    cp -r $logsdir/ros $s3mountdir/
+    cp -r $logsdir/ros $s3mountdir/$WORLD_NAME
 
     # src-monitor and docker logs
-    cp /home/ubuntu/code/cloudsim-src-monitor.log $s3mountdir
-    cp /home/ubuntu/code/cloudsim-docker.log $s3mountdir
+    cp /home/ubuntu/code/cloudsim-src-monitor.log $s3mountdir/$WORLD_NAME
+    cp /home/ubuntu/code/cloudsim-docker.log $s3mountdir/$WORLD_NAME
 
     echo 'finished copying logs to s3 mnt folder'
 else
